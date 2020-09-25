@@ -6,7 +6,7 @@ const url = require("url");
 const server = createServer((req, res) => {
   const pathname = url.parse(req.url).pathname;
 
-  let filePath = path.join(__dirname, "pages", pathname);
+  let filePath = path.join(__dirname, "test-pages", pathname);
   let contentType = "text/html";
 
   if (pathname === "/js/lux.js") {
