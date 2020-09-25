@@ -1,7 +1,7 @@
 let luxRequests;
 
 beforeAll(async () => {
-  await page.goto("http://localhost:3000/lux-auto.html", { waitUntil: "networkidle0" });
+  await page.goto("http://localhost:3000/default.html", { waitUntil: "networkidle0" });
 
   luxRequests = requestInterceptor.findMatchingRequests("https://lux.speedcurve.com/lux/");
 });
