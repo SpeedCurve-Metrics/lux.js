@@ -10,26 +10,10 @@
 </head>
 <body>
     <p id="msg">Calculating primes... </p>
+    <script src="/calculate-primes.js"></script>
     <script>
-        calculatePrimes(0, 10000000).then(() => {
-            document.getElementById("msg").textContent += "Done.";
-        });
-
-        function calculatePrimes(start, max) {
-            return new Promise((resolve) => {
-                const sieve = [];
-
-                for (let i = Math.max(start, 2); i <= max; ++i) {
-                    if (!sieve[i]) {
-                        for (let j = i << 1; j <= max; j += i) {
-                            sieve[j] = true;
-                        }
-                    }
-                }
-
-                resolve(true);
-            });
-        }
+        calculatePrimes(0, 10000000);
+        document.getElementById("msg").textContent += "Done.";
     </script>
 </body>
 </html>

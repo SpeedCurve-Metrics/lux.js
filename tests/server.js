@@ -9,9 +9,12 @@ const server = createServer((req, res) => {
   let filePath = path.join(__dirname, "test-pages", pathname);
   let contentType = "text/html";
 
+  if (pathname.substr(-3) === ".js") {
+    contentType = "application/javascript";
+  }
+
   if (pathname === "/js/lux.js") {
     filePath = path.join(__dirname, "..", "dist", "lux.min.js");
-    contentType = "application/javascript";
   }
 
   readFile(filePath, (err, contents) => {

@@ -1,3 +1,3 @@
-beforeAll(() => {
+beforeEach(() => {
   requestInterceptor.reset();
 });
