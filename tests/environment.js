@@ -6,6 +6,7 @@ class CustomEnvironment extends PuppeteerEnvironment {
     await super.setup();
 
     this.global.requestInterceptor = new RequestInterceptor(this.global.page);
+    this.global.navigateTo = (url) => this.global.page.goto(url, { waitUntil: "networkidle0" });
   }
 
   async teardown() {

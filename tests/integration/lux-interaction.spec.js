@@ -2,7 +2,7 @@ const { parseNestedPairs } = require("../helpers/lux");
 
 describe("LUX interaction", () => {
   test("gather IX metrics after the first interaction", async () => {
-    await page.goto("http://localhost:3000/default-with-interaction.html", { waitUntil: "networkidle0" });
+    await navigateTo("http://localhost:3000/default-with-interaction.html");
     await page.click("button");
     const luxRequests = requestInterceptor.findMatchingRequests("https://lux.speedcurve.com/lux/");
     const ixBeacon = new URL(luxRequests[1].url());

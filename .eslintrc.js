@@ -14,5 +14,6 @@ module.exports = {
     page: true,
     browser: true,
     requestInterceptor: true,
+    navigateTo: true,
   },
 };
