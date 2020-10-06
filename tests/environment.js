@@ -5,6 +5,7 @@ class CustomEnvironment extends PuppeteerEnvironment {
   async setup() {
     await super.setup();
 
+    this.global.page.setCacheEnabled(false);
     this.global.requestInterceptor = new RequestInterceptor(this.global.page);
     this.global.navigateTo = (url) => this.global.page.goto(url, { waitUntil: "networkidle0" });
   }
