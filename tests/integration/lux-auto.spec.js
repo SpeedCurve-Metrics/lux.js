@@ -6,17 +6,17 @@ beforeAll(async () => {
 });
 
 describe("LUX auto", () => {
-  it("should send a LUX beacon", async () => {
+  test("automatically sending a LUX beacon", async () => {
     expect(luxRequests.length).toBe(1);
   });
 
-  it("should use the document title as the page label", async () => {
+  test("using the document title as the page label", async () => {
     const beacon = new URL(luxRequests[0].url());
 
     expect(beacon.searchParams.get("l")).toBe("LUX Auto Test");
   });
 
-  it("should send the basic page metrics", async () => {
+  test("sending the basic page metrics", async () => {
     const beacon = new URL(luxRequests[0].url());
 
     expect(beacon.searchParams.get("NT").length).toBeGreaterThan(0);
