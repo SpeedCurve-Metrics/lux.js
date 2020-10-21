@@ -27,7 +27,6 @@ LUX = (function () {
       ) {
         // Sample & limit other errors.
         // Send the error beacon.
-        _label = _getPageLabel(); // User might have changed the label in-between SPA actions.
         new Image().src =
           _errorUrl +
           "?v=" +
@@ -43,7 +42,7 @@ LUX = (function () {
           "&msg=" +
           encodeURIComponent(e.message) +
           "&l=" +
-          encodeURIComponent(_label) +
+          encodeURIComponent(_getPageLabel()) +
           (connectionType() ? "&ct=" + connectionType() : "") +
           "";
       }
@@ -753,9 +752,6 @@ LUX = (function () {
     _removeIxHandlers();
     _addIxHandlers();
 
-    // User might have changed the label in-between SPA actions.
-    _label = _getPageLabel();
-
     // Reset a bunch of flags.
     gbNavSent = 0;
     gbLuxSent = 0;
@@ -1255,9 +1251,6 @@ LUX = (function () {
       gFlags = gFlags | gFlag_NotVisible;
     }
 
-    // Update the label in case the user set it late or the TITLE tag occurred after lux.js.
-    _label = _getPageLabel();
-
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
     // So we create a base URL that has all the necessary information:
     var baseUrl =
@@ -1272,7 +1265,7 @@ LUX = (function () {
       gUid +
       (sCustomerData ? "&CD=" + sCustomerData : "") +
       "&l=" +
-      encodeURIComponent(_label);
+      encodeURIComponent(_getPageLabel());
 
     var is = inlineTagSize("script");
     var ic = inlineTagSize("style");
@@ -1414,7 +1407,7 @@ LUX = (function () {
         gUid +
         (sCustomerData ? "&CD=" + sCustomerData : "") +
         "&l=" +
-        encodeURIComponent(_label) +
+        encodeURIComponent(_getPageLabel()) +
         "&IX=" +
         sIx +
         (gFirstInputDelay ? "&FID=" + gFirstInputDelay : "") +
@@ -1458,7 +1451,7 @@ LUX = (function () {
         "&CD=" +
         sCustomerData +
         "&l=" +
-        encodeURIComponent(_label) +
+        encodeURIComponent(_getPageLabel()) +
         "&HN=" +
         encodeURIComponent(document.location.hostname) +
         "";
@@ -1823,7 +1816,7 @@ LUX = (function () {
     beaconUrl: _beaconUrl, // where to send the beacon
     samplerate: _samplerate, // percentage of beacons to accept
     auto: _auto, // whether to automatically send the beacon after onload
-    label: _label, // the "name" of this page or episode
+    label: (typeof LUX !== "undefined" && typeof LUX.label !== "undefined") ? LUX.label : undefined, // the "name" of this page or episode
     version: version, // use this for self-updating
     ae: [], // array for error handler (ignored)
     al: [], // array for Long Tasks (ignored)
