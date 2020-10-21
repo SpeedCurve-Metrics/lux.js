@@ -9,7 +9,6 @@ var LUX = (function () {
 
   // Log JS errors.
   var _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
-  var sError = "";
   var nErrors = 0;
   var maxErrors = 5; // Some pages have 50K errors. Set a limit on how many we record.
   function errorHandler(e) {
