@@ -1,6 +1,6 @@
 test("page label can be changed between SPA page loads", async () => {
-  let luxRequests
-  let beacon
+  let luxRequests;
+  let beacon;
 
   await navigateTo("http://localhost:3000/auto-false.html");
   await page.evaluate("LUX.send()");
@@ -19,8 +19,8 @@ test("page label can be changed between SPA page loads", async () => {
 });
 
 test("default page label changes when document.title changes", async () => {
-  let luxRequests
-  let beacon
+  let luxRequests;
+  let beacon;
 
   await navigateTo("http://localhost:3000/auto-false.html");
   await page.evaluate("LUX.send()");
