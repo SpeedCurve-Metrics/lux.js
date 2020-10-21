@@ -2,7 +2,7 @@
 // We don't want to polyfill unless we're going to implement the entire performance API,
 // ow it confuses other people's code that checks for feature support.
 var LUX_t_start = Date.now();
-LUX = (function () {
+var LUX = (function () {
   dlog("lux.js evaluation start.");
 
   var version = "207"; // version of this JS code
@@ -1835,5 +1835,7 @@ LUX = (function () {
 
   return _LUX;
 })();
+
+window.LUX = LUX;
 
 var LUX_t_end = Date.now();
