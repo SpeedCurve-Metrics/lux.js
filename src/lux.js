@@ -7,10 +7,6 @@ LUX = (function () {
 
   var version = "207"; // version of this JS code
 
-  // We initialize page label here, but we actually assign it RIGHT BEFORE the beacon is sent
-  // (to avoid the situation where this line executes before the TITLE tag is processed).
-  var _label = _getPageLabel();
-
   // Log JS errors.
   var _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
   var sError = "";
