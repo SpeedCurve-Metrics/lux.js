@@ -311,11 +311,6 @@ LUX = (function () {
     return _getM(name, _getMarks());
   }
 
-  // Return THE LAST measure that matches the name.
-  function _getMeasure(name) {
-    return _getM(name, _getMeasures());
-  }
-
   function _getM(name, aItems) {
     if (aItems) {
       for (i = aItems.length - 1; i >= 0; i--) {
