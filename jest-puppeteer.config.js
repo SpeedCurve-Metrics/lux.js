@@ -1,6 +1,7 @@
 module.exports = {
   server: {
-    command: 'node tests/server.js',
+    command: "node tests/server.js",
     port: 3000,
+    usedPortAction: "kill",
   },
-}
+};
