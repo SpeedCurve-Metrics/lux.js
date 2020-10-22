@@ -2,7 +2,7 @@ let luxRequests;
 
 beforeAll(async () => {
   await navigateTo("http://localhost:3000/default.html");
-  luxRequests = requestInterceptor.findMatchingRequests("https://lux.speedcurve.com/lux/");
+  luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
 });
 
 describe("LUX auto", () => {

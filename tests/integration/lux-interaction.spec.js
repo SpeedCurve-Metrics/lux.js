@@ -4,7 +4,7 @@ describe("LUX interaction", () => {
   test("gather IX metrics after the first interaction", async () => {
     await navigateTo("http://localhost:3000/default-with-interaction.html");
     await page.click("button");
-    const luxRequests = requestInterceptor.findMatchingRequests("https://lux.speedcurve.com/lux/");
+    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
     const ixBeacon = new URL(luxRequests[1].url());
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
 
