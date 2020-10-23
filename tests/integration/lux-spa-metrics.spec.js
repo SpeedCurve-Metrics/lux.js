@@ -5,17 +5,17 @@ describe("LUX SPA", () => {
     const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
 
     await navigateTo("http://localhost:3000/auto-false.html");
-    expect(luxRequests.length).toBe(0);
+    expect(luxRequests.count()).toBe(0);
 
     await page.evaluate("LUX.send()");
-    expect(luxRequests.length).toBe(1);
+    expect(luxRequests.count()).toBe(1);
   });
 
   test("load time value for the first pages is the time between navigationStart and loadEventStart", async () => {
     await navigateTo("http://localhost:3000/auto-false.html");
     await page.evaluate("LUX.send()");
     const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
-    const beacon = new URL(luxRequests[0].url());
+    const beacon = luxRequests.getUrl(0);
     const navigationTiming = beacon.searchParams.get("NT");
     const luxLoadTime = extractCondensedValue(navigationTiming, "ls");
     const navigationStart = await page.evaluate("performance.timing.navigationStart");
@@ -33,7 +33,7 @@ describe("LUX SPA", () => {
     await page.evaluate("LUX.send()");
 
     const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
-    const beacon = new URL(luxRequests[1].url());
+    const beacon = luxRequests.getUrl(1);
     const navigationTiming = beacon.searchParams.get("NT");
     const loadEventStart = extractCondensedValue(navigationTiming, "ls");
 

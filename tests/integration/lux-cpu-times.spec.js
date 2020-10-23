@@ -4,7 +4,7 @@ describe("LUX CPU timing", () => {
   test("detect and report long tasks on the page", async () => {
     await navigateTo("http://localhost:3000/default-with-cpu.html");
     const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
-    const beacon = new URL(luxRequests[0].url());
+    const beacon = luxRequests.getUrl(0);
     const cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
     expect(parseInt(cpuMetrics.n, 10)).toBe(1);
@@ -20,7 +20,7 @@ describe("LUX CPU timing", () => {
   test.skip("detect and report long tasks that occured before the lux.js script", async () => {
     await navigateTo("http://localhost:3000/no-inline-snippet-with-cpu.html");
     const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
-    const beacon = new URL(luxRequests[0].url());
+    const beacon = luxRequests.getUrl(0);
     const cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
     expect(parseInt(cpuMetrics.n, 10)).toBe(1);

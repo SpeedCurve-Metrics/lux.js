@@ -7,7 +7,7 @@ describe("LUX SPA CPU metrics", () => {
     await navigateTo("http://localhost:3000/auto-false-with-cpu.html");
     await page.evaluate("LUX.send()");
 
-    let beacon = new URL(luxRequests[0].url());
+    let beacon = luxRequests.getUrl(0);
     let cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
     expect(parseInt(cpuMetrics.n, 10)).toBe(1);
@@ -24,7 +24,7 @@ describe("LUX SPA CPU metrics", () => {
     await page.waitForTimeout(100);
     await page.evaluate("LUX.send()");
 
-    beacon = new URL(luxRequests[1].url());
+    beacon = luxRequests.getUrl(1);
     cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
     expect(parseInt(cpuMetrics.n, 10)).toBe(0);
@@ -34,7 +34,7 @@ describe("LUX SPA CPU metrics", () => {
     await page.click("#calculate-primes");
     await page.evaluate("LUX.send()");
 
-    beacon = new URL(luxRequests[2].url());
+    beacon = luxRequests.getUrl(2);
     cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
     expect(parseInt(cpuMetrics.n, 10)).toBe(1);
