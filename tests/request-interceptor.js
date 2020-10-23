@@ -15,7 +15,7 @@ module.exports = class RequestInterceptor {
   createRequestMatcher(searchString) {
     const matcher = new RequestMatcher(searchString);
 
-    this.requests.forEach((request) => matcher.addRequest(request))
+    this.requests.forEach((request) => matcher.addRequest(request));
     this.matchers.push(matcher);
 
     return matcher;
