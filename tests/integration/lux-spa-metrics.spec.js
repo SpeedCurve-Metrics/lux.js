@@ -1,9 +1,13 @@
 const { extractCondensedValue } = require("../helpers/lux");
 
 describe("LUX SPA", () => {
-  test("sending a LUX beacon only when LUX.send is called", async () => {
-    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+  const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
 
+  beforeEach(() => {
+    luxRequests.reset();
+  });
+
+  test("sending a LUX beacon only when LUX.send is called", async () => {
     await navigateTo("http://localhost:3000/auto-false.html");
     expect(luxRequests.count()).toBe(0);
 
@@ -14,7 +18,6 @@ describe("LUX SPA", () => {
   test("load time value for the first pages is the time between navigationStart and loadEventStart", async () => {
     await navigateTo("http://localhost:3000/auto-false.html");
     await page.evaluate("LUX.send()");
-    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
     const beacon = luxRequests.getUrl(0);
     const navigationTiming = beacon.searchParams.get("NT");
     const luxLoadTime = extractCondensedValue(navigationTiming, "ls");
@@ -32,7 +35,6 @@ describe("LUX SPA", () => {
     await page.waitForTimeout(100);
     await page.evaluate("LUX.send()");
 
-    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
     const beacon = luxRequests.getUrl(1);
     const navigationTiming = beacon.searchParams.get("NT");
     const loadEventStart = extractCondensedValue(navigationTiming, "ls");

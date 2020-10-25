@@ -1,6 +1,10 @@
 describe("LUX JS page label", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
 
+  beforeEach(() => {
+    luxRequests.reset();
+  });
+
   beforeAll(async () => {
     await navigateTo("http://localhost:3000/auto-false.html");
     await page.evaluate(() => {
@@ -13,10 +17,6 @@ describe("LUX JS page label", () => {
       };
     });
     await page.evaluate("LUX.jspagelabel = 'config.page[0].name'");
-  });
-
-  beforeEach(() => {
-    luxRequests.reset();
   });
 
   test("can be taken from a global JS variable", async () => {
