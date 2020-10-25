@@ -19,3 +19,23 @@ exports.parseNestedPairs = function (cpuMetrics) {
     })
   );
 };
+
+/**
+ * Gets loadEventStart as milliseconds from a page instance
+ */
+exports.getLoadEventStartMs = async function (page) {
+  const navigationStart = await page.evaluate("performance.timing.navigationStart");
+  const loadEventStart = await page.evaluate("performance.timing.loadEventStart");
+
+  return loadEventStart - navigationStart;
+};
+
+/**
+ * Gets the elapsed time since navigation start in milliseconds
+ */
+exports.getElapsedMs = async function (page) {
+  const navigationStart = await page.evaluate("performance.timing.navigationStart");
+  const now = await page.evaluate("Date.now()");
+
+  return now - navigationStart;
+};
