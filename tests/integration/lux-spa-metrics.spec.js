@@ -1,4 +1,4 @@
-const { extractCondensedValue, getLoadEventStartMs } = require("../helpers/lux");
+const { extractCondensedValue, getPerformanceTimingMs } = require("../helpers/lux");
 
 describe("LUX SPA", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
@@ -20,10 +20,13 @@ describe("LUX SPA", () => {
     await page.evaluate("LUX.send()");
     const beacon = luxRequests.getUrl(0);
     const navigationTiming = beacon.searchParams.get("NT");
-    const luxLoadTime = extractCondensedValue(navigationTiming, "ls");
-    const loadEventStartMs = await getLoadEventStartMs(page);
+    const luxLoadEventStart = extractCondensedValue(navigationTiming, "ls");
+    const luxLoadEventEnd = extractCondensedValue(navigationTiming, "ls");
+    const pageLoadEventStart = await getPerformanceTimingMs(page, "loadEventStart");
+    const pageLoadEventEnd = await getPerformanceTimingMs(page, "loadEventEnd");
 
-    expect(luxLoadTime).toBe(loadEventStartMs);
+    expect(luxLoadEventStart).toBe(pageLoadEventStart);
+    expect(luxLoadEventEnd).toBe(pageLoadEventEnd);
   });
 
   test("load time value for subsequent pages is the time between LUX.init() and LUX.send()", async () => {
@@ -37,11 +40,13 @@ describe("LUX SPA", () => {
     const beacon = luxRequests.getUrl(1);
     const navigationTiming = beacon.searchParams.get("NT");
     const loadEventStart = extractCondensedValue(navigationTiming, "ls");
+    const loadEventEnd = extractCondensedValue(navigationTiming, "le");
 
     // We waited 100ms between LUX.init() and LUX.start(), so the load time should
     // be at least 100ms. 120ms is an arbitrary upper limit to make sure we're not
     // over-reporting load time.
     expect(loadEventStart).toBeGreaterThanOrEqual(100);
     expect(loadEventStart).toBeLessThan(120);
+    expect(loadEventStart).toEqual(loadEventEnd);
   });
 });

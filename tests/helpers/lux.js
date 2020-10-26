@@ -21,17 +21,17 @@ exports.parseNestedPairs = function (cpuMetrics) {
 };
 
 /**
- * Gets loadEventStart as milliseconds from a page instance
+ * Gets a performance.timing value as milliseconds since navigation start
  */
-exports.getLoadEventStartMs = async function (page) {
+exports.getPerformanceTimingMs = async function (page, metric) {
   const navigationStart = await page.evaluate("performance.timing.navigationStart");
-  const loadEventStart = await page.evaluate("performance.timing.loadEventStart");
+  const timingValue = await page.evaluate(`performance.timing.${metric}`);
 
-  return loadEventStart - navigationStart;
+  return timingValue - navigationStart;
 };
 
 /**
- * Gets the elapsed time since navigation start in milliseconds
+ * Gets the current time as milliseconds since navigation start
  */
 exports.getElapsedMs = async function (page) {
   const navigationStart = await page.evaluate("performance.timing.navigationStart");
