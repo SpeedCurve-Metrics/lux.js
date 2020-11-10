@@ -4,7 +4,7 @@
     "build": "mkdir -p dist && terser --mangle --compress --output dist/lux.min.js src/lux.js",
     "jest": "jest",
     "jest-watch": "jest --watch",
-    "prettier": "prettier --write 'tests/**/*.js'",
+    "prettier": "prettier --write 'src/**/*.js' 'tests/**/*.js'",
     "eslint": "eslint 'src/**/*.js' 'tests/**/*.js'",
     "test": "npm run eslint && npm run jest"
   },

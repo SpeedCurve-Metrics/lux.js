@@ -58,7 +58,7 @@ LUX = (function () {
   if ("function" === typeof PerformanceObserver) {
     var perfObserver = new PerformanceObserver(function (list) {
       // Keep an array of perf objects to process later.
-      list.getEntries().forEach(function(entry) {
+      list.getEntries().forEach(function (entry) {
         gaPerfEntries.push(entry);
       });
     });
@@ -91,9 +91,9 @@ LUX = (function () {
   var gFlag_NoUserTiming = 4;
   var gFlag_NotVisible = 8;
   // array of marks where each element is a hash
-  var gaMarks = (typeof LUX.gaMarks !== "undefined") ? LUX.gaMarks : [];
+  var gaMarks = typeof LUX.gaMarks !== "undefined" ? LUX.gaMarks : [];
   // array of measures where each element is a hash
-  var gaMeasures = (typeof LUX.gaMeasures !== "undefined") ? LUX.gaMeasures : [];
+  var gaMeasures = typeof LUX.gaMeasures !== "undefined" ? LUX.gaMeasures : [];
   var ghIx = {}; // hash for Interaction Metrics (scroll, click, keyboard)
   var ghData = {}; // hash for data that is specific to the customer (eg, userid, conversion info)
   var gbLuxSent = 0; // have we sent the LUX data? (avoid sending twice in unload)
@@ -110,8 +110,9 @@ LUX = (function () {
   var perf = window.performance;
   var gMaxQuerystring = 2000; // split the beacon querystring if it gets longer than this
   // Customers can override this by setting LUX.beaconUrl.
-  var _beaconUrl = (typeof LUX.beaconUrl !== "undefined") ? LUX.beaconUrl : "https://lux.speedcurve.com/lux/"; // everything before the "?"
-  var _samplerate = (typeof LUX.samplerate !== "undefined") ? LUX.samplerate : 100;
+  var _beaconUrl =
+    typeof LUX.beaconUrl !== "undefined" ? LUX.beaconUrl : "https://lux.speedcurve.com/lux/"; // everything before the "?"
+  var _samplerate = typeof LUX.samplerate !== "undefined" ? LUX.samplerate : 100;
   dlog(
     "Sample rate = " +
       _samplerate +
@@ -120,7 +121,7 @@ LUX = (function () {
         ? "This session IS being sampled."
         : "This session is NOT being sampled. The data will NOT show up in your LUX dashboards. Call LUX.forceSample() and try again.")
   );
-  var _auto = (typeof LUX.auto !== "undefined") ? LUX.auto : true;
+  var _auto = typeof LUX.auto !== "undefined" ? LUX.auto : true;
 
   // Get a timestamp as close to navigationStart as possible.
   var _navigationStart = LUX.ns ? LUX.ns : Date.now ? Date.now() : +new Date(); // create a _navigationStart
@@ -305,7 +306,12 @@ LUX = (function () {
       }
     }
 
-    gaMeasures.push({ name: name, entryType: "measure", startTime: startTime, duration: endTime - startTime });
+    gaMeasures.push({
+      name: name,
+      entryType: "measure",
+      startTime: startTime,
+      duration: endTime - startTime,
+    });
 
     return;
   }
@@ -407,7 +413,7 @@ LUX = (function () {
     // marks
     var aMarks = _getMarks();
     if (aMarks) {
-      aMarks.forEach(function(m) {
+      aMarks.forEach(function (m) {
         // For user timing values taken in a SPA page load, we need to adjust them
         // so that they're zeroed against the last LUX.init() call. We zero every
         // UT value except for the internal LUX start mark.
@@ -427,7 +433,7 @@ LUX = (function () {
     // measures
     var aMeasures = _getMeasures();
     if (aMeasures) {
-      aMeasures.forEach(function(m) {
+      aMeasures.forEach(function (m) {
         var name = m.name,
           t = Math.round(m.duration);
         if ("undefined" === typeof hUT[name]) {
@@ -488,7 +494,9 @@ LUX = (function () {
       // Do not include Long Tasks that start _after_ the page is done.
       // For "main" pages, done is loadEventEnd. For SPA pages, it is gEndMark (but since we set
       //   gEndMark for _all_ pages we test if it is a SPA by the presence of gStartMark.)
-      var tEnd = startMark ? _getMark(gEndMark).startTime : perf.timing.loadEventEnd - perf.timing.navigationStart;
+      var tEnd = startMark
+        ? _getMark(gEndMark).startTime
+        : perf.timing.loadEventEnd - perf.timing.navigationStart;
 
       for (var i = 0; i < gaPerfEntries.length; i++) {
         var p = gaPerfEntries[i];
@@ -779,7 +787,12 @@ LUX = (function () {
     var num = 0;
     for (var i = 0, len = aElems.length; i < len; i++) {
       var e = aElems[i];
-      if (e.src && !e.async && !e.defer && 0 !== (e.compareDocumentPosition(lastViewportElem) & 4)) {
+      if (
+        e.src &&
+        !e.async &&
+        !e.defer &&
+        0 !== (e.compareDocumentPosition(lastViewportElem) & 4)
+      ) {
         // If the script has a SRC and async is false and it occurs BEFORE the last viewport element,
         // then increment the counter.
         num++;
@@ -972,7 +985,12 @@ LUX = (function () {
       var startRender;
 
       if (ns) {
-        if (perf && perf.getEntriesByType && perf.getEntriesByType("paint") && perf.getEntriesByType("paint").length) {
+        if (
+          perf &&
+          perf.getEntriesByType &&
+          perf.getEntriesByType("paint") &&
+          perf.getEntriesByType("paint").length
+        ) {
           // If Paint Timing API is supported, use it.
           for (var arr = perf.getEntriesByType("paint"), i = 0; i < arr.length; i++) {
             var ppt = arr[i]; // PerformancePaintTiming object
@@ -1196,7 +1214,14 @@ LUX = (function () {
 
     // Return true if the top-left corner is in the viewport and it has width & height.
     var lt = findPos(e);
-    return lt[0] >= 0 && lt[1] >= 0 && lt[0] < vw && lt[1] < vh && e.offsetWidth > 0 && e.offsetHeight > 0;
+    return (
+      lt[0] >= 0 &&
+      lt[1] >= 0 &&
+      lt[0] < vw &&
+      lt[1] < vh &&
+      e.offsetWidth > 0 &&
+      e.offsetHeight > 0
+    );
   }
 
   // Return an array containing the top & left coordinates of the element.
@@ -1734,7 +1759,12 @@ LUX = (function () {
 
   function _setCookie(name, value, seconds) {
     try {
-      document.cookie = name + "=" + escape(value) + (seconds ? "; max-age=" + seconds : "") + "; path=/; SameSite=Lax";
+      document.cookie =
+        name +
+        "=" +
+        escape(value) +
+        (seconds ? "; max-age=" + seconds : "") +
+        "; path=/; SameSite=Lax";
     } catch (e) {
       dlog("Error setting document.cookie.");
     }
@@ -1808,7 +1838,7 @@ LUX = (function () {
     beaconUrl: _beaconUrl, // where to send the beacon
     samplerate: _samplerate, // percentage of beacons to accept
     auto: _auto, // whether to automatically send the beacon after onload
-    label: (typeof LUX.label !== "undefined") ? LUX.label : undefined, // the "name" of this page or episode
+    label: typeof LUX.label !== "undefined" ? LUX.label : undefined, // the "name" of this page or episode
     version: version, // use this for self-updating
     ae: [], // array for error handler (ignored)
     al: [], // array for Long Tasks (ignored)
@@ -1817,7 +1847,7 @@ LUX = (function () {
 
   // Process the command queue
   if (LUX.ac && LUX.ac.length) {
-    LUX.ac.forEach(function(args) {
+    LUX.ac.forEach(function (args) {
       var fn = args.shift();
 
       if ("function" === typeof _LUX[fn]) {
@@ -1828,7 +1858,7 @@ LUX = (function () {
 
   // process the error events that happened before lux.js got loaded
   if (typeof window.LUX_ae !== "undefined") {
-    window.LUX_ae.forEach(function(error) {
+    window.LUX_ae.forEach(function (error) {
       errorHandler(error);
     });
   }
