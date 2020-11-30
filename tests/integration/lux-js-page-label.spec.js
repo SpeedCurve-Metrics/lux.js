@@ -65,4 +65,20 @@ describe("LUX JS page label", () => {
 
     expect(luxRequests.getUrl(1).searchParams.get("l")).toBe("JS Label");
   });
+
+  test("falls back to document title when JS variable doesn't eval", async () => {
+    await page.evaluate("LUX.init()");
+    await page.evaluate("window.config = {}");
+    await page.evaluate("LUX.send()");
+
+    expect(luxRequests.getUrl(0).searchParams.get("l")).toBe("LUX SPA Test With JS Page Label");
+  });
+
+  test("falls back to document title when JS variable evaluates to a falsey value", async () => {
+    await page.evaluate("LUX.init()");
+    await page.evaluate("window.config.page[0].name = ''");
+    await page.evaluate("LUX.send()");
+
+    expect(luxRequests.getUrl(0).searchParams.get("l")).toBe("LUX SPA Test With JS Page Label");
+  });
 });

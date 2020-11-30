@@ -1720,9 +1720,13 @@ LUX = (function () {
       return LUX.label;
     } else if (typeof LUX.jspagelabel !== "undefined") {
       try {
-        return eval(LUX.jspagelabel);
+        var label = eval(LUX.jspagelabel);
       } catch (e) {
         console.log("Error evaluating customer settings LUX page label:", e);
+      }
+
+      if (label) {
+        return label;
       }
     }
 
