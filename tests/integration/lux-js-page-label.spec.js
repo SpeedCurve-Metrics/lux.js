@@ -1,12 +1,9 @@
 describe("LUX JS page label", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
 
-  beforeEach(() => {
+  beforeEach(async () => {
     luxRequests.reset();
-  });
 
-  beforeAll(async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
     await page.evaluate(() => {
       window.config = {
         page: [
@@ -16,7 +13,10 @@ describe("LUX JS page label", () => {
         ],
       };
     });
-    await page.evaluate("LUX.jspagelabel = 'config.page[0].name'");
+  });
+
+  beforeAll(async () => {
+    await navigateTo("http://localhost:3000/auto-false-js-page-label.html");
   });
 
   test("can be taken from a global JS variable", async () => {
@@ -31,6 +31,24 @@ describe("LUX JS page label", () => {
     await page.evaluate("LUX.send()");
 
     expect(luxRequests.getUrl(1).searchParams.get("l")).toBe("Another JS Label");
+  });
+
+  test("the variable can be changed on the fly", async () => {
+    await page.evaluate("LUX.init()");
+    await page.evaluate("window.config.page[0].name = 'First JS Label'");
+    await page.evaluate("LUX.send()");
+
+    expect(luxRequests.getUrl(0).searchParams.get("l")).toBe("First JS Label");
+
+    await page.evaluate("LUX.init()");
+    await page.evaluate("LUX.jspagelabel = 'window.config.page[0].label'");
+    await page.evaluate("window.config.page[0].label = 'Different Variable Label'");
+    await page.evaluate("LUX.send()");
+
+    expect(luxRequests.getUrl(1).searchParams.get("l")).toBe("Different Variable Label");
+
+    // Restore jspagelabel to previous state
+    await page.evaluate("LUX.jspagelabel = 'window.config.page[0].name'");
   });
 
   test("LUX.label takes priority over JS page label", async () => {

@@ -4,7 +4,8 @@ const path = require("path");
 const url = require("url");
 
 const server = createServer((req, res) => {
-  const pathname = url.parse(req.url).pathname;
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
 
   let filePath = path.join(__dirname, "test-pages", pathname);
   let contentType = "text/html";
@@ -22,6 +23,10 @@ const server = createServer((req, res) => {
       res.writeHead(404);
       res.end("Not Found");
     } else {
+      if (parsedUrl.query.jspagelabel) {
+        contents = `LUX=LUX||{};LUX.jspagelabel=${JSON.stringify(parsedUrl.query.jspagelabel)};${contents}`;
+      }
+
       res.writeHead(200, { "content-type": contentType });
       res.end(contents);
     }

@@ -1839,6 +1839,7 @@ LUX = (function () {
     samplerate: _samplerate, // percentage of beacons to accept
     auto: _auto, // whether to automatically send the beacon after onload
     label: typeof LUX.label !== "undefined" ? LUX.label : undefined, // the "name" of this page or episode
+    jspagelabel: typeof LUX.jspagelabel !== "undefined" ? LUX.jspagelabel : undefined,
     version: version, // use this for self-updating
     ae: [], // array for error handler (ignored)
     al: [], // array for Long Tasks (ignored)
