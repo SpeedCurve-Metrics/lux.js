@@ -24,7 +24,9 @@ const server = createServer((req, res) => {
       res.end("Not Found");
     } else {
       if (parsedUrl.query.jspagelabel) {
-        contents = `LUX=LUX||{};LUX.jspagelabel=${JSON.stringify(parsedUrl.query.jspagelabel)};${contents}`;
+        contents = `LUX=LUX||{};LUX.jspagelabel=${JSON.stringify(
+          parsedUrl.query.jspagelabel
+        )};${contents}`;
       }
 
       res.writeHead(200, { "content-type": contentType });
