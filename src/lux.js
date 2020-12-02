@@ -10,7 +10,7 @@ LUX = (function () {
 
   dlog("lux.js evaluation start.");
 
-  var version = "208"; // version of this JS code
+  var version = "209"; // version of this JS code
 
   // Log JS errors.
   var _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
