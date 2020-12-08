@@ -54,17 +54,21 @@ LUX = (function () {
   // Note: This code was later added to the LUX snippet. In the snippet we ONLY collect
   //       Long Task entries because that is the only entry type that can not be buffered.
   //       We _copy_ any Long Tasks collected by the snippet and ignore it after that.
-  var gaPerfEntries = "object" === typeof window.LUX_al ? window.LUX_al.slice() : []; // array of Long Tasks (prefer the array from the snippet)
+  var gaSnippetLongTasks = (typeof window.LUX_al === "object") ? window.LUX_al : [];
+  var gaPerfEntries = gaSnippetLongTasks.slice(); // array of Long Tasks (prefer the array from the snippet)
   if ("function" === typeof PerformanceObserver) {
     var perfObserver = new PerformanceObserver(function (list) {
       // Keep an array of perf objects to process later.
       list.getEntries().forEach(function (entry) {
-        gaPerfEntries.push(entry);
+        // Only record long tasks that weren't already recorded by the PerformanceObserver in the snippet
+        if (gaSnippetLongTasks.length === 0 || entry.entryType === "longtask" && gaPerfEntries.indexOf(entry) === -1) {
+          gaPerfEntries.push(entry);
+        }
       });
     });
     try {
       if ("function" === typeof PerformanceLongTaskTiming) {
-        perfObserver.observe({ type: "longtask" });
+        perfObserver.observe({ type: "longtask", buffered: true });
       }
       if ("function" === typeof LargestContentfulPaint) {
         perfObserver.observe({ type: "largest-contentful-paint", buffered: true });
