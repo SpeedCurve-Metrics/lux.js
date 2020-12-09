@@ -889,7 +889,7 @@ LUX = (function () {
       // This is a SPA page view, so send the SPA marks & measures instead of Nav Timing.
       var start = Math.round(_getMark(gStartMark).startTime); // the start mark is "zero"
       ns += start; // "navigationStart" for a SPA is the real navigationStart plus the start mark
-      var end = Math.round(_getMark(gEndMark).startTime) - start; // delta from start mark
+      const end = Math.round(_getMark(gEndMark).startTime) - start; // delta from start mark
       s =
         ns +
         "fs" +
@@ -931,7 +931,7 @@ LUX = (function () {
         "";
     } else if (_getMark(gEndMark)) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
-      var end = Math.round(_getMark(gEndMark).startTime);
+      const end = Math.round(_getMark(gEndMark).startTime);
       s =
         ns +
         "fs" +
@@ -1350,8 +1350,8 @@ LUX = (function () {
         querystring += "&UT=" + sUT;
       } else {
         // Only add a substring of User Timing
-        var avail = gMaxQuerystring - curLen; // how much room is left in the querystring
-        var iComma = sUT.lastIndexOf(",", avail); // as many UT tuples as possible
+        const avail = gMaxQuerystring - curLen; // how much room is left in the querystring
+        const iComma = sUT.lastIndexOf(",", avail); // as many UT tuples as possible
         querystring += "&UT=" + sUT.substring(0, iComma);
         sUT_remainder = sUT.substring(iComma + 1);
       }
@@ -1368,7 +1368,7 @@ LUX = (function () {
     gbIxSent = sIx;
 
     // Send other beacons for JUST User Timing.
-    var avail = gMaxQuerystring - baseUrl.length;
+    const avail = gMaxQuerystring - baseUrl.length;
     while (sUT_remainder) {
       var sUT_cur = "";
       if (sUT_remainder.length <= avail) {
