@@ -9,10 +9,10 @@ describe("LUX SPA", () => {
 
   test("sending a LUX beacon only when LUX.send is called", async () => {
     await navigateTo("http://localhost:3000/auto-false.html");
-    expect(luxRequests.count()).toBe(0);
+    expect(luxRequests.count()).toEqual(0);
 
     await page.evaluate("LUX.send()");
-    expect(luxRequests.count()).toBe(1);
+    expect(luxRequests.count()).toEqual(1);
   });
 
   test("load time value for the first pages is the time between navigationStart and loadEventStart", async () => {
@@ -25,8 +25,8 @@ describe("LUX SPA", () => {
     const pageLoadEventStart = await getPerformanceTimingMs(page, "loadEventStart");
     const pageLoadEventEnd = await getPerformanceTimingMs(page, "loadEventEnd");
 
-    expect(luxLoadEventStart).toBe(pageLoadEventStart);
-    expect(luxLoadEventEnd).toBe(pageLoadEventEnd);
+    expect(luxLoadEventStart).toEqual(pageLoadEventStart);
+    expect(luxLoadEventEnd).toEqual(pageLoadEventEnd);
   });
 
   test("load time value for subsequent pages is the time between LUX.init() and LUX.send()", async () => {

@@ -8,13 +8,13 @@ describe("LUX interaction", () => {
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
 
-    expect(luxRequests.count()).toBe(2);
+    expect(luxRequests.count()).toEqual(2);
 
     // Click time
     expect(parseInt(ixMetrics.c, 10)).toBeGreaterThan(1);
 
     // Click attribution
-    expect(ixMetrics.ci).toBe("content");
+    expect(ixMetrics.ci).toEqual("content");
 
     // Click coordinates
     expect(parseInt(ixMetrics.cx, 10)).toBeGreaterThan(1);

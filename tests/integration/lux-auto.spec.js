@@ -6,13 +6,13 @@ describe("LUX auto", () => {
   });
 
   test("LUX beacon is automatically sent", () => {
-    expect(luxRequests.count()).toBe(1);
+    expect(luxRequests.count()).toEqual(1);
   });
 
   test("document title is used as the default page label", () => {
     const beacon = luxRequests.getUrl(0);
 
-    expect(beacon.searchParams.get("l")).toBe("LUX Auto Test");
+    expect(beacon.searchParams.get("l")).toEqual("LUX Auto Test");
   });
 
   test("basic page metrics are sent", () => {

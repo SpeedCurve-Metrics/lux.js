@@ -8,14 +8,14 @@ describe("LUX SPA page labels", () => {
     await page.evaluate("LUX.send()");
 
     beacon = luxRequests.getUrl(0);
-    expect(beacon.searchParams.get("l")).toBe("First Label");
+    expect(beacon.searchParams.get("l")).toEqual("First Label");
 
     await page.evaluate("LUX.init()");
     await page.evaluate("LUX.label = 'Second Label'");
     await page.evaluate("LUX.send()");
 
     beacon = luxRequests.getUrl(1);
-    expect(beacon.searchParams.get("l")).toBe("Second Label");
+    expect(beacon.searchParams.get("l")).toEqual("Second Label");
   });
 
   test("default page label changes when document.title changes", async () => {
@@ -26,13 +26,13 @@ describe("LUX SPA page labels", () => {
     await page.evaluate("LUX.send()");
 
     beacon = luxRequests.getUrl(0);
-    expect(beacon.searchParams.get("l")).toBe("LUX SPA Test");
+    expect(beacon.searchParams.get("l")).toEqual("LUX SPA Test");
 
     await page.evaluate("LUX.init()");
     await page.evaluate("document.title = 'New Document Title'");
     await page.evaluate("LUX.send()");
 
     beacon = luxRequests.getUrl(1);
-    expect(beacon.searchParams.get("l")).toBe("New Document Title");
+    expect(beacon.searchParams.get("l")).toEqual("New Document Title");
   });
 });

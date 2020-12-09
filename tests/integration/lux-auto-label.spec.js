@@ -4,6 +4,6 @@ describe("LUX auto with custom label", () => {
     const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
     const beacon = luxRequests.getUrl(0);
 
-    expect(beacon.searchParams.get("l")).toBe("Custom Label");
+    expect(beacon.searchParams.get("l")).toEqual("Custom Label");
   });
 });

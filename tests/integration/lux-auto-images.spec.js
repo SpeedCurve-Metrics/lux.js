@@ -10,7 +10,7 @@ describe("LUX auto images", () => {
     const totalImages = extractCondensedValue(pageStats, "it");
     const imagesAboveFold = extractCondensedValue(pageStats, "ia");
 
-    expect(totalImages).toBe(3);
-    expect(imagesAboveFold).toBe(2);
+    expect(totalImages).toEqual(3);
+    expect(imagesAboveFold).toEqual(2);
   });
 });

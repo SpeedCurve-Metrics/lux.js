@@ -7,7 +7,7 @@ describe("LUX CPU timing", () => {
     const beacon = luxRequests.getUrl(0);
     const cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
-    expect(parseInt(cpuMetrics.n, 10)).toBe(1);
+    expect(parseInt(cpuMetrics.n, 10)).toEqual(1);
     expect(parseInt(cpuMetrics.s, 10)).toBeGreaterThan(49);
 
     // The test page should have one long task, so the median should equal the total
@@ -23,7 +23,7 @@ describe("LUX CPU timing", () => {
     const beacon = luxRequests.getUrl(0);
     const cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
-    expect(parseInt(cpuMetrics.n, 10)).toBe(1);
+    expect(parseInt(cpuMetrics.n, 10)).toEqual(1);
     expect(parseInt(cpuMetrics.s, 10)).toBeGreaterThan(49);
 
     // The test page should have one long task, so the median should equal the total
