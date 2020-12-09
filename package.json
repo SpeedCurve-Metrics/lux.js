@@ -1,7 +1,9 @@
 {
   "name": "lux.js",
   "scripts": {
-    "build": "mkdir -p dist && terser --mangle --compress --output dist/lux.min.js src/lux.js",
+    "build": "mkdir -p dist && npm run compile-src && npm run minify",
+    "compile-src": "tsc --allowJs --outFile dist/lux.js src/lux.js",
+    "minify": "terser --mangle --compress --output dist/lux.min.js dist/lux.js",
     "jest": "jest",
     "jest-watch": "jest --watch",
     "prettier": "prettier --write 'src/**/*.js' 'tests/**/*.js'",
@@ -16,7 +18,8 @@
     "prettier": "^2.2.1",
     "puppeteer": "^5.5.0",
     "rimraf": "^3.0.2",
-    "terser": "^5.5.1"
+    "terser": "^5.5.1",
+    "typescript": "^4.1.2"
   },
   "prettier": {
     "printWidth": 100
