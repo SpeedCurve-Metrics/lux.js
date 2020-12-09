@@ -1483,10 +1483,16 @@ LUX = (function () {
     }
   }
 
-  // Wrapper for fetching a URL.
   function _sendBeacon(url) {
-    // Use a script instead of an image so we can return self-updating code.
-    //new Image().src = url;
+    if (LUX.beaconMode !== "simple") {
+      return _sendBeaconAutoUpdate(url);
+    }
+
+    new Image().src = url;
+  }
+
+  // Send a beacon that will also trigger the self-updating mechanism
+  function _sendBeaconAutoUpdate(url) {
     var s1 = document.createElement("script");
     s1.async = true;
     s1.src = url;
