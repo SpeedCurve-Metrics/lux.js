@@ -360,86 +360,56 @@ LUX = (function () {
     return gaMeasures;
   }
 
-  // _clearMarks()
-  function _clearMarks(name) {
-    if (perf && perf.clearMarks) {
-      return perf.clearMarks(name);
-    }
-
-    if (name) {
-      // only remove the mark(s) with this label
-      // do it back to front because the array changes in place
-      for (var i = gaMarks.length - 1; i >= 0; i--) {
-        if (name === gaMarks[i].name) {
-          gaMarks.splice(i, 1);
-        }
-      }
-    } else {
-      gaMarks = [];
-    }
-
-    return;
-  }
-
-  // _clearMeasures()
-  function _clearMeasures(name) {
-    if (perf && perf.clearMeasures) {
-      return perf.clearMeasures(name);
-    }
-
-    if (name) {
-      // only remove the measure(s) with this label
-      // do it back to front because the array changes in place
-      for (var i = gaMeasures.length - 1; i >= 0; i--) {
-        if (name === gaMeasures[i].name) {
-          gaMeasures.splice(i, 1);
-        }
-      }
-    } else {
-      gaMeasures = [];
-    }
-
-    return;
-  }
-
   // Return a string of User Timing Metrics formatted for beacon querystring.
   function userTimingValues() {
     // The User Timing spec allows for there to be multiple marks with the same name,
     // and multiple measures with the same name. But we can only send back one value
     // for a name, so we always take the MAX value. We do this by first creating a
     // hash that has the max value for each name.
-    var hUT = {};
+    const hUT = {};
+    const startMark = _getMark(gStartMark);
 
     // marks
-    var aMarks = _getMarks();
+    const aMarks = _getMarks();
     if (aMarks) {
       aMarks.forEach(function (m) {
+        const name = m.name;
+
         // For user timing values taken in a SPA page load, we need to adjust them
         // so that they're zeroed against the last LUX.init() call. We zero every
         // UT value except for the internal LUX start mark.
-        var startMark = _getMark(gStartMark);
-        var tZero = name !== gStartMark && startMark ? startMark.startTime : 0;
+        const tZero = name !== gStartMark && startMark ? startMark.startTime : 0;
+        const markTime = Math.round(m.startTime - tZero);
 
-        var name = m.name,
-          t = Math.round(m.startTime - tZero);
-        if ("undefined" === typeof hUT[name]) {
-          hUT[name] = t;
+        if (markTime < 0) {
+          // Exclude marks that were taken before the current SPA page view
+          return;
+        }
+
+        if (typeof hUT[name] === "undefined") {
+          hUT[name] = markTime;
         } else {
-          hUT[name] = Math.max(t, hUT[name]);
+          hUT[name] = Math.max(markTime, hUT[name]);
         }
       });
     }
 
     // measures
-    var aMeasures = _getMeasures();
+    const aMeasures = _getMeasures();
     if (aMeasures) {
       aMeasures.forEach(function (m) {
-        var name = m.name,
-          t = Math.round(m.duration);
-        if ("undefined" === typeof hUT[name]) {
-          hUT[name] = t;
+        if (startMark && m.startTime < startMark.startTime) {
+          // Exclude measures that were taken before the current SPA page view
+          return;
+        }
+
+        const name = m.name;
+        const measureTime = Math.round(m.duration);
+
+        if (typeof hUT[name] === "undefined") {
+          hUT[name] = measureTime;
         } else {
-          hUT[name] = Math.max(t, hUT[name]);
+          hUT[name] = Math.max(measureTime, hUT[name]);
         }
       });
     }
@@ -447,14 +417,12 @@ LUX = (function () {
     // OK. hUT is now a hash (associative array) whose keys are the names of the
     // marks & measures, and the value is the max value. Here we create a tuple
     // for each name|value pair and then join them.
-    var aUT = [];
-    var aNames = Object.keys(hUT);
-    if (aNames) {
-      for (var i = 0, len = aNames.length; i < len; i++) {
-        var name = aNames[i];
-        aUT.push(name + "|" + hUT[name]);
-      }
-    }
+    const aUT = [];
+    const aNames = Object.keys(hUT);
+
+    aNames.forEach(function (name) {
+      aUT.push(name + "|" + hUT[name]);
+    });
 
     return aUT.join(",");
   }
@@ -746,9 +714,7 @@ LUX = (function () {
   function _init() {
     dlog("Enter LUX.init().");
 
-    // Clear all marks, measures & interactions from the previous "page".
-    _clearMarks();
-    _clearMeasures();
+    // Clear all interactions from the previous "page".
     _clearIx();
 
     // Since we actively disable IX handlers, we re-add them each time.

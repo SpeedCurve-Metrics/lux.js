@@ -43,4 +43,39 @@ describe("LUX SPA user timing", () => {
     expect(parseInt(userTiming["test-mark"])).toBeGreaterThanOrEqual(100);
     expect(parseInt(userTiming["test-mark"])).toBeLessThan(120);
   });
+
+  test("global state is not affected by LUX", async () => {
+    await navigateTo("http://localhost:3000/auto-false.html");
+
+    await page.evaluate("performance.mark('my-mark')");
+    await page.evaluate("performance.measure('my-measure', 'my-mark')");
+    await page.evaluate("LUX.send()");
+    await page.evaluate("LUX.init()");
+    await page.evaluate("LUX.send()");
+
+    expect(await page.evaluate("performance.getEntriesByName('my-mark').length")).toEqual(1);
+    expect(await page.evaluate("performance.getEntriesByName('my-measure').length")).toEqual(1);
+  });
+
+  test("user timing marks and measures from previous beacons are not included", async () => {
+    await navigateTo("http://localhost:3000/auto-false.html");
+
+    await page.evaluate("performance.mark('first-test-mark')");
+    await page.evaluate("performance.measure('first-test-measure', 'first-test-mark')");
+    await page.evaluate("LUX.send()");
+    await page.evaluate("LUX.init()");
+    await page.evaluate("performance.mark('second-test-mark')");
+    await page.evaluate("performance.measure('second-test-measure', 'second-test-mark')");
+    await page.evaluate("LUX.send()");
+
+    const firstUserTiming = parseNestedPairs(luxRequests.getUrl(0).searchParams.get("UT"));
+    expect(firstUserTiming).toHaveProperty("first-test-mark");
+    expect(firstUserTiming).toHaveProperty("first-test-measure");
+
+    const secondUserTiming = parseNestedPairs(luxRequests.getUrl(1).searchParams.get("UT"));
+    expect(secondUserTiming).not.toHaveProperty("first-test-mark");
+    expect(secondUserTiming).not.toHaveProperty("first-test-measure");
+    expect(secondUserTiming).toHaveProperty("second-test-mark");
+    expect(secondUserTiming).toHaveProperty("second-test-measure");
+  });
 });
