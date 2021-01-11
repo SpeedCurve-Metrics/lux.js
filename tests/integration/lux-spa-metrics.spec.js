@@ -34,7 +34,7 @@ describe("LUX SPA", () => {
     await page.evaluate("LUX.send()");
 
     await page.evaluate("LUX.init()");
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(20);
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(1);
@@ -42,11 +42,11 @@ describe("LUX SPA", () => {
     const loadEventStart = extractCondensedValue(navigationTiming, "ls");
     const loadEventEnd = extractCondensedValue(navigationTiming, "le");
 
-    // We waited 100ms between LUX.init() and LUX.start(), so the load time should
-    // be at least 100ms. 120ms is an arbitrary upper limit to make sure we're not
+    // We waited 20ms between LUX.init() and LUX.start(), so the load time should
+    // be at least 20ms. 30ms is an arbitrary upper limit to make sure we're not
     // over-reporting load time.
-    expect(loadEventStart).toBeGreaterThanOrEqual(100);
-    expect(loadEventStart).toBeLessThan(120);
+    expect(loadEventStart).toBeGreaterThanOrEqual(20);
+    expect(loadEventStart).toBeLessThan(30);
     expect(loadEventStart).toEqual(loadEventEnd);
   });
 });

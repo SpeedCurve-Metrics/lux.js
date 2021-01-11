@@ -21,7 +21,6 @@ describe("LUX SPA CPU metrics", () => {
 
     // Initiate a second page view with no long tasks
     await page.evaluate("LUX.init()");
-    await page.waitForTimeout(100);
     await page.evaluate("LUX.send()");
 
     beacon = luxRequests.getUrl(1);
