@@ -92,6 +92,8 @@ describe("LUX SPA user timing", () => {
     const firstUserTiming = parseNestedPairs(luxRequests.getUrl(0).searchParams.get("UT"));
     expect(firstUserTiming).toHaveProperty("first-test-mark");
     expect(firstUserTiming).toHaveProperty("first-test-measure");
+    expect(firstUserTiming).not.toHaveProperty("second-test-mark");
+    expect(firstUserTiming).not.toHaveProperty("second-test-measure");
 
     const secondUserTiming = parseNestedPairs(luxRequests.getUrl(1).searchParams.get("UT"));
     expect(secondUserTiming).not.toHaveProperty("first-test-mark");
