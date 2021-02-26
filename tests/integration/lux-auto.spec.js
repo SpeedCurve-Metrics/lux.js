@@ -9,6 +9,12 @@ describe("LUX auto", () => {
     expect(luxRequests.count()).toEqual(1);
   });
 
+  test("customer ID is detected correctly", () => {
+    const beacon = luxRequests.getUrl(0);
+
+    expect(beacon.searchParams.get("id")).toEqual("10001");
+  });
+
   test("document title is used as the default page label", () => {
     const beacon = luxRequests.getUrl(0);
 
