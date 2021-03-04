@@ -1,7 +1,7 @@
 const { extractCondensedValue, getPerformanceTimingMs } = require("../helpers/lux");
 
 describe("LUX SPA", () => {
-  const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+  const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
   beforeEach(() => {
     luxRequests.reset();

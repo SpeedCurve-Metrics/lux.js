@@ -1,5 +1,5 @@
 describe("LUX auto", () => {
-  const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+  const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
   beforeAll(async () => {
     await navigateTo("http://localhost:3000/default.html");

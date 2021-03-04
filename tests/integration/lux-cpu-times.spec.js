@@ -3,7 +3,7 @@ const { parseNestedPairs } = require("../helpers/lux");
 describe("LUX CPU timing", () => {
   test("detect and report long tasks on the page", async () => {
     await navigateTo("http://localhost:3000/default-with-cpu.html");
-    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const beacon = luxRequests.getUrl(0);
     const cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
@@ -19,7 +19,7 @@ describe("LUX CPU timing", () => {
 
   test("detect and report long tasks that occured before the lux.js script", async () => {
     await navigateTo("http://localhost:3000/no-inline-snippet-with-cpu.html");
-    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const beacon = luxRequests.getUrl(0);
     const cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 

@@ -1,7 +1,7 @@
 describe("LUX SPA page labels", () => {
   test("page label can be changed between SPA page loads", async () => {
     let beacon;
-    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
     await navigateTo("http://localhost:3000/auto-false.html");
     await page.evaluate("LUX.label = 'First Label'");
@@ -20,7 +20,7 @@ describe("LUX SPA page labels", () => {
 
   test("default page label changes when document.title changes", async () => {
     let beacon;
-    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
     await navigateTo("http://localhost:3000/auto-false.html");
     await page.evaluate("LUX.send()");
