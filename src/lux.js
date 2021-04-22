@@ -87,10 +87,13 @@ LUX = (function () {
   }
 
   var gFlags = 0; // bitmask of flags for this session & page
-  var gFlag_InitCalled = 1; // the init function was called (this is probably a SPA page view) - next will be 2,4,8,etc. up to 31 bits
-  var gFlag_NoNavTiming = 2;
-  var gFlag_NoUserTiming = 4;
-  var gFlag_NotVisible = 8;
+  const gFlag_InitCalled = 1; // the init function was called (this is probably a SPA page view)
+  const gFlag_NoNavTiming = 2;
+  const gFlag_NoUserTiming = 4;
+  const gFlag_NotVisible = 8;
+  const gFlag_UnloadBeacon = 16; // The beacon was sent from the unload handler
+  const gFlag_TimeoutBeacon = 32; // The beacon was sent after the maximum wait time
+
   // array of marks where each element is a hash
   var gaMarks = typeof LUX.gaMarks !== "undefined" ? LUX.gaMarks : [];
   // array of measures where each element is a hash
@@ -123,7 +126,9 @@ LUX = (function () {
         ? "This session IS being sampled."
         : "This session is NOT being sampled. The data will NOT show up in your LUX dashboards. Call LUX.forceSample() and try again.")
   );
-  var _auto = typeof LUX.auto !== "undefined" ? LUX.auto : true;
+  const _auto = typeof LUX.auto !== "undefined" ? LUX.auto : true;
+  const _autoOnHidden = LUX.measureUntil === "pagehidden";
+  const _afterOnloadTimeout = LUX.maxTimeAfterOnload || 0;
 
   // Get a timestamp as close to navigationStart as possible.
   var _navigationStart = LUX.ns ? LUX.ns : Date.now ? Date.now() : +new Date(); // create a _navigationStart
@@ -1652,21 +1657,43 @@ LUX = (function () {
   }
 
   // Wrapper to support older browsers (<= IE8)
-  function addListener(eventName, callback) {
+  function addListener(eventName, callback, useCapture) {
     if (window.addEventListener) {
-      window.addEventListener(eventName, callback, false);
+      window.addEventListener(eventName, callback, useCapture || false);
     } else if (window.attachEvent) {
       window.attachEvent("on" + eventName, callback);
     }
   }
 
   // Wrapper to support older browsers (<= IE8)
-  function removeListener(eventName, callback) {
+  function removeListener(eventName, callback, useCapture) {
     if (window.removeEventListener) {
-      window.removeEventListener(eventName, callback, false);
+      window.removeEventListener(eventName, callback, useCapture || false);
     } else if (window.detachEvent) {
       window.detachEvent("on" + eventName, callback);
     }
+  }
+
+  function _addUnloadHandlers() {
+    const onunload = () => {
+      gFlags = gFlags | gFlag_UnloadBeacon;
+      _sendLux();
+      _sendIx();
+    };
+
+    const onHiddenOrPageHide = (event) => {
+      if (event.type === "pagehide" || document.visibilityState === "hidden") {
+        onunload();
+      }
+    };
+
+    // As well as visibilitychange, we also listen for pagehide. This is really
+    // only for browsers with buggy visibilitychange implementations. For really
+    // old browsers that don't support pagehide, we use unload.
+    const terminationEvent = "onpagehide" in self ? "pagehide" : "unload";
+
+    addListener(terminationEvent, onHiddenOrPageHide, true);
+    addListener("visibilitychange", onHiddenOrPageHide, true);
   }
 
   function _addIxHandlers() {
@@ -1814,16 +1841,11 @@ LUX = (function () {
         setTimeout(_sendLux, 200);
       });
     }
+  }
 
-    // Send beacons in the UNLOAD handlers because the browser can UNLOAD before ONLOAD is called,
-    // so this is our safety net to try to get some kind of beacon sent.
-    // Set both unload and beforeunload in case one is not supported.
-    addListener("beforeunload", _sendLux);
-    addListener("unload", _sendLux);
-    // If IX was already sent as part of sendLux, it will NOT get sent twice.
-    // So it is okay to also add unload handlers for _sendIx:
-    addListener("beforeunload", _sendIx);
-    addListener("unload", _sendIx);
+  // Add the unload handlers for auto mode, or when LUX.sendBeaconAfter is "pagehidden"
+  if (_auto || _autoOnHidden) {
+    _addUnloadHandlers();
   }
 
   // Regardless of _auto, we need to register the IX handlers immediately.
