@@ -34,8 +34,5 @@ exports.getPerformanceTimingMs = async function (page, metric) {
  * Gets the current time as milliseconds since navigation start
  */
 exports.getElapsedMs = async function (page) {
-  const navigationStart = await page.evaluate("performance.timing.navigationStart");
-  const now = await page.evaluate("Date.now()");
-
-  return now - navigationStart;
+  return await page.evaluate("Math.round(performance.now())");
 };
