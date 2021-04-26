@@ -33,7 +33,7 @@ const server = createServer((req, res) => {
       }
     });
   } else if (pathname == "/beacon/") {
-    console.log(req.headers.accept)
+    console.log(req.headers.accept);
     res.writeHead(200, { "content-type": "application/javascript" });
     res.end(`/* Beacon received at ${new Date()} */`);
   } else {
