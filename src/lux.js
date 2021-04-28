@@ -1,6 +1,3 @@
-// Instead of polyfill'ing window.performance, we create an API under the LUX namespace.
-// We don't want to polyfill unless we're going to implement the entire performance API,
-// or it confuses other people's code that checks for feature support.
 var LUX_t_start = Date.now();
 
 var LUX = window.LUX || {};
