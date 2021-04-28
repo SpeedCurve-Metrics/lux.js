@@ -1335,7 +1335,7 @@ LUX = (function () {
     // Set some states.
     gbLuxSent = 1;
     gbNavSent = 1;
-    gbIxSent = sIx;
+    gbIxSent = sIx ? 1 : 0;
 
     // Send other beacons for JUST User Timing.
     const avail = gMaxQuerystring - baseUrl.length;
