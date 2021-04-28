@@ -12,20 +12,20 @@ describe("LUX SPA user timing", () => {
 
     const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate("performance.mark('test-mark')");
-    await page.waitForTimeout(20);
+    await page.waitForTimeout(30);
     await page.evaluate("performance.measure('test-measure', 'test-mark')");
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
     const userTiming = parseNestedPairs(beacon.searchParams.get("UT"));
 
-    // The mark and measure values will vary from test to test, so there is ~5ms margin of error.
+    // The mark and measure values will vary from test to test, so there is ~10ms margin of error.
     // To test the mark, we get the current timestamp just before creating the mark. To test the
-    // measure, we wait 20ms between the mark and measure, which should make the measure ~20ms.
+    // measure, we wait 30ms between the mark and measure, which should make the measure ~30ms.
     expect(parseInt(userTiming["test-mark"])).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(parseInt(userTiming["test-mark"])).toBeLessThan(timeBeforeMark + 5);
-    expect(parseInt(userTiming["test-measure"])).toBeGreaterThanOrEqual(20);
-    expect(parseInt(userTiming["test-measure"])).toBeLessThan(30);
+    expect(parseInt(userTiming["test-mark"])).toBeLessThan(timeBeforeMark + 10);
+    expect(parseInt(userTiming["test-measure"])).toBeGreaterThanOrEqual(30);
+    expect(parseInt(userTiming["test-measure"])).toBeLessThan(40);
   });
 
   test("LUX.mark and LUX.measure work the same as performance.mark and performance.measure", async () => {
@@ -33,20 +33,20 @@ describe("LUX SPA user timing", () => {
 
     const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate("LUX.mark('test-mark')");
-    await page.waitForTimeout(20);
+    await page.waitForTimeout(30);
     await page.evaluate("LUX.measure('test-measure', 'test-mark')");
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
     const userTiming = parseNestedPairs(beacon.searchParams.get("UT"));
 
-    // The mark and measure values will vary from test to test, so there is ~5ms margin of error.
+    // The mark and measure values will vary from test to test, so there is ~10ms margin of error.
     // To test the mark, we get the current timestamp just before creating the mark. To test the
-    // measure, we wait 20ms between the mark and measure, which should make the measure ~20ms.
+    // measure, we wait 30ms between the mark and measure, which should make the measure ~30ms.
     expect(parseInt(userTiming["test-mark"])).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(parseInt(userTiming["test-mark"])).toBeLessThan(timeBeforeMark + 5);
-    expect(parseInt(userTiming["test-measure"])).toBeGreaterThanOrEqual(20);
-    expect(parseInt(userTiming["test-measure"])).toBeLessThan(30);
+    expect(parseInt(userTiming["test-mark"])).toBeLessThan(timeBeforeMark + 10);
+    expect(parseInt(userTiming["test-measure"])).toBeGreaterThanOrEqual(30);
+    expect(parseInt(userTiming["test-measure"])).toBeLessThan(40);
   });
 
   test("user timing marks are relative to the previous LUX.init call", async () => {
@@ -54,15 +54,15 @@ describe("LUX SPA user timing", () => {
 
     await page.evaluate("LUX.send()");
     await page.evaluate("LUX.init()");
-    await page.waitForTimeout(20);
+    await page.waitForTimeout(30);
     await page.evaluate("performance.mark('test-mark')");
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(1);
     const userTiming = parseNestedPairs(beacon.searchParams.get("UT"));
 
-    expect(parseInt(userTiming["test-mark"])).toBeGreaterThanOrEqual(20);
-    expect(parseInt(userTiming["test-mark"])).toBeLessThan(30);
+    expect(parseInt(userTiming["test-mark"])).toBeGreaterThanOrEqual(30);
+    expect(parseInt(userTiming["test-mark"])).toBeLessThan(40);
   });
 
   test("global state is not affected by LUX", async () => {
