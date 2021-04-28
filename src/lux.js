@@ -195,7 +195,7 @@ LUX = (function () {
     }
 
     if (bCancelable) {
-      var now = _now();
+      var now = _now(true);
       var eventTimeStamp = evt.timeStamp;
 
       if (eventTimeStamp > 1520000000) {
@@ -226,14 +226,33 @@ LUX = (function () {
   });
   ////////////////////// FID END
 
-  // now() returns the number of ms since navigationStart.
-  function _now() {
+  /**
+   * Returns the time elapsed (in ms) since navigationStart. For SPAs, returns
+   * the time elapsed since the last LUX.init call.
+   *
+   * When `absolute = true` the time is always relative to navigationStart, even
+   * in SPAs.
+   *
+   * @param {Boolean} absolute
+   * @returns
+   */
+  function _now(absolute) {
+    const currentTimestamp = Date.now ? Date.now() : +new Date();
+    const msSinceNavigationStart = currentTimestamp - _navigationStart;
+    const startMark = _getMark(gStartMark);
+
+    // For SPA page views, we use our internal mark as a reference point
+    if (startMark && !absolute) {
+      return msSinceNavigationStart - startMark.startTime;
+    }
+
+    // For "regular" page views, we can use performance.now() if it's available...
     if (perf && perf.now) {
       return perf.now();
     }
 
-    var n = Date.now ? Date.now() : +new Date();
-    return n - _navigationStart;
+    // ... or we can use navigationStart as a reference point
+    return msSinceNavigationStart;
   }
 
   // set a mark
