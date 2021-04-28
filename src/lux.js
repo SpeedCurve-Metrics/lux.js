@@ -1510,37 +1510,57 @@ LUX = (function () {
   // Most of the time, however, IX happens *after* LUX, so we send a separate IX beacon but
   // only beacon back the first interaction that happens.
 
-  // Give a start element, return the first ancestor that has an ID AND the data-sctrack property.
-  // If not found, return the first ancestor that has an ID.
-  //   firstId - the first ID found crawling ancestors
-  //   bAttrFound - true if an ancestor was found with the data-sctrack attribute
-  function _findTrackedElement(elem, firstId, bAttrFound) {
-    if (!elem || !elem.hasAttribute) {
-      // No more ancestors. Return whatever we got. Might be undefined.
-      return firstId;
+  /**
+   * Get the interaction attribution name for an element
+   *
+   * @param {HTMLElement} el
+   * @returns string
+   */
+  function interactionAttributionForElement(el) {
+    // Default to using the element's own ID if it has one
+    if (el.id) {
+      return el.id;
     }
 
-    if (elem.hasAttribute("data-sctrack")) {
-      // Set the attribute flag.
-      bAttrFound = true;
-      if (elem.id) {
-        // This MUST be the first time we have the attribute *AND* an ID,
-        // so override any previous IDs (where the attribute had not yet been found).
-        firstId = elem.id;
+    // The next preference is to find an ancestor with the "data-sctrack" attribute
+    let ancestor = el;
+
+    // We also store the first ancestor ID that we find, so we can use it as
+    // a fallback later.
+    let ancestorId;
+
+    while (ancestor.parentNode && ancestor.parentNode.tagName) {
+      ancestor = ancestor.parentNode;
+
+      if (ancestor.hasAttribute("data-sctrack")) {
+        return ancestor.getAttribute("data-sctrack");
+      }
+
+      if (ancestor.id && !ancestorId) {
+        ancestorId = ancestor.id;
       }
     }
 
-    if (!firstId && elem.id) {
-      // If we've never found an ID, use this as the first one.
-      firstId = elem.id;
+    // The next preference is to use the text content of a button or link
+    const isSubmitInput = el.tagName === "INPUT" && el.type === "submit";
+    const isButton = el.tagName === "BUTTON";
+    const isLink = el.tagName === "A";
+
+    if (isSubmitInput && el.value) {
+      return el.value;
     }
 
-    if (bAttrFound && firstId) {
-      // If we've found both, return
-      return firstId;
+    if ((isButton || isLink) && el.innerText) {
+      return el.innerText;
     }
 
-    return _findTrackedElement(elem.parentNode, firstId, bAttrFound);
+    // The next preference is to use the first ancestor ID
+    if (ancestorId) {
+      return ancestorId;
+    }
+
+    // No suitable attribute was found
+    return "";
   }
 
   function _scrollHandler() {
@@ -1558,7 +1578,7 @@ LUX = (function () {
       ghIx["k"] = Math.round(_now());
 
       if (e && e.target) {
-        var trackId = _findTrackedElement(e.target);
+        var trackId = interactionAttributionForElement(e.target);
         if (trackId) {
           ghIx["ki"] = trackId;
         }
@@ -1589,7 +1609,7 @@ LUX = (function () {
           ghIx["cx"] = e.clientX;
           ghIx["cy"] = e.clientY;
         }
-        var trackId = _findTrackedElement(e.target);
+        var trackId = interactionAttributionForElement(e.target);
         if (trackId) {
           ghIx["ci"] = trackId;
         }
