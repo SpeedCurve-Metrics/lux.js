@@ -17,7 +17,7 @@ describe("LUX CPU timing", () => {
     expect(cpuMetrics.x).toEqual(cpuMetrics.s);
   });
 
-  test("detect and report long tasks that occured before the lux.js script", async () => {
+  test.skip("detect and report long tasks that occured before the lux.js script", async () => {
     await navigateTo("http://localhost:3000/no-inline-snippet-with-cpu.html");
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const beacon = luxRequests.getUrl(0);
