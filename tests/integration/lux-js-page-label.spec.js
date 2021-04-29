@@ -1,5 +1,5 @@
 describe("LUX JS page label", () => {
-  const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+  const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
   beforeEach(async () => {
     luxRequests.reset();

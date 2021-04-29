@@ -10,6 +10,11 @@ class CustomEnvironment extends PuppeteerEnvironment {
     console.log(`Running tests in ${browserVersion}`);
 
     this.global.page.setCacheEnabled(false);
+
+    this.global.page.on("pageerror", (error) => {
+      console.error("[PAGE ERROR]", error);
+    });
+
     this.global.page.on("console", (msg) => {
       const type = msg.type();
 

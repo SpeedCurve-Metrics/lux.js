@@ -15,11 +15,15 @@ module.exports = class RequestMatcher {
   }
 
   get(index) {
+    if (typeof this.requests[index] === "undefined") {
+      throw new Error(`Request at index ${index} does not exist`);
+    }
+
     return this.requests[index];
   }
 
   getUrl(index) {
-    return new URL(this.requests[index].url());
+    return new URL(this.get(index).url());
   }
 
   count() {

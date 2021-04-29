@@ -3,7 +3,7 @@ const { extractCondensedValue } = require("../helpers/lux");
 describe("LUX auto images", () => {
   test("calculating the number of images on the page", async () => {
     await navigateTo("http://localhost:3000/default-with-images.html");
-    const luxRequests = requestInterceptor.createRequestMatcher("https://lux.speedcurve.com/lux/");
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const beacon = luxRequests.getUrl(0);
 
     const pageStats = beacon.searchParams.get("PS");

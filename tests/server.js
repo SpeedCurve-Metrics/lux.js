@@ -3,11 +3,13 @@ const readFile = require("fs").readFile;
 const path = require("path");
 const url = require("url");
 
+const SERVER_PORT = 3000;
+
 const server = createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
 
-  let filePath = path.join(__dirname, "test-pages", pathname);
+  const filePath = path.join(__dirname, "test-pages", pathname);
   let contentType = "text/html";
 
   if (pathname.substr(-3) === ".js") {
@@ -15,24 +17,36 @@ const server = createServer((req, res) => {
   }
 
   if (pathname === "/js/lux.js") {
-    filePath = path.join(__dirname, "..", "dist", "lux.min.js");
-  }
+    readFile(path.join(__dirname, "..", "dist", "lux.min.js"), (err, contents) => {
+      if (err) {
+        res.writeHead(404);
+        res.end("Not Found");
+      } else {
+        let preamble = `LUX=LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';`;
 
-  readFile(filePath, (err, contents) => {
-    if (err) {
-      res.writeHead(404);
-      res.end("Not Found");
-    } else {
-      if (parsedUrl.query.jspagelabel) {
-        contents = `LUX=LUX||{};LUX.jspagelabel=${JSON.stringify(
-          parsedUrl.query.jspagelabel
-        )};${contents}`;
+        if (parsedUrl.query.jspagelabel) {
+          preamble += `LUX.jspagelabel=${JSON.stringify(parsedUrl.query.jspagelabel)};`;
+        }
+
+        res.writeHead(200, { "content-type": contentType });
+        res.end(preamble + contents);
       }
-
-      res.writeHead(200, { "content-type": contentType });
-      res.end(contents);
-    }
-  });
+    });
+  } else if (pathname == "/beacon/") {
+    console.log(req.headers.accept);
+    res.writeHead(200, { "content-type": "application/javascript" });
+    res.end(`/* Beacon received at ${new Date()} */`);
+  } else {
+    readFile(filePath, (err, contents) => {
+      if (err) {
+        res.writeHead(404);
+        res.end("Not Found");
+      } else {
+        res.writeHead(200, { "content-type": contentType });
+        res.end(contents);
+      }
+    });
+  }
 });
 
-server.listen(3000);
+server.listen(SERVER_PORT);

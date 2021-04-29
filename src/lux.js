@@ -1,6 +1,3 @@
-// Instead of polyfill'ing window.performance, we create an API under the LUX namespace.
-// We don't want to polyfill unless we're going to implement the entire performance API,
-// or it confuses other people's code that checks for feature support.
 var LUX_t_start = Date.now();
 
 var LUX = window.LUX || {};
@@ -10,7 +7,7 @@ LUX = (function () {
 
   dlog("lux.js evaluation start.");
 
-  var version = "211"; // version of this JS code
+  var version = "213";
 
   // Log JS errors.
   var _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
@@ -54,17 +51,24 @@ LUX = (function () {
   // Note: This code was later added to the LUX snippet. In the snippet we ONLY collect
   //       Long Task entries because that is the only entry type that can not be buffered.
   //       We _copy_ any Long Tasks collected by the snippet and ignore it after that.
-  var gaPerfEntries = "object" === typeof window.LUX_al ? window.LUX_al.slice() : []; // array of Long Tasks (prefer the array from the snippet)
+  var gaSnippetLongTasks = typeof window.LUX_al === "object" ? window.LUX_al : [];
+  var gaPerfEntries = gaSnippetLongTasks.slice(); // array of Long Tasks (prefer the array from the snippet)
   if ("function" === typeof PerformanceObserver) {
     var perfObserver = new PerformanceObserver(function (list) {
       // Keep an array of perf objects to process later.
       list.getEntries().forEach(function (entry) {
-        gaPerfEntries.push(entry);
+        // Only record long tasks that weren't already recorded by the PerformanceObserver in the snippet
+        if (
+          gaSnippetLongTasks.length === 0 ||
+          (entry.entryType === "longtask" && gaPerfEntries.indexOf(entry) === -1)
+        ) {
+          gaPerfEntries.push(entry);
+        }
       });
     });
     try {
       if ("function" === typeof PerformanceLongTaskTiming) {
-        perfObserver.observe({ type: "longtask" });
+        perfObserver.observe({ type: "longtask", buffered: true });
       }
       if ("function" === typeof LargestContentfulPaint) {
         perfObserver.observe({ type: "largest-contentful-paint", buffered: true });
@@ -191,7 +195,7 @@ LUX = (function () {
     }
 
     if (bCancelable) {
-      var now = _now();
+      var now = _now(true);
       var eventTimeStamp = evt.timeStamp;
 
       if (eventTimeStamp > 1520000000) {
@@ -222,14 +226,33 @@ LUX = (function () {
   });
   ////////////////////// FID END
 
-  // now() returns the number of ms since navigationStart.
-  function _now() {
+  /**
+   * Returns the time elapsed (in ms) since navigationStart. For SPAs, returns
+   * the time elapsed since the last LUX.init call.
+   *
+   * When `absolute = true` the time is always relative to navigationStart, even
+   * in SPAs.
+   *
+   * @param {Boolean} absolute
+   * @returns
+   */
+  function _now(absolute) {
+    const currentTimestamp = Date.now ? Date.now() : +new Date();
+    const msSinceNavigationStart = currentTimestamp - _navigationStart;
+    const startMark = _getMark(gStartMark);
+
+    // For SPA page views, we use our internal mark as a reference point
+    if (startMark && !absolute) {
+      return msSinceNavigationStart - startMark.startTime;
+    }
+
+    // For "regular" page views, we can use performance.now() if it's available...
     if (perf && perf.now) {
       return perf.now();
     }
 
-    var n = Date.now ? Date.now() : +new Date();
-    return n - _navigationStart;
+    // ... or we can use navigationStart as a reference point
+    return msSinceNavigationStart;
   }
 
   // set a mark
@@ -1331,7 +1354,7 @@ LUX = (function () {
     // Set some states.
     gbLuxSent = 1;
     gbNavSent = 1;
-    gbIxSent = sIx;
+    gbIxSent = sIx ? 1 : 0;
 
     // Send other beacons for JUST User Timing.
     const avail = gMaxQuerystring - baseUrl.length;
@@ -1487,37 +1510,57 @@ LUX = (function () {
   // Most of the time, however, IX happens *after* LUX, so we send a separate IX beacon but
   // only beacon back the first interaction that happens.
 
-  // Give a start element, return the first ancestor that has an ID AND the data-sctrack property.
-  // If not found, return the first ancestor that has an ID.
-  //   firstId - the first ID found crawling ancestors
-  //   bAttrFound - true if an ancestor was found with the data-sctrack attribute
-  function _findTrackedElement(elem, firstId, bAttrFound) {
-    if (!elem || !elem.hasAttribute) {
-      // No more ancestors. Return whatever we got. Might be undefined.
-      return firstId;
+  /**
+   * Get the interaction attribution name for an element
+   *
+   * @param {HTMLElement} el
+   * @returns string
+   */
+  function interactionAttributionForElement(el) {
+    // Default to using the element's own ID if it has one
+    if (el.id) {
+      return el.id;
     }
 
-    if (elem.hasAttribute("data-sctrack")) {
-      // Set the attribute flag.
-      bAttrFound = true;
-      if (elem.id) {
-        // This MUST be the first time we have the attribute *AND* an ID,
-        // so override any previous IDs (where the attribute had not yet been found).
-        firstId = elem.id;
+    // The next preference is to find an ancestor with the "data-sctrack" attribute
+    let ancestor = el;
+
+    // We also store the first ancestor ID that we find, so we can use it as
+    // a fallback later.
+    let ancestorId;
+
+    while (ancestor.parentNode && ancestor.parentNode.tagName) {
+      ancestor = ancestor.parentNode;
+
+      if (ancestor.hasAttribute("data-sctrack")) {
+        return ancestor.getAttribute("data-sctrack");
+      }
+
+      if (ancestor.id && !ancestorId) {
+        ancestorId = ancestor.id;
       }
     }
 
-    if (!firstId && elem.id) {
-      // If we've never found an ID, use this as the first one.
-      firstId = elem.id;
+    // The next preference is to use the text content of a button or link
+    const isSubmitInput = el.tagName === "INPUT" && el.type === "submit";
+    const isButton = el.tagName === "BUTTON";
+    const isLink = el.tagName === "A";
+
+    if (isSubmitInput && el.value) {
+      return el.value;
     }
 
-    if (bAttrFound && firstId) {
-      // If we've found both, return
-      return firstId;
+    if ((isButton || isLink) && el.innerText) {
+      return el.innerText;
     }
 
-    return _findTrackedElement(elem.parentNode, firstId, bAttrFound);
+    // The next preference is to use the first ancestor ID
+    if (ancestorId) {
+      return ancestorId;
+    }
+
+    // No suitable attribute was found
+    return "";
   }
 
   function _scrollHandler() {
@@ -1535,7 +1578,7 @@ LUX = (function () {
       ghIx["k"] = Math.round(_now());
 
       if (e && e.target) {
-        var trackId = _findTrackedElement(e.target);
+        var trackId = interactionAttributionForElement(e.target);
         if (trackId) {
           ghIx["ki"] = trackId;
         }
@@ -1566,7 +1609,7 @@ LUX = (function () {
           ghIx["cx"] = e.clientX;
           ghIx["cy"] = e.clientY;
         }
-        var trackId = _findTrackedElement(e.target);
+        var trackId = interactionAttributionForElement(e.target);
         if (trackId) {
           ghIx["ci"] = trackId;
         }
