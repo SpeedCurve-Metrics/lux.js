@@ -1,9 +1,13 @@
 /**
  * Extracts a single value from a LUX "condensed string" (a string of continuous
  * <key><val> pairs where <key> is a string and <val> is numeric)
+ *
+ * @returns Number|null
  */
 exports.extractCondensedValue = function (timingString, key) {
-  return parseInt(timingString.match(new RegExp(`${key}(\\d+)`))[1], 10);
+  const matches = timingString.match(new RegExp(`${key}(\\d+)`));
+
+  return matches ? parseInt(matches[1], 10) : null;
 };
 
 /**
