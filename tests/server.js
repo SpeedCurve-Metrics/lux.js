@@ -33,7 +33,6 @@ const server = createServer((req, res) => {
       }
     });
   } else if (pathname == "/beacon/") {
-    console.log(req.headers.accept);
     res.writeHead(200, { "content-type": "application/javascript" });
     res.end(`/* Beacon received at ${new Date()} */`);
   } else {
@@ -42,8 +41,16 @@ const server = createServer((req, res) => {
         res.writeHead(404);
         res.end("Not Found");
       } else {
-        res.writeHead(200, { "content-type": contentType });
-        res.end(contents);
+        const sendResponse = () => {
+          res.writeHead(200, { "content-type": contentType });
+          res.end(contents);
+        };
+
+        if (parsedUrl.query.delay) {
+          setTimeout(sendResponse, parseInt(parsedUrl.query.delay, 10));
+        } else {
+          sendResponse();
+        }
       }
     });
   }
