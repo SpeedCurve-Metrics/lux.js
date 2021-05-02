@@ -82,7 +82,7 @@ describe("LUX JS page label", () => {
     expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("LUX SPA Test With JS Page Label");
   });
 
-  test("internal LUX variables can't be accessed", async() => {
+  test("internal LUX variables can't be accessed", async () => {
     await page.evaluate("LUX.init()");
     await page.evaluate("LUX.jspagelabel = '_getPageLabel.toString()'");
     await page.evaluate("LUX.send()");
