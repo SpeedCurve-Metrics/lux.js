@@ -1731,14 +1731,16 @@ LUX = (function () {
     if (typeof LUX.label !== "undefined") {
       return LUX.label;
     } else if (typeof LUX.jspagelabel !== "undefined") {
+      const evaluateJsPageLabel = Function(`"use strict"; return ${LUX.jspagelabel}`);
+
       try {
-        var label = eval(LUX.jspagelabel);
+        const label = evaluateJsPageLabel();
+
+        if (label) {
+          return label;
+        }
       } catch (e) {
         console.log("Error evaluating customer settings LUX page label:", e);
-      }
-
-      if (label) {
-        return label;
       }
     }
 
