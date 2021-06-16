@@ -7,7 +7,7 @@ LUX = (function () {
 
   dlog("lux.js evaluation start.");
 
-  var version = "215";
+  var version = "216";
 
   // Log JS errors.
   var _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
@@ -110,6 +110,7 @@ LUX = (function () {
   var gCustomerDataTimeout; // setTimeout timer for sending a Customer Data beacon after onload
   var perf = window.performance;
   var gMaxQuerystring = 2000; // split the beacon querystring if it gets longer than this
+  const _beaconMode = (typeof LUX.beaconMode !== "undefined") ? LUX.beaconMode : "autoupdate";
   // Customers can override this by setting LUX.beaconUrl.
   var _beaconUrl =
     typeof LUX.beaconUrl !== "undefined" ? LUX.beaconUrl : "https://lux.speedcurve.com/lux/"; // everything before the "?"
@@ -1853,6 +1854,7 @@ LUX = (function () {
     },
 
     // properties
+    beaconMode: _beaconMode,
     beaconUrl: _beaconUrl, // where to send the beacon
     samplerate: _samplerate, // percentage of beacons to accept
     auto: _auto, // whether to automatically send the beacon after onload
