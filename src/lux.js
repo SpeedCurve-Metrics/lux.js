@@ -110,7 +110,7 @@ LUX = (function () {
   var gCustomerDataTimeout; // setTimeout timer for sending a Customer Data beacon after onload
   var perf = window.performance;
   var gMaxQuerystring = 2000; // split the beacon querystring if it gets longer than this
-  const _beaconMode = (typeof LUX.beaconMode !== "undefined") ? LUX.beaconMode : "autoupdate";
+  const _beaconMode = typeof LUX.beaconMode !== "undefined" ? LUX.beaconMode : "autoupdate";
   // Customers can override this by setting LUX.beaconUrl.
   var _beaconUrl =
     typeof LUX.beaconUrl !== "undefined" ? LUX.beaconUrl : "https://lux.speedcurve.com/lux/"; // everything before the "?"
