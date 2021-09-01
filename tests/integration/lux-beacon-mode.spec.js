@@ -1,4 +1,4 @@
-describe("LUX becaon mode", () => {
+describe("LUX beacon mode", () => {
   test("inserts a <script> tag by default", async () => {
     await navigateTo("http://localhost:3000/auto-false.html");
 
