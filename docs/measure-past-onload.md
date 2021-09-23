@@ -4,6 +4,7 @@ The onload event hasn't been a relevant measure of page performance -or even pag
 
 ## Goals
 
+- Don't change the existing behaviour for current LUX users.
 - Implement a variety of "measure until" markers that users can choose from.
 - Set a better default marker for all new LUX users while retaining the existing behaviour for existing customers.
 - Allow customers to pick their marker globally via the SpeedCurve UI, while allowing them to override it on a per-page basis.
