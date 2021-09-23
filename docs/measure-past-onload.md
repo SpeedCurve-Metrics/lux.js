@@ -23,15 +23,15 @@ Wait until the visibilitychange event signals that the page has been hidden.
 
 ### `LUX.measureUntil = "cpuidle"`
 
-Wait until there have been no long tasks for a number of miliseconds.
+Wait until there have been no long tasks for a number of miliseconds after onload. _Note: This method may be unreliable on fast devices._
 
 ### `LUX.measureUntil = "networkidle"`
 
-Wait until there have been no `fetch()` or XHR requests a number of miliseconds.
+Wait until there have been no `fetch()` or XHR requests for a number of miliseconds. _Note: This requires monkey patching the global `fetch()` and `XMLHttpRequest` APIs. This code should not be applied unless the user has opted-in to this feature._
 
 ## Fallbacks
 
-It's possible that any of these markers (including onload) can be delayed to the point where LUX collects "too much" data. It's also possible that the markers are never reached, for example when using `cpuidle`, a page might have no long tasks; or when using `visibilitychange`, a page might already be hidden.
+It's possible that any of these markers can be delayed to the point where LUX collects "too much" data. It's also possible that the markers are never reached, for example when using `cpuidle`, a page might have no long tasks; or when using `visibilitychange`, a page might already be hidden. For this reason, some fallbacks are required:
 
 ### `LUX.maxMeasureTime = 60000`
 
@@ -72,4 +72,48 @@ We could implement a "SPA mode" checkbox in the SpeedCurve UI that essentially s
 LUX.auto = false;
 LUX.maxMeasureTime = 60_000;
 LUX.sendBeaconOnPageHidden = true;
+```
+
+## Other API changes
+
+### New method: `LUX.markLoadTime()`
+
+The changes outlined in this document separate sending the beacon from the onload event. This will require SPA developers to have a way of marking their "onload" event without sending the beacon. `LUX.markLoadTime()` will record the "onload" time, but will not trigger `LUX.send()`.
+
+### New method: `LUX.configure(configObject)`
+
+With more configuration properties available, users might find it easier to sepcify their LUX configuration as a single object. `LUX.configure()` will allow users to change code like this...
+
+```js
+LUX.auto = false;
+LUX.label = "Home";
+LUX.addData("tvMode", 1);
+LUX.addData("env", "prod");
+```
+
+... to something like this:
+
+```js
+LUX.configure({
+    auto: false,
+    label: "Home",
+    data: {
+        tvMode: 1,
+        env: "prod",
+    },
+});
+```
+
+### New parameter: `LUX.send(configObject)`
+
+Similar to `LUX.configure()`, this would allow users to specify their LUX configuration at the point where the beacon is sent.
+
+```js
+LUX.send({
+    label: "Home",
+    data: {
+        tvMode: 1,
+        env: "prod",
+    },
+});
 ```
