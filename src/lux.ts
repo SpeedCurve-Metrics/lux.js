@@ -2,11 +2,12 @@ import LUX_t_start from "./start-marker";
 import * as Config from "./config";
 import now from "./now";
 import Flags from "./flags";
+import { LuxGlobal } from "./global"
 
-var LUX = window.LUX || {};
+let LUX: LuxGlobal = window.LUX || {};
 
 LUX = (function () {
-  var gaLog = []; // used to store debug messages
+  let gaLog: string[] = []; // used to store debug messages
 
   dlog("lux.js evaluation start.");
 
@@ -16,7 +17,7 @@ LUX = (function () {
   var _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
   var nErrors = 0;
   var maxErrors = 5; // Some pages have 50K errors. Set a limit on how many we record.
-  function errorHandler(e) {
+  function errorHandler(e: ErrorEvent) {
     nErrors++;
     if (e && "undefined" !== typeof e.filename && "undefined" !== typeof e.message) {
       // it is a valid error object
@@ -67,19 +68,19 @@ LUX = (function () {
       });
     });
     try {
-      if ("function" === typeof PerformanceLongTaskTiming) {
+      if (typeof PerformanceLongTaskTiming === "function") {
         perfObserver.observe({ type: "longtask", buffered: true });
       }
-      if ("function" === typeof LargestContentfulPaint) {
+      if (typeof LargestContentfulPaint === "function") {
         perfObserver.observe({ type: "largest-contentful-paint", buffered: true });
       }
-      if ("function" === typeof PerformanceElementTiming) {
+      if (typeof PerformanceElementTiming === "function") {
         perfObserver.observe({ type: "element", buffered: true });
       }
-      if ("function" === typeof PerformancePaintTiming) {
+      if (typeof PerformancePaintTiming === "function") {
         perfObserver.observe({ type: "paint", buffered: true });
       }
-      if ("function" === typeof LayoutShift) {
+      if (typeof LayoutShift === "function") {
         perfObserver.observe({ type: "layout-shift", buffered: true });
       }
     } catch (e) {
@@ -138,7 +139,7 @@ LUX = (function () {
     gLuxSnippetStart = LUX.ns ? LUX.ns - _navigationStart : 0;
   } else {
     dlog("Nav Timing is not supported.");
-    gFlags = gFlags | Flags.foobar;
+    gFlags = gFlags | Flags.NavTimingNotSupported;
   }
 
   ////////////////////// FID BEGIN
@@ -1656,18 +1657,18 @@ LUX = (function () {
   }
 
   // Wrapper to support older browsers (<= IE8)
-  function addListener(eventName, callback, useCapture) {
+  function addListener(eventName: string, callback: EventListener, useCapture = false) {
     if (window.addEventListener) {
-      window.addEventListener(eventName, callback, useCapture || false);
+      window.addEventListener(eventName, callback, useCapture);
     } else if (window.attachEvent) {
       window.attachEvent("on" + eventName, callback);
     }
   }
 
   // Wrapper to support older browsers (<= IE8)
-  function removeListener(eventName, callback, useCapture) {
+  function removeListener(eventName: string, callback: EventListener, useCapture = false) {
     if (window.removeEventListener) {
-      window.removeEventListener(eventName, callback, useCapture || false);
+      window.removeEventListener(eventName, callback, useCapture);
     } else if (window.detachEvent) {
       window.detachEvent("on" + eventName, callback);
     }
@@ -1680,7 +1681,7 @@ LUX = (function () {
       _sendIx();
     };
 
-    const onHiddenOrPageHide = (event) => {
+    const onHiddenOrPageHide = (event: Event) => {
       if (event.type === "pagehide" || document.visibilityState === "hidden") {
         onunload();
       }
@@ -1710,10 +1711,10 @@ LUX = (function () {
   // This is a big number (epoch ms . random) that is used to matchup a LUX beacon with a separate IX beacon
   // (because they get sent at different times). Each "page view" (including SPA) should have a
   // unique gSyncId.
-  function createSyncId(bInSampleBucket) {
+  function createSyncId(bInSampleBucket = false): string {
     var syncId = bInSampleBucket
       ? Number(new Date()) + "00000" // "00" matches all sample rates
-      : Number(new Date()) + "" + _padLeft(parseInt(100000 * Math.random()), "00000");
+      : Number(new Date()) + "" + _padLeft(Math.round(100000 * Math.random()), "00000");
     return syncId;
   }
 
@@ -1721,7 +1722,7 @@ LUX = (function () {
   // We use this to track all the page views in a single user session.
   // If there is NOT a UID then set it to the new value (which is the same as the "sync ID" for this page).
   // Refresh its expiration date and return its value.
-  function refreshUniqueId(newValue) {
+  function refreshUniqueId(newValue: string): string {
     var uid = _getCookie("lux_uid");
     if (!uid || uid.length < 11) {
       uid = newValue;
@@ -1741,7 +1742,7 @@ LUX = (function () {
     return uid;
   }
 
-  function setUniqueId(uid) {
+  function setUniqueId(uid: string): string {
     _setCookie("lux_uid", uid, gSessionTimeout);
 
     return uid;
@@ -1749,7 +1750,7 @@ LUX = (function () {
 
   // We use gUid (session ID) to do sampling. We make this available to customers so
   // they can do sampling (A/B testing) using the same session ID.
-  function _getUniqueId() {
+  function _getUniqueId(): string {
     return gUid;
   }
 
@@ -1784,7 +1785,7 @@ LUX = (function () {
     return true;
   }
 
-  function _getCookie(name) {
+  function _getCookie(name: string): string | undefined {
     try {
       // Seeing "Permission denied" errors, so do a simple try-catch.
       var aTuples = document.cookie.split(";");
@@ -1802,7 +1803,7 @@ LUX = (function () {
     return undefined;
   }
 
-  function _setCookie(name, value, seconds) {
+  function _setCookie(name: string, value: string, seconds: number): void {
     try {
       document.cookie =
         name +
@@ -1816,12 +1817,12 @@ LUX = (function () {
   }
 
   // "padding" MUST be the length of the resulting string, eg, "0000" if you want a result of length 4.
-  function _padLeft(str, padding) {
+  function _padLeft(str: string, padding: string): string {
     return (padding + str).slice(-padding.length);
   }
 
   // Log messages/errors to console if enabled, or put in array.
-  function dlog(msg) {
+  function dlog(msg: string) {
     gaLog.push(msg);
     if (LUX.debug) {
       console.log("LUX: " + msg);

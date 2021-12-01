@@ -3,16 +3,18 @@ export interface ConfigObject {
   beaconMode: "simple" | "autoupdate";
   beaconUrl: string;
   customerid?: string;
+  debug?: boolean;
   jspagelabel?: string;
+  label?: string;
   maxMeasureTime: number;
   measureUntil: "onload" | "pagehidden";
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
 }
 
-type MaybeConfigObject = Partial<ConfigObject>;
+export type UserConfig = Partial<ConfigObject>;
 
-export function fromObject(obj: MaybeConfigObject): ConfigObject {
+export function fromObject(obj: UserConfig): ConfigObject {
   const autoMode = getProperty(obj, "auto", true);
 
   return {
@@ -20,6 +22,7 @@ export function fromObject(obj: MaybeConfigObject): ConfigObject {
     beaconMode: getProperty(obj, "beaconMode", "simple"),
     beaconUrl: getProperty(obj, "beaconUrl", "https://lux.speedcurve.com/lux/"),
     customerid: getProperty(obj, "customerid", undefined),
+    debug: getProperty(obj, "debug", false),
     jspagelabel: getProperty(obj, "jspagelabel", undefined),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
     measureUntil: getProperty(obj, "measureUntil", "onload"),

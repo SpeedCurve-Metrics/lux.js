@@ -1,9 +1,9 @@
 {
   "name": "lux.js",
   "scripts": {
-    "build": "mkdir -p dist && npm run rollup && npm run minify",
+    "build": "mkdir dist && npm run rollup && npm run minify",
     "rollup": "rollup -c rollup.config.js",
-    "compile-src": "tsc --allowJs --outFile dist/lux.js src/lux.js",
+    "compile-src": "tsc --allowJs --outFile dist/lux.js src/lux.ts",
     "minify": "terser --mangle --compress --output dist/lux.min.js dist/lux.js",
     "jest": "jest",
     "jest-watch": "jest --watch",
