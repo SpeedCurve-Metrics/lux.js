@@ -1,4 +1,5 @@
-const { extractCondensedValue, getPerformanceTimingMs } = require("../helpers/lux");
+import { extractCondensedValue, getPerformanceTimingMs } from "../helpers/lux";
+import Flags from "../../src/flags";
 
 describe("LUX SPA", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
@@ -48,5 +49,10 @@ describe("LUX SPA", () => {
     expect(loadEventStart).toBeGreaterThanOrEqual(20);
     expect(loadEventStart).toBeLessThan(60);
     expect(loadEventStart).toEqual(loadEventEnd);
+
+    // Check that the InitCalled flag was set
+    const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
+
+    expect(beaconFlags & Flags.InitCalled).toEqual(Flags.InitCalled);
   });
 });

@@ -1,4 +1,7 @@
-var LUX_t_start = Date.now();
+import LUX_t_start from "./start-marker";
+import * as Config from "./config";
+import now from "./now";
+import Flags from "./flags";
 
 var LUX = window.LUX || {};
 
@@ -86,13 +89,8 @@ LUX = (function () {
     dlog("Long Tasks not supported.");
   }
 
-  var gFlags = 0; // bitmask of flags for this session & page
-  const gFlag_InitCalled = 1; // the init function was called (this is probably a SPA page view)
-  const gFlag_NoNavTiming = 2;
-  const gFlag_NoUserTiming = 4;
-  const gFlag_NotVisible = 8;
-  const gFlag_UnloadBeacon = 16; // The beacon was sent from the unload handler
-  const gFlag_TimeoutBeacon = 32; // The beacon was sent after the maximum wait time
+  // Bitmask of flags for this session & page
+  let gFlags = 0;
 
   // array of marks where each element is a hash
   var gaMarks = typeof LUX.gaMarks !== "undefined" ? LUX.gaMarks : [];
@@ -112,12 +110,13 @@ LUX = (function () {
   var gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
   var gCustomerDataTimeout; // setTimeout timer for sending a Customer Data beacon after onload
   var perf = window.performance;
-  var gMaxQuerystring = 2000; // split the beacon querystring if it gets longer than this
-  const _beaconMode = typeof LUX.beaconMode !== "undefined" ? LUX.beaconMode : "autoupdate";
-  // Customers can override this by setting LUX.beaconUrl.
-  var _beaconUrl =
-    typeof LUX.beaconUrl !== "undefined" ? LUX.beaconUrl : "https://lux.speedcurve.com/lux/"; // everything before the "?"
-  var _samplerate = typeof LUX.samplerate !== "undefined" ? LUX.samplerate : 100;
+  var gMaxQuerystring = 8190; // split the beacon querystring if it gets longer than this
+
+  const userConfig = Config.fromObject(LUX);
+
+  const _beaconMode = userConfig.beaconMode;
+  const _beaconUrl = userConfig.beaconUrl;
+  const _samplerate = userConfig.samplerate;
   dlog(
     "Sample rate = " +
       _samplerate +
@@ -126,12 +125,12 @@ LUX = (function () {
         ? "This session IS being sampled."
         : "This session is NOT being sampled. The data will NOT show up in your LUX dashboards. Call LUX.forceSample() and try again.")
   );
-  const _auto = typeof LUX.auto !== "undefined" ? LUX.auto : true;
-  const _autoOnHidden = LUX.measureUntil === "pagehidden";
-  const _afterOnloadTimeout = LUX.maxTimeAfterOnload || 0;
+  const _auto = userConfig.auto;
+  const _maxMeasureTime = userConfig.maxMeasureTime;
+  const _sendBeaconOnPageHidden = userConfig.sendBeaconOnPageHidden;
 
   // Get a timestamp as close to navigationStart as possible.
-  var _navigationStart = LUX.ns ? LUX.ns : Date.now ? Date.now() : +new Date(); // create a _navigationStart
+  var _navigationStart = LUX.ns ? LUX.ns : now(); // create a _navigationStart
   var gLuxSnippetStart = 0;
   if (perf && perf.timing && perf.timing.navigationStart) {
     _navigationStart = perf.timing.navigationStart;
@@ -139,7 +138,7 @@ LUX = (function () {
     gLuxSnippetStart = LUX.ns ? LUX.ns - _navigationStart : 0;
   } else {
     dlog("Nav Timing is not supported.");
-    gFlags = gFlags | gFlag_NoNavTiming;
+    gFlags = gFlags | Flags.foobar;
   }
 
   ////////////////////// FID BEGIN
@@ -270,7 +269,7 @@ LUX = (function () {
       }
     }
 
-    gFlags = gFlags | gFlag_NoUserTiming;
+    gFlags = gFlags | Flags.UserTimingNotSupported;
 
     // shim:
     gaMarks.push({ name: name, entryType: "mark", startTime: _now(), duration: 0 });
@@ -758,7 +757,7 @@ LUX = (function () {
 
     // Clear flags then set the flag that init was called (ie, this is a SPA).
     gFlags = 0;
-    gFlags = gFlags | gFlag_InitCalled;
+    gFlags = gFlags | Flags.InitCalled;
 
     // Mark the "navigationStart" for this SPA page.
     _mark(gStartMark);
@@ -1262,7 +1261,7 @@ LUX = (function () {
     var DCLS = calculateDCLS();
     var sLuxjs = selfLoading();
     if (document.visibilityState && "visible" !== document.visibilityState) {
-      gFlags = gFlags | gFlag_NotVisible;
+      gFlags = gFlags | Flags.VisibilityStateNotVisible;
     }
 
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
@@ -1676,7 +1675,7 @@ LUX = (function () {
 
   function _addUnloadHandlers() {
     const onunload = () => {
-      gFlags = gFlags | gFlag_UnloadBeacon;
+      gFlags = gFlags | Flags.BeaconSentFromUnloadHandler;
       _sendLux();
       _sendIx();
     };
@@ -1843,8 +1842,8 @@ LUX = (function () {
     }
   }
 
-  // Add the unload handlers for auto mode, or when LUX.sendBeaconAfter is "pagehidden"
-  if (_auto || _autoOnHidden) {
+  // Add the unload handlers for auto mode, or when LUX.measureUntil is "pagehidden"
+  if (_sendBeaconOnPageHidden) {
     _addUnloadHandlers();
   }
 
@@ -1911,4 +1910,4 @@ LUX = (function () {
   return _LUX;
 })();
 
-var LUX_t_end = Date.now();
+var LUX_t_end = now();

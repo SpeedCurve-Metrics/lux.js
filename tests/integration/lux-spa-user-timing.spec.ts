@@ -1,4 +1,4 @@
-const { parseNestedPairs, getElapsedMs } = require("../helpers/lux");
+import { parseNestedPairs, getElapsedMs } from "../helpers/lux";
 
 describe("LUX SPA user timing", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");

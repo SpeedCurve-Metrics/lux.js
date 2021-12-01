@@ -1,4 +1,4 @@
-const { extractCondensedValue } = require("../helpers/lux");
+import { extractCondensedValue } from "../helpers/lux";
 
 const testPages = [
   ["default configuration", "default.html"],
