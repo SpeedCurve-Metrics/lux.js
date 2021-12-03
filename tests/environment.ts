@@ -1,5 +1,5 @@
-const PuppeteerEnvironment = require("jest-environment-puppeteer");
-const RequestInterceptor = require("./request-interceptor");
+import PuppeteerEnvironment from "jest-environment-puppeteer";
+import RequestInterceptor from "./request-interceptor";
 
 class CustomEnvironment extends PuppeteerEnvironment {
   async setup() {

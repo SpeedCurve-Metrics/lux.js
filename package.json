@@ -1,15 +1,15 @@
 {
   "name": "lux.js",
   "scripts": {
-    "build": "mkdir dist && npm run rollup && npm run minify",
+    "build": "npm run rollup",
     "rollup": "rollup -c rollup.config.js",
     "compile-src": "tsc --allowJs --outFile dist/lux.js src/lux.ts",
-    "minify": "terser --mangle --compress --output dist/lux.min.js dist/lux.js",
     "jest": "jest",
     "jest-watch": "jest --watch",
-    "prettier": "prettier --write 'src/**/*.{js,ts}' 'tests/**/*.{js,ts}'",
-    "eslint": "eslint 'src/**/*.{js,ts}' 'tests/**/*.{js,ts}'",
-    "test": "npm run eslint && npm run jest"
+    "lint": "eslint 'src/**/*.{js,ts}' 'tests/**/*.{js,ts}'",
+    "lint-fix": "npm run lint -- --fix",
+    "test": "npm run lint && npm run jest",
+    "watch": "npm run rollup -- --watch"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
@@ -20,18 +20,18 @@
     "@types/jest": "^27.0.3",
     "@types/jest-environment-puppeteer": "^4.4.1",
     "@types/puppeteer": "^5.4.4",
+    "@typescript-eslint/eslint-plugin": "^5.5.0",
+    "@typescript-eslint/parser": "^5.5.0",
     "babel-jest": "^27.4.0",
     "eslint": "^8.3.0",
-    "eslint-config-prettier": "^8.1.0",
-    "i": "^0.3.7",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "jest": "^27.0.4",
     "jest-puppeteer": "^6.0.0",
-    "npm": "^8.1.4",
     "prettier": "^2.2.1",
     "puppeteer": "^12.0.1",
-    "rimraf": "^3.0.2",
     "rollup": "^2.60.1",
-    "terser": "^5.6.0",
+    "rollup-plugin-terser": "^7.0.2",
     "typescript": "^4.2.2"
   },
   "prettier": {

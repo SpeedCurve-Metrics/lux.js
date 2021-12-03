@@ -22,7 +22,7 @@ const server = createServer((req, res) => {
         res.writeHead(404);
         res.end("Not Found");
       } else {
-        let preamble = `LUX=LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';`;
+        let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';`;
 
         if (parsedUrl.query.jspagelabel) {
           preamble += `LUX.jspagelabel=${JSON.stringify(parsedUrl.query.jspagelabel)};`;

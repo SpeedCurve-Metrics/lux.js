@@ -1,6 +1,6 @@
 module.exports = {
   preset: "jest-puppeteer",
-  testEnvironment: "./tests/environment.js",
-  setupFilesAfterEnv: ["./tests/global-setup-after-env.js"],
+  testEnvironment: "./tests/environment.ts",
+  setupFilesAfterEnv: ["./tests/global-setup-after-env.ts"],
   testTimeout: 10000,
 };

@@ -7,7 +7,7 @@ const testPages = [
 
 describe.each(testPages)("%s", (_, testPage) => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-  let beacon;
+  let beacon: URL;
 
   beforeAll(async () => {
     luxRequests.reset();
@@ -47,5 +47,21 @@ describe.each(testPages)("%s", (_, testPage) => {
 
     expect(extractCondensedValue(navTiming, "fc")).toBeGreaterThan(0);
     expect(extractCondensedValue(navTiming, "lc")).toBeGreaterThan(0);
+  });
+
+  test("metrics about the lux.js script are sent", () => {
+    const LJS = beacon.searchParams.get("LJS");
+
+    expect(LJS.length).toBeGreaterThan(0);
+    expect(extractCondensedValue(LJS, "d")).not.toBeNull();
+    expect(extractCondensedValue(LJS, "t")).not.toBeNull();
+    expect(extractCondensedValue(LJS, "f")).toBeGreaterThan(0);
+    expect(extractCondensedValue(LJS, "c")).not.toBeNull();
+    expect(extractCondensedValue(LJS, "n")).toBeGreaterThan(0);
+    expect(extractCondensedValue(LJS, "e")).toBeGreaterThan(0);
+    expect(extractCondensedValue(LJS, "r")).toBeGreaterThan(0);
+    expect(extractCondensedValue(LJS, "x")).toBeGreaterThan(0);
+    expect(extractCondensedValue(LJS, "l")).toBeGreaterThan(0);
+    expect(extractCondensedValue(LJS, "s")).toBeGreaterThan(0);
   });
 });

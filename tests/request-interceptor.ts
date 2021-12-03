@@ -1,10 +1,13 @@
-const RequestMatcher = require("./request-matcher");
+import { Page, Request } from "puppeteer";
+import RequestMatcher from "./request-matcher";
 
-module.exports = class RequestInterceptor {
-  constructor(page) {
+export default class RequestInterceptor {
+  page: Page;
+  requests: Request[] = [];
+  matchers: RequestMatcher[] = [];
+
+  constructor(page: Page) {
     this.page = page;
-    this.requests = [];
-    this.matchers = [];
 
     page.on("request", (request) => {
       this.requests.push(request);
@@ -12,7 +15,7 @@ module.exports = class RequestInterceptor {
     });
   }
 
-  createRequestMatcher(searchString) {
+  createRequestMatcher(searchString: string) {
     const matcher = new RequestMatcher(searchString);
 
     this.requests.forEach((request) => matcher.addRequest(request));
@@ -24,4 +27,4 @@ module.exports = class RequestInterceptor {
   reset() {
     this.requests = [];
   }
-};
+}
