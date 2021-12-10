@@ -21,9 +21,9 @@ class CustomEnvironment extends PuppeteerEnvironment {
       Promise.all(msg.args().map((arg) => arg.jsonValue())).then((args) => {
         if (args.length) {
           if (typeof console[type] === "function") {
-            console[type].apply(console, ["[PAGE CONSOLE]"].concat(args));
+            console[type](...["[PAGE CONSOLE]"].concat(args));
           } else {
-            console.log.apply(console, ["[PAGE CONSOLE]"].concat(args));
+            console.log(...["[PAGE CONSOLE]"].concat(args));
           }
         }
       });

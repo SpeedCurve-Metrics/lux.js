@@ -3,12 +3,12 @@
   "scripts": {
     "build": "npm run rollup",
     "rollup": "rollup -c rollup.config.js",
-    "compile-src": "tsc --allowJs --outFile dist/lux.js src/lux.ts",
+    "type-check": "tsc --noEmit",
     "jest": "jest",
     "jest-watch": "jest --watch",
-    "lint": "eslint 'src/**/*.{js,ts}' 'tests/**/*.{js,ts}'",
+    "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts'",
     "lint-fix": "npm run lint -- --fix",
-    "test": "npm run lint && npm run jest",
+    "test": "npm run type-check && npm run lint && npm run jest",
     "watch": "npm run rollup -- --watch"
   },
   "devDependencies": {

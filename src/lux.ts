@@ -1,7 +1,7 @@
 import LUX_t_start from "./start-marker";
 import * as Config from "./config";
 import Flags from "./flags";
-import { Command, LuxGlobal, PerformanceEntryShim } from "./global";
+import { Command, LuxGlobal } from "./global";
 import { InteractionInfo } from "./interaction";
 import now from "./now";
 
@@ -268,9 +268,18 @@ LUX = (function () {
 
     gFlags = gFlags | Flags.UserTimingNotSupported;
 
-    // shim:
-    gaMarks.push({ name: name, entryType: "mark", startTime: _now(), duration: 0 });
-    return;
+    // Shim
+    const entry = {
+      name: name,
+      detail: null,
+      entryType: "mark",
+      startTime: _now(),
+      duration: 0,
+    } as PerformanceMark;
+
+    gaMarks.push(entry);
+
+    return entry;
   }
 
   // compute a measurement (delta)
@@ -306,12 +315,19 @@ LUX = (function () {
       const startMark = _getMark(startMarkName);
       if (startMark) {
         startTime = startMark.startTime;
-      } else if (perf && perf.timing && perf.timing[startMarkName]) {
+      } else if (
+        perf &&
+        perf.timing &&
+        perf.timing[startMarkName as keyof Omit<PerformanceTiming, "toJSON">]
+      ) {
         // the mark name can also be a property from Navigation Timing
-        startTime = perf.timing[startMarkName] - perf.timing.navigationStart;
+        startTime =
+          perf.timing[startMarkName as keyof Omit<PerformanceTiming, "toJSON">] -
+          perf.timing.navigationStart;
       } else {
-        // Bail - we couldn't find the startMarkName.
-        return;
+        throw new DOMException(
+          `Failed to execute 'measure' on 'Performance': The mark '${startMarkName}' does not exist`
+        );
       }
     }
 
@@ -319,28 +335,39 @@ LUX = (function () {
       const endMark = _getMark(endMarkName);
       if (endMark) {
         endTime = endMark.startTime;
-      } else if (perf && perf.timing && perf.timing[endMarkName]) {
+      } else if (
+        perf &&
+        perf.timing &&
+        perf.timing[endMarkName as keyof Omit<PerformanceTiming, "toJSON">]
+      ) {
         // the mark name can also be a property from Navigation Timing
-        endTime = perf.timing[endMarkName] - perf.timing.navigationStart;
+        endTime =
+          perf.timing[endMarkName as keyof Omit<PerformanceTiming, "toJSON">] -
+          perf.timing.navigationStart;
       } else {
-        // Bail - we couldn't find the startMarkName.
-        return;
+        throw new DOMException(
+          `Failed to execute 'measure' on 'Performance': The mark '${endMarkName}' does not exist`
+        );
       }
     }
 
-    gaMeasures.push({
+    // Shim
+    const entry = {
       name: name,
+      detail: null,
       entryType: "measure",
       startTime: startTime,
       duration: endTime - startTime,
-    });
+    } as PerformanceMeasure;
 
-    return;
+    gaMeasures.push(entry);
+
+    return entry;
   }
 
   // Return THE LAST mark that matches the name.
-  function _getMark(name: string): PerformanceEntryShim | undefined {
-    return _getM<PerformanceEntryShim>(name, _getMarks());
+  function _getMark(name: string): PerformanceEntry | undefined {
+    return _getM<PerformanceEntry>(name, _getMarks());
   }
 
   function _getM<T extends { name: string }>(name: string, aItems: T[]): T | undefined {
@@ -357,7 +384,7 @@ LUX = (function () {
   }
 
   // Return an array of marks.
-  function _getMarks(): PerformanceEntryShim[] {
+  function _getMarks(): PerformanceEntryList {
     if (perf) {
       if (perf.getEntriesByType) {
         return perf.getEntriesByType("mark");
@@ -370,7 +397,7 @@ LUX = (function () {
   }
 
   // Return an array of measures.
-  function _getMeasures(): PerformanceEntryShim[] {
+  function _getMeasures(): PerformanceEntryList {
     if (perf) {
       if (perf.getEntriesByType) {
         return perf.getEntriesByType("measure");
@@ -805,7 +832,8 @@ LUX = (function () {
       const e = aElems[i];
       if (e.href && "stylesheet" === e.rel && 0 !== e.href.indexOf("data:")) {
         if (
-          e.onloadcssdefined ||
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (e as any).onloadcssdefined ||
           "print" === e.media ||
           "style" === e.as ||
           ("function" === typeof e.onload && "all" === e.media)
@@ -945,7 +973,7 @@ LUX = (function () {
 
   // Return First Contentful Paint or zero if not supported.
   function getFcp() {
-    if (perf && perf.getEntriesByType && perf.getEntriesByType("paint")) {
+    if (perf && perf.getEntriesByType && perf.getEntriesByType("paint").length) {
       for (let arr = perf.getEntriesByType("paint"), i = 0; i < arr.length; i++) {
         const ppt = arr[i]; // PerformancePaintTiming object
         if ("first-contentful-paint" === ppt.name) {
@@ -982,12 +1010,7 @@ LUX = (function () {
       let startRender;
 
       if (ns) {
-        if (
-          perf &&
-          perf.getEntriesByType &&
-          perf.getEntriesByType("paint") &&
-          perf.getEntriesByType("paint").length
-        ) {
+        if (perf && perf.getEntriesByType && perf.getEntriesByType("paint").length) {
           // If Paint Timing API is supported, use it.
           for (let arr = perf.getEntriesByType("paint"), i = 0; i < arr.length; i++) {
             const ppt = arr[i]; // PerformancePaintTiming object
@@ -1111,7 +1134,7 @@ LUX = (function () {
 
   // Return the main HTML document transfer size (in bytes).
   function docSize() {
-    if (perf && perf.getEntriesByType) {
+    if (perf && perf.getEntriesByType && perf.getEntriesByType("navigation").length) {
       const aEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
       if (aEntries && aEntries.length > 0 && aEntries[0]["encodedBodySize"]) {
         return aEntries[0]["encodedBodySize"];

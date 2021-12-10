@@ -6,12 +6,32 @@ declare global {
     LUX?: LuxGlobal;
     LUX_ae?: ErrorEvent[];
     LUX_al?: PerformanceEntryList;
+
+    chrome: {
+      loadTimes?: () => ChromeLoadTimes;
+    };
   }
 
   // Internet Explorer 8 compatibility
   interface Window {
     attachEvent(event: string, listener: EventListener): boolean;
     detachEvent(event: string, listener: EventListener): void;
+  }
+
+  // Internet Explorer 9 compatibility
+  interface PerformanceTiming {
+    msFirstPaint: number;
+  }
+
+  // Vendor-specific APIs
+  interface ChromeLoadTimes {
+    firstPaintTime: number;
+  }
+
+  interface Performance {
+    webkitGetEntriesByType: typeof performance.getEntriesByType;
+    webkitMark: typeof performance.mark;
+    webkitMeasure: typeof performance.measure;
   }
 
   /**

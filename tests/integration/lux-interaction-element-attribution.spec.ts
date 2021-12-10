@@ -1,6 +1,6 @@
 import { parseNestedPairs } from "../helpers/lux";
 
-describe.skip("LUX interaction element attribution", () => {
+describe("LUX interaction element attribution", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
   beforeAll(async () => {
