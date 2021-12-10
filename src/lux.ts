@@ -1801,7 +1801,7 @@ LUX = (function () {
         const label = evaluateJsPageLabel();
 
         if (label) {
-        gFlags = addFlag(gFlags, Flags.PageLabelFromGlobalVariable);
+          gFlags = addFlag(gFlags, Flags.PageLabelFromGlobalVariable);
 
           return label;
         }
