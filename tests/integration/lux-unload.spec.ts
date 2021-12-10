@@ -1,4 +1,4 @@
-import Flags from "../../src/flags";
+import Flags, { hasFlag } from "../../src/flags";
 
 describe("LUX unload behaviour", () => {
   test("not automatically sending a beacon when the user navigates away from a page with LUX.auto = false", async () => {
@@ -23,9 +23,7 @@ describe("LUX unload behaviour", () => {
     const beacon = luxRequests.getUrl(0);
     const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
 
-    expect(beaconFlags & Flags.BeaconSentFromUnloadHandler).toEqual(
-      Flags.BeaconSentFromUnloadHandler
-    );
+    expect(hasFlag(beaconFlags, Flags.BeaconSentFromUnloadHandler)).toBe(true);
     expect(beacon.searchParams.get("l")).toEqual("LUX SPA test with sendBeaconOnPageHidden = true");
   });
 });

@@ -32,10 +32,6 @@ describe.each(testPages)("%s", (_, testPage) => {
     expect(beacon.searchParams.get("uid").length).toBeGreaterThan(0);
   });
 
-  test("document title is used as the default page label", () => {
-    expect(beacon.searchParams.get("l")).toEqual("LUX Auto Test");
-  });
-
   test("default metrics are sent", () => {
     expect(beacon.searchParams.get("IX")).toBeNull();
     expect(beacon.searchParams.get("HN")).toEqual("localhost");

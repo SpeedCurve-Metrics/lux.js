@@ -1,6 +1,6 @@
 import LUX_t_start from "./start-marker";
 import * as Config from "./config";
-import Flags from "./flags";
+import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { InteractionInfo } from "./interaction";
 import now from "./now";
@@ -138,7 +138,7 @@ LUX = (function () {
     gLuxSnippetStart = LUX.ns ? LUX.ns - _navigationStart : 0;
   } else {
     dlog("Nav Timing is not supported.");
-    gFlags = gFlags | Flags.NavTimingNotSupported;
+    gFlags = addFlag(gFlags, Flags.NavTimingNotSupported);
   }
 
   ////////////////////// FID BEGIN
@@ -266,7 +266,7 @@ LUX = (function () {
       }
     }
 
-    gFlags = gFlags | Flags.UserTimingNotSupported;
+    gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
 
     // Shim
     const entry = {
@@ -788,7 +788,7 @@ LUX = (function () {
 
     // Clear flags then set the flag that init was called (ie, this is a SPA).
     gFlags = 0;
-    gFlags = gFlags | Flags.InitCalled;
+    gFlags = addFlag(gFlags, Flags.InitCalled);
 
     // Mark the "navigationStart" for this SPA page.
     _mark(gStartMark);
@@ -1290,7 +1290,7 @@ LUX = (function () {
     const DCLS = calculateDCLS();
     const sLuxjs = selfLoading();
     if (document.visibilityState && "visible" !== document.visibilityState) {
-      gFlags = gFlags | Flags.VisibilityStateNotVisible;
+      gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
     }
 
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
@@ -1708,7 +1708,7 @@ LUX = (function () {
 
   function _addUnloadHandlers() {
     const onunload = () => {
-      gFlags = gFlags | Flags.BeaconSentFromUnloadHandler;
+      gFlags = addFlag(gFlags, Flags.BeaconSentFromUnloadHandler);
       _sendLux();
       _sendIx();
     };
@@ -1791,6 +1791,8 @@ LUX = (function () {
   // Return the current page label.
   function _getPageLabel() {
     if (typeof LUX.label !== "undefined") {
+      gFlags = addFlag(gFlags, Flags.PageLabelFromLabelProp);
+
       return LUX.label;
     } else if (typeof LUX.jspagelabel !== "undefined") {
       const evaluateJsPageLabel = Function(`"use strict"; return ${LUX.jspagelabel}`);
@@ -1799,6 +1801,8 @@ LUX = (function () {
         const label = evaluateJsPageLabel();
 
         if (label) {
+        gFlags = addFlag(gFlags, Flags.PageLabelFromGlobalVariable);
+
           return label;
         }
       } catch (e) {
@@ -1807,6 +1811,8 @@ LUX = (function () {
     }
 
     // default to document.title
+    gFlags = addFlag(gFlags, Flags.PageLabelFromDocumentTitle);
+
     return document.title;
   }
 

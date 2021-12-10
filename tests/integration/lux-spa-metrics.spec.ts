@@ -1,5 +1,5 @@
 import { extractCondensedValue, getPerformanceTimingMs } from "../helpers/lux";
-import Flags from "../../src/flags";
+import Flags, { hasFlag } from "../../src/flags";
 
 describe("LUX SPA", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
@@ -53,6 +53,6 @@ describe("LUX SPA", () => {
     // Check that the InitCalled flag was set
     const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
 
-    expect(beaconFlags & Flags.InitCalled).toEqual(Flags.InitCalled);
+    expect(hasFlag(beaconFlags, Flags.InitCalled)).toBe(true);
   });
 });
