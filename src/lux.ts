@@ -127,7 +127,6 @@ LUX = (function () {
         : "This session is NOT being sampled. The data will NOT show up in your LUX dashboards. Call LUX.forceSample() and try again.")
   );
   const _auto = userConfig.auto;
-  const _maxMeasureTime = userConfig.maxMeasureTime;
   const _sendBeaconOnPageHidden = userConfig.sendBeaconOnPageHidden;
 
   // Get a timestamp as close to navigationStart as possible.
