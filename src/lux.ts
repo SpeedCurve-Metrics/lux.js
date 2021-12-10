@@ -59,7 +59,7 @@ LUX = (function () {
   const gaSnippetLongTasks = typeof window.LUX_al === "object" ? window.LUX_al : [];
   const gaPerfEntries = gaSnippetLongTasks.slice(); // array of Long Tasks (prefer the array from the snippet)
 
-  if ("function" === typeof PerformanceObserver) {
+  if (typeof PerformanceObserver === "function") {
     const perfObserver = new PerformanceObserver(function (list) {
       // Keep an array of perf objects to process later.
       list.getEntries().forEach(function (entry) {
@@ -86,10 +86,8 @@ LUX = (function () {
         perfObserver.observe({ type: "layout-shift", buffered: true });
       }
     } catch (e) {
-      dlog("Long Tasks error.");
+      dlog(`Error setting up PerformanceObserver: ${e}`);
     }
-  } else {
-    dlog("Long Tasks not supported.");
   }
 
   // Bitmask of flags for this session & page
