@@ -1,4 +1,4 @@
-const { extractCondensedValue } = require("../helpers/lux");
+import { extractCondensedValue } from "../helpers/lux";
 
 describe("LUX auto images", () => {
   test("calculating the number of images on the page", async () => {

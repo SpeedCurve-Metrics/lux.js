@@ -1,4 +1,4 @@
-const { parseNestedPairs } = require("../helpers/lux");
+import { parseNestedPairs } from "../helpers/lux";
 
 describe("LUX SPA CPU metrics", () => {
   test("long tasks are only reported for the SPA page they were associated with", async () => {

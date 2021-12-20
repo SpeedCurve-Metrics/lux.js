@@ -1,4 +1,4 @@
-const { parseNestedPairs } = require("../helpers/lux");
+import { parseNestedPairs } from "../helpers/lux";
 
 describe("LUX CPU timing", () => {
   test("detect and report long tasks on the page", async () => {
