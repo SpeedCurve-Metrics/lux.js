@@ -16,6 +16,42 @@ describe("LUX SPA", () => {
     expect(luxRequests.count()).toEqual(1);
   });
 
+  test("regular page metrics are sent for the first SPA page view", async () => {
+    await navigateTo("http://localhost:3000/auto-false.html");
+    await page.evaluate("LUX.send()");
+
+    const beacon = luxRequests.getUrl(0);
+    const navTiming = beacon.searchParams.get("NT");
+    const pageStats = beacon.searchParams.get("PS");
+
+    // Paint metrics
+    expect(extractCondensedValue(navTiming, "sr")).toBeGreaterThan(0);
+    expect(extractCondensedValue(navTiming, "fc")).toBeGreaterThan(0);
+    expect(extractCondensedValue(navTiming, "lc")).toBeGreaterThan(0);
+
+    // Page stats
+    expect(extractCondensedValue(pageStats, "ns")).toEqual(1);
+    expect(extractCondensedValue(pageStats, "ss")).toEqual(0);
+
+    // Viewport stats
+    const viewport = page.viewport();
+    expect(extractCondensedValue(pageStats, "vh")).toEqual(viewport.height);
+    expect(extractCondensedValue(pageStats, "vw")).toEqual(viewport.width);
+  });
+
+  test("calling LUX.init before LUX.send does not lose data", async () => {
+    await navigateTo("http://localhost:3000/auto-false.html");
+    await page.evaluate("LUX.init()");
+    await page.evaluate("LUX.send()");
+
+    const beacon = luxRequests.getUrl(0);
+    const navTiming = beacon.searchParams.get("NT");
+
+    expect(extractCondensedValue(navTiming, "sr")).toBeGreaterThan(0);
+    expect(extractCondensedValue(navTiming, "fc")).toBeGreaterThan(0);
+    expect(extractCondensedValue(navTiming, "lc")).toBeGreaterThan(0);
+  });
+
   test("load time value for the first pages is the time between navigationStart and loadEventStart", async () => {
     await navigateTo("http://localhost:3000/auto-false.html");
     await page.evaluate("LUX.send()");

@@ -766,6 +766,15 @@ LUX = (function () {
   // This function should ONLY be called within a SPA!
   // Otherwise, you might clear marks & measures that were set by a shim.
   function _init() {
+    // Some customers (incorrectly) call LUX.init on the very first page load of a SPA. This would
+    // cause some first-page-only data (like paint metrics) to be lost. To prevent this, we silently
+    // bail from this function when we detect an unnecessary LUX.init call.
+    const endMark = _getMark(gEndMark);
+
+    if (!endMark) {
+      return;
+    }
+
     dlog("Enter LUX.init().");
 
     // Clear all interactions from the previous "page".
