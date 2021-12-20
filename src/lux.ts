@@ -1,5 +1,6 @@
 import LUX_t_start from "./start-marker";
 import * as Config from "./config";
+import Logger, { LogEvent } from "./logger";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { InteractionInfo } from "./interaction";
@@ -8,11 +9,10 @@ import now from "./now";
 let LUX: LuxGlobal = window.LUX || {};
 
 LUX = (function () {
-  const gaLog: string[] = []; // used to store debug messages
-
-  dlog("lux.js evaluation start.");
-
   const SCRIPT_VERSION = "300";
+  const logger = new Logger();
+
+  logger.logEvent(LogEvent.EvaluationStart, SCRIPT_VERSION);
 
   // Log JS errors.
   const _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
@@ -86,7 +86,7 @@ LUX = (function () {
         perfObserver.observe({ type: "layout-shift", buffered: true });
       }
     } catch (e) {
-      dlog(`Error setting up PerformanceObserver: ${e}`);
+      logger.logEvent(LogEvent.PerformanceObserverError, e);
     }
   }
 
@@ -116,14 +116,13 @@ LUX = (function () {
 
   const _beaconUrl = userConfig.beaconUrl;
   const _samplerate = userConfig.samplerate;
-  dlog(
-    "Sample rate = " +
-      _samplerate +
-      "%. " +
-      (_sample()
-        ? "This session IS being sampled."
-        : "This session is NOT being sampled. The data will NOT show up in your LUX dashboards. Call LUX.forceSample() and try again.")
-  );
+
+  if (_sample()) {
+    logger.logEvent(LogEvent.SessionIsSampled, _samplerate);
+  } else {
+    logger.logEvent(LogEvent.SessionIsNotSampled, _samplerate);
+  }
+
   const _auto = userConfig.auto;
   const _sendBeaconOnPageHidden = userConfig.sendBeaconOnPageHidden;
 
@@ -135,7 +134,7 @@ LUX = (function () {
     // Record when the LUX snippet was evaluated relative to navigationStart.
     gLuxSnippetStart = LUX.ns ? LUX.ns - _navigationStart : 0;
   } else {
-    dlog("Nav Timing is not supported.");
+    logger.logEvent(LogEvent.NavTimingNotSupported);
     gFlags = addFlag(gFlags, Flags.NavTimingNotSupported);
   }
 
@@ -190,7 +189,7 @@ LUX = (function () {
       bCancelable = evt.cancelable;
     } catch (e) {
       // bail - no need to return anything
-      dlog("Permission error accessing input event.");
+      logger.logEvent(LogEvent.InputEventPermissionError);
       return;
     }
 
@@ -255,7 +254,8 @@ LUX = (function () {
   // set a mark
   // NOTE: It's possible to set multiple marks with the same name.
   function _mark(name: string) {
-    dlog("Enter LUX.mark(), name = " + name);
+    logger.logEvent(LogEvent.MarkCalled, name);
+
     if (perf) {
       if (perf.mark) {
         return perf.mark(name);
@@ -282,7 +282,8 @@ LUX = (function () {
 
   // compute a measurement (delta)
   function _measure(name: string, startMarkName?: string, endMarkName?: string) {
-    dlog("Enter LUX.measure(), name = " + name);
+    logger.logEvent(LogEvent.MeasureCalled, name, startMarkName, endMarkName);
+
     if ("undefined" === typeof startMarkName && _getMark(gStartMark)) {
       // If a start mark is not specified, but the user has called _init() to set a new start,
       // then use the new start base time (similar to navigationStart) as the start mark.
@@ -714,7 +715,8 @@ LUX = (function () {
 
   // _addData()
   function _addData(name: string, value: unknown) {
-    dlog("Enter LUX.addData(), name = " + name + ", value = " + value);
+    logger.logEvent(LogEvent.AddDataCalled, name, value);
+
     const typeN = typeof name;
     const typeV = typeof value;
     if ("string" === typeN && ("string" === typeV || "number" === typeV || "boolean" === typeV)) {
@@ -775,7 +777,7 @@ LUX = (function () {
       return;
     }
 
-    dlog("Enter LUX.init().");
+    logger.logEvent(LogEvent.InitCalled);
 
     // Clear all interactions from the previous "page".
     _clearIx();
@@ -904,7 +906,7 @@ LUX = (function () {
         size += e.innerHTML.length;
       } catch (e) {
         // It seems like IE throws an error when accessing the innerHTML property
-        dlog("Error accessing inline element innerHTML.");
+        logger.logEvent(LogEvent.InnerHtmlAccessError);
         return -1;
       }
     }
@@ -1043,7 +1045,8 @@ LUX = (function () {
       }
     }
 
-    dlog("Paint Timing not supported.");
+    logger.logEvent(LogEvent.PaintTimingNotSupported);
+
     return null;
   }
 
@@ -1268,7 +1271,7 @@ LUX = (function () {
 
   // Beacon back the LUX data.
   function _sendLux() {
-    dlog("Enter LUX.send().");
+    logger.logEvent(LogEvent.SendCalled);
 
     const customerid = getCustomerId();
     if (
@@ -1386,7 +1389,7 @@ LUX = (function () {
 
     // Send the MAIN LUX beacon.
     const mainBeaconUrl = baseUrl + querystring;
-    dlog("Sending main LUX beacon: " + mainBeaconUrl);
+    logger.logEvent(LogEvent.MainBeaconSent, mainBeaconUrl);
     _sendBeacon(mainBeaconUrl);
 
     // Set some states.
@@ -1422,7 +1425,7 @@ LUX = (function () {
       }
 
       const utBeaconUrl = baseUrl + "&UT=" + sUT_cur;
-      dlog("Sending extra User Timing beacon: " + utBeaconUrl);
+      logger.logEvent(LogEvent.UserTimingBeaconSent, utBeaconUrl);
       _sendBeacon(utBeaconUrl);
     }
   }
@@ -1464,7 +1467,7 @@ LUX = (function () {
         encodeURIComponent(document.location.hostname) +
         "";
       const beaconUrl = _beaconUrl + querystring;
-      dlog("Sending Interaction Metrics beacon: " + beaconUrl);
+      logger.logEvent(LogEvent.InteractionBeaconSent, beaconUrl);
       _sendBeacon(beaconUrl);
 
       gbIxSent = 1;
@@ -1505,7 +1508,7 @@ LUX = (function () {
         encodeURIComponent(document.location.hostname) +
         "";
       const beaconUrl = _beaconUrl + querystring;
-      dlog("Sending late Customer Data beacon: " + beaconUrl);
+      logger.logEvent(LogEvent.CustomDataBeaconSent, beaconUrl);
       _sendBeacon(beaconUrl);
     }
   }
@@ -1614,7 +1617,7 @@ LUX = (function () {
           target = e.target;
         }
       } catch (e) {
-        dlog("Error accessing event target.");
+        logger.logEvent(LogEvent.EventTargetAccessError);
         target = null;
       }
 
@@ -1784,7 +1787,7 @@ LUX = (function () {
         }
       }
     } catch (e) {
-      dlog("Error accessing document.cookie.");
+      logger.logEvent(LogEvent.CookieReadError);
     }
 
     return undefined;
@@ -1799,21 +1802,13 @@ LUX = (function () {
         (seconds ? "; max-age=" + seconds : "") +
         "; path=/; SameSite=Lax";
     } catch (e) {
-      dlog("Error setting document.cookie.");
+      logger.logEvent(LogEvent.CookieSetError);
     }
   }
 
   // "padding" MUST be the length of the resulting string, eg, "0000" if you want a result of length 4.
   function _padLeft(str: string, padding: string): string {
     return (padding + str).slice(-padding.length);
-  }
-
-  // Log messages/errors to console if enabled, or put in array.
-  function dlog(msg: string) {
-    gaLog.push(msg);
-    if (LUX.debug) {
-      console.log("LUX: " + msg);
-    }
   }
 
   // Set "LUX.auto=false" to disable send results automatically and
@@ -1847,9 +1842,7 @@ LUX = (function () {
     send: _sendLux,
     addData: _addData,
     getSessionId: _getUniqueId, // so customers can do their own sampling
-    getDebug: function () {
-      return gaLog;
-    },
+    getDebug: () => logger.getEvents(),
     forceSample: function () {
       setUniqueId(createSyncId(true));
       console.log("Sampling has been turned on for this session.");
@@ -1891,7 +1884,7 @@ LUX = (function () {
     window.LUX_ae.forEach(errorHandler);
   }
 
-  dlog("lux.js evaluation end.");
+  logger.logEvent(LogEvent.EvaluationEnd);
 
   return _LUX;
 })();
