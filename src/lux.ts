@@ -12,7 +12,7 @@ LUX = (function () {
 
   dlog("lux.js evaluation start.");
 
-  const version = "300";
+  const SCRIPT_VERSION = "300";
 
   // Log JS errors.
   const _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
@@ -32,7 +32,7 @@ LUX = (function () {
         new Image().src =
           _errorUrl +
           "?v=" +
-          version +
+          SCRIPT_VERSION +
           "&id=" +
           getCustomerId() +
           "&fn=" +
@@ -1305,7 +1305,7 @@ LUX = (function () {
     const baseUrl =
       _beaconUrl +
       "?v=" +
-      version +
+      SCRIPT_VERSION +
       "&id=" +
       customerid +
       "&sid=" +
@@ -1447,7 +1447,7 @@ LUX = (function () {
       const sCustomerData = customerDataValues(); // customer data
       const querystring =
         "?v=" +
-        version +
+        SCRIPT_VERSION +
         "&id=" +
         customerid +
         "&sid=" +
@@ -1490,7 +1490,7 @@ LUX = (function () {
     if (sCustomerData) {
       const querystring =
         "?v=" +
-        version +
+        SCRIPT_VERSION +
         "&id=" +
         customerid +
         "&sid=" +
@@ -1865,7 +1865,7 @@ LUX = (function () {
     auto: _auto, // whether to automatically send the beacon after onload
     label: typeof LUX.label !== "undefined" ? LUX.label : undefined, // the "name" of this page or episode
     jspagelabel: typeof LUX.jspagelabel !== "undefined" ? LUX.jspagelabel : undefined,
-    version: version, // use this for self-updating
+    version: SCRIPT_VERSION, // use this for self-updating
     ae: [], // array for error handler (ignored)
     al: [], // array for Long Tasks (ignored)
     debug: LUX.debug ? true : false,
