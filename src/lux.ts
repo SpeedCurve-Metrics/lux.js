@@ -102,7 +102,6 @@ LUX = (function () {
   let gbLuxSent = 0; // have we sent the LUX data? (avoid sending twice in unload)
   let gbNavSent = 0; // have we sent the Nav Timing beacon yet? (avoid sending twice for SPA)
   let gbIxSent = 0; // have we sent the IX data? (avoid sending twice for SPA)
-  let gbUpdated = 0; // make sure we only self-update lux.js once
   let gbFirstPV = 1; // this is the first page view (vs. a SPA "soft nav")
   const gStartMark = "LUX_start"; // the name of the mark that corresponds to "navigationStart" for SPA
   const gEndMark = "LUX_end"; // the name of the mark that corresponds to "loadEventStart" for SPA
@@ -115,7 +114,6 @@ LUX = (function () {
 
   const userConfig = Config.fromObject(LUX);
 
-  const _beaconMode = userConfig.beaconMode;
   const _beaconUrl = userConfig.beaconUrl;
   const _samplerate = userConfig.samplerate;
   dlog(
@@ -1504,32 +1502,7 @@ LUX = (function () {
   }
 
   function _sendBeacon(url: string) {
-    if (LUX.beaconMode !== "simple") {
-      return _sendBeaconAutoUpdate(url);
-    }
-
     new Image().src = url;
-  }
-
-  // Send a beacon that will also trigger the self-updating mechanism
-  function _sendBeaconAutoUpdate(url: string) {
-    const s1 = document.createElement("script");
-    s1.async = true;
-    s1.src = url;
-    let aElems: HTMLCollection = document.getElementsByTagName("script");
-    if (aElems.length) {
-      aElems[0].parentNode?.insertBefore(s1, aElems[0]);
-    } else {
-      aElems = document.getElementsByTagName("head");
-      if (aElems.length) {
-        aElems[0].appendChild(s1);
-      } else {
-        aElems = document.getElementsByTagName("body");
-        if (aElems.length) {
-          aElems[0].appendChild(s1);
-        }
-      }
-    }
   }
 
   // INTERACTION METRICS
@@ -1648,41 +1621,6 @@ LUX = (function () {
         }
       }
       _sendIx();
-    }
-  }
-
-  // This function is sometimes called by the /lux/ beacon response to
-  // update the browser cache with the latest version of lux.js.
-  function _doUpdate(newestVer: number, twiddle: string) {
-    // If the newest version is newer than the browser cached version, then update.
-    if (newestVer && Number(version) < newestVer && document.body && !gbUpdated) {
-      dlog("Updating cached version of lux.js from " + version + " to " + newestVer + ".");
-      // Since we're a SPA, it's possible that we could do an infinite number of self-updates
-      // because lux.js would be refreshed, but it's not reloaded so "version" remains the same
-      // until the next reload. To avoid infinite self-updates, set a flag so we only do it once.
-      gbUpdated = 1;
-
-      const luxScript = getScriptElement("/js/lux.js");
-      if (luxScript) {
-        if ("function" === typeof fetch) {
-          // use fetch and cache:reload
-          // see https://calendar.perfplanet.com/2017/clearing-cache-in-the-browser/
-          fetch(luxScript.src, { cache: "reload" });
-        } else {
-          // old technique: use an iFrame that gets reloaded
-          // see https://www.stevesouders.com/blog/2012/05/22/self-updating-scripts/
-          const iframe1 = document.createElement("iframe");
-          iframe1.style.display = "none";
-          iframe1.id = "LUX_update_iframe";
-          // twiddle allows the caller of _doUpdate to bust the browser & CDN cache if necessary
-          // (this is overly cautious but gives us power if the cached code has bugs)
-          iframe1.src =
-            "//cdn.speedcurve.com/luxupdate.php?src=" +
-            encodeURIComponent(luxScript.src) +
-            (twiddle ? "&tw=" + twiddle : "");
-          document.body.appendChild(iframe1);
-        }
-      }
     }
   }
 
@@ -1907,11 +1845,12 @@ LUX = (function () {
       setUniqueId(createSyncId(true));
       console.log("Sampling has been turned on for this session.");
     },
-    doUpdate: _doUpdate, // use this for self-updating
+    doUpdate: () => {
+      // Deprecated, intentionally empty.
+    },
     cmd: _runCommand,
 
     // properties
-    beaconMode: _beaconMode,
     beaconUrl: _beaconUrl, // where to send the beacon
     samplerate: _samplerate, // percentage of beacons to accept
     auto: _auto, // whether to automatically send the beacon after onload

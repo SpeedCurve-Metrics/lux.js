@@ -1,6 +1,5 @@
 export interface ConfigObject {
   auto: boolean;
-  beaconMode: "simple" | "autoupdate";
   beaconUrl: string;
   customerid?: string;
   debug?: boolean;
@@ -19,7 +18,6 @@ export function fromObject(obj: UserConfig): ConfigObject {
 
   return {
     auto: autoMode,
-    beaconMode: getProperty(obj, "beaconMode", "simple"),
     beaconUrl: getProperty(obj, "beaconUrl", "https://lux.speedcurve.com/lux/"),
     customerid: getProperty(obj, "customerid", undefined),
     debug: getProperty(obj, "debug", false),
