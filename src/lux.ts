@@ -416,11 +416,17 @@ LUX = (function () {
     // hash that has the max value for each name.
     const hUT: Record<string, number> = {};
     const startMark = _getMark(gStartMark);
+    const endMark = _getMark(gEndMark);
 
     // marks
     const aMarks = _getMarks();
     if (aMarks) {
       aMarks.forEach(function (m) {
+        if (m === startMark || m === endMark) {
+          // Don't include the internal marks in the beacon
+          return;
+        }
+
         const name = m.name;
 
         // For user timing values taken in a SPA page load, we need to adjust them

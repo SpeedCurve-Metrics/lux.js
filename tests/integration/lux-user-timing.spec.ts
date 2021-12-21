@@ -13,6 +13,7 @@ describe("LUX user timing", () => {
   test("records all user timing marks and measures", () => {
     const userTiming = parseNestedPairs(beacon.searchParams.get("UT"));
 
+    expect(Object.values(userTiming).length).toEqual(3);
     expect(parseInt(userTiming["first-mark"], 10)).toBeGreaterThan(0);
     expect(parseInt(userTiming["test-mark"], 10)).toBeGreaterThan(0);
     expect(parseInt(userTiming["test-measure"], 10)).toBeGreaterThan(0);
