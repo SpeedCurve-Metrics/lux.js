@@ -1,5 +1,9 @@
 import PuppeteerEnvironment from "jest-environment-puppeteer";
 import RequestInterceptor from "./request-interceptor";
+declare global {
+  const requestInterceptor: RequestInterceptor;
+  const navigateTo: typeof page.goto;
+}
 
 class CustomEnvironment extends PuppeteerEnvironment {
   async setup() {
