@@ -9,6 +9,7 @@ export interface ConfigObject {
   maxErrors: number;
   maxMeasureTime: number;
   measureUntil: "onload" | "pagehidden";
+  minMeasureTime: number;
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   trackErrors: boolean;
@@ -30,6 +31,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     maxErrors: getProperty(obj, "maxErrors", 5),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
     measureUntil: getProperty(obj, "measureUntil", "onload"),
+    minMeasureTime: getProperty(obj, "minMeasureTime", 0),
     samplerate: getProperty(obj, "samplerate", 100),
     sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
     trackErrors: getProperty(obj, "trackErrors", true),

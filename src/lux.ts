@@ -8,6 +8,9 @@ import now from "./now";
 
 let LUX: LuxGlobal = window.LUX || {};
 
+// Get a timestamp as close to navigationStart as possible.
+let _navigationStart = LUX.ns ? LUX.ns : now();
+
 LUX = (function () {
   const SCRIPT_VERSION = "300";
   const logger = new Logger();
@@ -115,6 +118,7 @@ LUX = (function () {
   let gSyncId = createSyncId(); // if we send multiple beacons, use this to sync them (eg, LUX & IX) (also called "luxid")
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
   let gCustomerDataTimeout: number; // setTimeout timer for sending a Customer Data beacon after onload
+  let gMaxMeasureTimeout: number; // setTimeout timer for sending the beacon after a maximum measurement time
   const perf = window.performance;
   const gMaxQuerystring = 8190; // split the beacon querystring if it gets longer than this
 
@@ -124,8 +128,6 @@ LUX = (function () {
     logger.logEvent(LogEvent.SessionIsNotSampled, [userConfig.samplerate]);
   }
 
-  // Get a timestamp as close to navigationStart as possible.
-  let _navigationStart = LUX.ns ? LUX.ns : now(); // create a _navigationStart
   let gLuxSnippetStart = 0;
   if (perf && perf.timing && perf.timing.navigationStart) {
     _navigationStart = perf.timing.navigationStart;
@@ -231,8 +233,7 @@ LUX = (function () {
    * in SPAs.
    */
   function _now(absolute?: boolean) {
-    const currentTimestamp = Date.now ? Date.now() : +new Date();
-    const msSinceNavigationStart = currentTimestamp - _navigationStart;
+    const msSinceNavigationStart = now() - _navigationStart;
     const startMark = _getMark(gStartMark);
 
     // For SPA page views, we use our internal mark as a reference point
@@ -806,6 +807,9 @@ LUX = (function () {
 
     // Mark the "navigationStart" for this SPA page.
     _mark(gStartMark);
+
+    // Reset the maximum measure timeout
+    createMaxMeasureTimeout();
   }
 
   // Return the number of blocking (synchronous) external scripts in the page.
@@ -1280,9 +1284,25 @@ LUX = (function () {
     _mark(gEndMark);
   }
 
+  function createMaxMeasureTimeout() {
+    clearMaxMeasureTimeout();
+    gMaxMeasureTimeout = window.setTimeout(() => {
+      gFlags = addFlag(gFlags, Flags.BeaconSentAfterTimeout);
+      _sendLux();
+    }, userConfig.maxMeasureTime - _now());
+  }
+
+  function clearMaxMeasureTimeout() {
+    if (gMaxMeasureTimeout) {
+      clearTimeout(gMaxMeasureTimeout);
+    }
+  }
+
   // Beacon back the LUX data.
   function _sendLux() {
     logger.logEvent(LogEvent.SendCalled);
+
+    clearMaxMeasureTimeout();
 
     const customerid = getCustomerId();
     if (
@@ -1839,15 +1859,27 @@ LUX = (function () {
   // Set "LUX.auto=false" to disable send results automatically and
   // instead you must call LUX.send() explicitly.
   if (userConfig.auto) {
-    if (document.readyState === "complete") {
-      // If onload has already passed, send the beacon now.
-      _sendLux();
-    } else {
-      // Ow, send the beacon slightly after window.onload.
-      addListener("load", () => {
-        setTimeout(_sendLux, 200);
-      });
-    }
+    const sendBeaconAfterMinimumMeasureTime = () => {
+      const elapsedTime = _now();
+      const timeRemaining = userConfig.minMeasureTime - elapsedTime;
+
+      if (timeRemaining <= 0) {
+        if (document.readyState === "complete") {
+          // If onload has already passed, send the beacon now.
+          _sendLux();
+        } else {
+          // Ow, send the beacon slightly after window.onload.
+          addListener("load", () => {
+            setTimeout(_sendLux, 200);
+          });
+        }
+      } else {
+        // Try again after the minimum measurement time has elapsed
+        setTimeout(sendBeaconAfterMinimumMeasureTime, timeRemaining);
+      }
+    };
+
+    sendBeaconAfterMinimumMeasureTime();
   }
 
   // Add the unload handlers for auto mode, or when LUX.measureUntil is "pagehidden"
@@ -1857,6 +1889,9 @@ LUX = (function () {
 
   // Regardless of userConfig.auto, we need to register the IX handlers immediately.
   _addIxHandlers();
+
+  // Set the maximum measurement timer
+  createMaxMeasureTimeout();
 
   // This is the public API.
   const _LUX: LuxGlobal = userConfig;
