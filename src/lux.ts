@@ -1374,8 +1374,8 @@ LUX = (function () {
       "&HN=" +
       encodeURIComponent(document.location.hostname) +
       (DCLS !== false ? "&CLS=" + DCLS : "") +
-      // fonts
-      "";
+      "&PN=" +
+      encodeURIComponent(document.location.pathname);
 
     // User Timing marks & measures
     let sUT_remainder = "";

@@ -32,10 +32,19 @@ describe.each(testPages)("%s", (_, testPage) => {
     expect(beacon.searchParams.get("uid").length).toBeGreaterThan(0);
   });
 
-  test("default metrics are sent", () => {
+  test("interaction data is not sent when there are no interactions", () => {
     expect(beacon.searchParams.get("IX")).toBeNull();
     expect(beacon.searchParams.get("HN")).toEqual("localhost");
+  });
+
+  test("CLS is set to zero when there are no layout shifts", () => {
     expect(parseFloat(beacon.searchParams.get("CLS"))).toEqual(0);
+  });
+
+  test("hostname and pathname are set, with pathname as the last query parameter", () => {
+    expect(beacon.searchParams.get("HN")).toEqual("localhost");
+    expect(beacon.searchParams.get("PN")).toEqual(`/${testPage}`);
+    expect([...beacon.searchParams.entries()].pop()).toEqual(["PN", `/${testPage}`]);
   });
 
   test("CPU stats are sent", () => {
