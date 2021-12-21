@@ -10,8 +10,8 @@ describe("LUX beacon request", () => {
 
   test("beacon is split into multiple requests when the URL is too long", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-    const mediumString = new Array(1000).fill("dogs!").join(""); // About 5KB
-    const longString = new Array(1600).fill("dogs!").join(""); // About 8KB (the URL length limit)
+    const mediumString = new Array(5000).fill("A").join(""); // About 5KB
+    const longString = new Array(8000).fill("A").join(""); // About 8KB (the URL length limit)
 
     await navigateTo("http://localhost:3000/auto-false.html");
     await page.evaluate(`performance.mark("${mediumString}")`);
