@@ -13,6 +13,7 @@ This is considered a major lux.js release and may contain some breaking changes.
 
 - Abandoned pages are now tracked by sending a beacon when the page state is **hidden**, rather than when the `unload` or `beforeunload` events are fired.
 - Developers who implement lux.js into a SPA by using `LUX.auto = false` can now opt-in to abandoned page tracking by setting `LUX.sendBeaconOnPageHidden = true`.
+- The pathname of the current page is now sent with every beacon.
 
 ### Bug fixes
 

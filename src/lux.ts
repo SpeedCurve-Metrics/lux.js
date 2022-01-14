@@ -1471,7 +1471,8 @@ LUX = (function () {
         (gFirstInputDelay ? "&FID=" + gFirstInputDelay : "") +
         "&HN=" +
         encodeURIComponent(document.location.hostname) +
-        "";
+        "&PN=" +
+        encodeURIComponent(document.location.pathname);
       const beaconUrl = _beaconUrl + querystring;
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
@@ -1512,7 +1513,8 @@ LUX = (function () {
         encodeURIComponent(_getPageLabel()) +
         "&HN=" +
         encodeURIComponent(document.location.hostname) +
-        "";
+        "&PN=" +
+        encodeURIComponent(document.location.pathname);
       const beaconUrl = _beaconUrl + querystring;
       logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);

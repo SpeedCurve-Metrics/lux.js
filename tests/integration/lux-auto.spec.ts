@@ -34,7 +34,6 @@ describe.each(testPages)("%s", (_, testPage) => {
 
   test("interaction data is not sent when there are no interactions", () => {
     expect(beacon.searchParams.get("IX")).toBeNull();
-    expect(beacon.searchParams.get("HN")).toEqual("localhost");
   });
 
   test("CLS is set to zero when there are no layout shifts", () => {

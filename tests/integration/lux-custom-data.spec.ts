@@ -54,6 +54,13 @@ describe("LUX custom data", () => {
 
     expect(mainBeacon.searchParams.get("CD")).toBeNull();
     expect(customData["var1"]).toEqual("hello");
+    expect(cdBeacon.searchParams.get("HN")).toEqual("localhost");
+    expect(cdBeacon.searchParams.get("PN")).toEqual("/default.html");
+
+    // Pathname should be the last query parameter
+    const lastQueryParam = [...cdBeacon.searchParams.entries()].pop();
+
+    expect(lastQueryParam).toEqual(["PN", "/default.html"]);
   });
 
   test("custom data is retained between SPA pages", async () => {

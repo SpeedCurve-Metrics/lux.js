@@ -1,29 +1,47 @@
 import { parseNestedPairs } from "../helpers/lux";
 
 describe("LUX interaction", () => {
-  test("gather interaction metrics after a click interaction", async () => {
-    await navigateTo("http://localhost:3000/default-with-interaction.html");
-    await page.click("#button-with-id");
+  describe("in auto mode", () => {
+    let luxRequests;
+    let ixBeacon;
 
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-    const ixBeacon = luxRequests.getUrl(1);
-    const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
+    beforeAll(async () => {
+      await navigateTo("http://localhost:3000/default-with-interaction.html");
+      await page.click("#button-with-id");
 
-    // Separate request for main beacon and interaction beacon
-    expect(luxRequests.count()).toEqual(2);
+      luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+      ixBeacon = luxRequests.getUrl(1);
+    });
 
-    // Click time
-    expect(parseInt(ixMetrics.c, 10)).toBeGreaterThan(1);
+    test("interaction metrics are gathered", () => {
+      const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
 
-    // Click attribution
-    expect(ixMetrics.ci).toEqual("button-with-id");
+      // Separate request for main beacon and interaction beacon
+      expect(luxRequests.count()).toEqual(2);
 
-    // Click coordinates
-    expect(parseInt(ixMetrics.cx, 10)).toBeGreaterThan(0);
-    expect(parseInt(ixMetrics.cy, 10)).toBeGreaterThan(0);
+      // Click time
+      expect(parseInt(ixMetrics.c, 10)).toBeGreaterThan(1);
 
-    // FID
-    expect(parseInt(ixBeacon.searchParams.get("FID"), 10)).toBeGreaterThan(0);
+      // Click attribution
+      expect(ixMetrics.ci).toEqual("button-with-id");
+
+      // Click coordinates
+      expect(parseInt(ixMetrics.cx, 10)).toBeGreaterThan(0);
+      expect(parseInt(ixMetrics.cy, 10)).toBeGreaterThan(0);
+
+      // FID
+      expect(parseInt(ixBeacon.searchParams.get("FID"), 10)).toBeGreaterThan(0);
+    });
+
+    test("only high level metrics are sent in the interaction beacon", () => {
+      expect(ixBeacon.searchParams.get("HN")).toEqual("localhost");
+      expect(ixBeacon.searchParams.get("PN")).toEqual("/default-with-interaction.html");
+
+      // Pathname should be the last query parameter
+      const lastQueryParam = [...ixBeacon.searchParams.entries()].pop();
+
+      expect(lastQueryParam).toEqual(["PN", "/default-with-interaction.html"]);
+    });
   });
 
   test("gather IX metrics in a SPA", async () => {
