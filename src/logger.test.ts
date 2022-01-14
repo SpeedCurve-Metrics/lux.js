@@ -13,7 +13,7 @@ describe("Logger", () => {
     const timestamp = Date.now();
 
     logger.logEvent(LogEvent.EvaluationStart);
-    logger.logEvent(LogEvent.AddDataCalled, "varName", "value");
+    logger.logEvent(LogEvent.AddDataCalled, ["varName", "value"]);
     logger.logEvent(LogEvent.EvaluationEnd);
 
     const events = logger.getEvents();

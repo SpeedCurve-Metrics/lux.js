@@ -7,6 +7,7 @@ export const LogEvent = {
   MeasureCalled: 5,
   AddDataCalled: 6,
   SendCalled: 7,
+  ForceSampleCalled: 8,
 
   // Data collection events
   SessionIsSampled: 21,
@@ -23,6 +24,7 @@ export const LogEvent = {
   EventTargetAccessError: 54,
   CookieReadError: 55,
   CookieSetError: 56,
+  PageLabelEvaluationError: 57,
 
   // Browser support messages
   NavTimingNotSupported: 71,
@@ -34,7 +36,7 @@ type LogEventRecord = [number, number, ...unknown[]];
 export default class Logger {
   events: LogEventRecord[] = [];
 
-  logEvent(event: number, ...args: unknown[]) {
+  logEvent(event: number, args: unknown[] = []) {
     this.events.push([Number(new Date()), event, args]);
   }
 

@@ -12,7 +12,7 @@ LUX = (function () {
   const SCRIPT_VERSION = "300";
   const logger = new Logger();
 
-  logger.logEvent(LogEvent.EvaluationStart, SCRIPT_VERSION);
+  logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION]);
 
   // Log JS errors.
   const _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
@@ -86,7 +86,7 @@ LUX = (function () {
         perfObserver.observe({ type: "layout-shift", buffered: true });
       }
     } catch (e) {
-      logger.logEvent(LogEvent.PerformanceObserverError, e);
+      logger.logEvent(LogEvent.PerformanceObserverError, [e]);
     }
   }
 
@@ -118,9 +118,9 @@ LUX = (function () {
   const _samplerate = userConfig.samplerate;
 
   if (_sample()) {
-    logger.logEvent(LogEvent.SessionIsSampled, _samplerate);
+    logger.logEvent(LogEvent.SessionIsSampled, [_samplerate]);
   } else {
-    logger.logEvent(LogEvent.SessionIsNotSampled, _samplerate);
+    logger.logEvent(LogEvent.SessionIsNotSampled, [_samplerate]);
   }
 
   const _auto = userConfig.auto;
@@ -254,7 +254,7 @@ LUX = (function () {
   // set a mark
   // NOTE: It's possible to set multiple marks with the same name.
   function _mark(name: string) {
-    logger.logEvent(LogEvent.MarkCalled, name);
+    logger.logEvent(LogEvent.MarkCalled, [name]);
 
     if (perf) {
       if (perf.mark) {
@@ -282,7 +282,7 @@ LUX = (function () {
 
   // compute a measurement (delta)
   function _measure(name: string, startMarkName?: string, endMarkName?: string) {
-    logger.logEvent(LogEvent.MeasureCalled, name, startMarkName, endMarkName);
+    logger.logEvent(LogEvent.MeasureCalled, [name, startMarkName, endMarkName]);
 
     if ("undefined" === typeof startMarkName && _getMark(gStartMark)) {
       // If a start mark is not specified, but the user has called _init() to set a new start,
@@ -721,7 +721,7 @@ LUX = (function () {
 
   // _addData()
   function _addData(name: string, value: unknown) {
-    logger.logEvent(LogEvent.AddDataCalled, name, value);
+    logger.logEvent(LogEvent.AddDataCalled, [name, value]);
 
     const typeN = typeof name;
     const typeV = typeof value;
@@ -1395,7 +1395,7 @@ LUX = (function () {
 
     // Send the MAIN LUX beacon.
     const mainBeaconUrl = baseUrl + querystring;
-    logger.logEvent(LogEvent.MainBeaconSent, mainBeaconUrl);
+    logger.logEvent(LogEvent.MainBeaconSent, [mainBeaconUrl]);
     _sendBeacon(mainBeaconUrl);
 
     // Set some states.
@@ -1431,7 +1431,7 @@ LUX = (function () {
       }
 
       const utBeaconUrl = baseUrl + "&UT=" + sUT_cur;
-      logger.logEvent(LogEvent.UserTimingBeaconSent, utBeaconUrl);
+      logger.logEvent(LogEvent.UserTimingBeaconSent, [utBeaconUrl]);
       _sendBeacon(utBeaconUrl);
     }
   }
@@ -1473,7 +1473,7 @@ LUX = (function () {
         encodeURIComponent(document.location.hostname) +
         "";
       const beaconUrl = _beaconUrl + querystring;
-      logger.logEvent(LogEvent.InteractionBeaconSent, beaconUrl);
+      logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 
       gbIxSent = 1;
@@ -1514,7 +1514,7 @@ LUX = (function () {
         encodeURIComponent(document.location.hostname) +
         "";
       const beaconUrl = _beaconUrl + querystring;
-      logger.logEvent(LogEvent.CustomDataBeaconSent, beaconUrl);
+      logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
     }
   }
@@ -1762,7 +1762,8 @@ LUX = (function () {
           return label;
         }
       } catch (e) {
-        console.log("Error evaluating customer settings LUX page label:", e);
+        logger.logEvent(LogEvent.PageLabelEvaluationError, [LUX.jspagelabel, e]);
+        console.log("Error evaluating page label", LUX.jspagelabel, e);
       }
     }
 
@@ -1850,8 +1851,8 @@ LUX = (function () {
     getSessionId: _getUniqueId, // so customers can do their own sampling
     getDebug: () => logger.getEvents(),
     forceSample: function () {
+      logger.logEvent(LogEvent.ForceSampleCalled);
       setUniqueId(createSyncId(true));
-      console.log("Sampling has been turned on for this session.");
     },
     doUpdate: () => {
       // Deprecated, intentionally empty.
