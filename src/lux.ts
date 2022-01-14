@@ -1665,25 +1665,31 @@ LUX = (function () {
   }
 
   function _addUnloadHandlers() {
-    // As well as visibilitychange, we also listen for pagehide. This is really
-    // only for browsers with buggy visibilitychange implementations. For really
-    // old browsers that don't support pagehide, we use beforeunload.
-    const terminationEvent = "onpagehide" in self ? "pagehide" : "beforeunload";
-
     const onunload = () => {
       gFlags = addFlag(gFlags, Flags.BeaconSentFromUnloadHandler);
       _sendLux();
       _sendIx();
     };
 
-    const onHiddenOrPageHide = (event: Event) => {
-      if (event.type === terminationEvent || document.visibilityState === "hidden") {
-        onunload();
-      }
-    };
+    // As well as visibilitychange, we also listen for pagehide. This is really only for browsers
+    // with buggy visibilitychange implementations. For much older browsers that don't support
+    // pagehide, we use unload and beforeunload.
+    if ("onpagehide" in self) {
+      addListener("pagehide", onunload, true);
+    } else {
+      addListener("unload", onunload, true);
+      addListener("beforeunload", onunload, true);
+    }
 
-    addListener(terminationEvent, onHiddenOrPageHide, true);
-    addListener("visibilitychange", onHiddenOrPageHide, true);
+    addListener(
+      "visibilitychange",
+      () => {
+        if (document.visibilityState === "hidden") {
+          onunload();
+        }
+      },
+      true
+    );
   }
 
   function _addIxHandlers() {
