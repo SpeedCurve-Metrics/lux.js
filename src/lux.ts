@@ -11,26 +11,29 @@ let LUX: LuxGlobal = window.LUX || {};
 LUX = (function () {
   const SCRIPT_VERSION = "300";
   const logger = new Logger();
+  const userConfig = Config.fromObject(LUX);
 
   logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION]);
 
   // Log JS errors.
-  const _errorUrl = "https://lux.speedcurve.com/error/"; // everything before the "?"
   let nErrors = 0;
-  const maxErrors = 5; // Some pages have 50K errors. Set a limit on how many we record.
   function errorHandler(e: ErrorEvent) {
+    if (!userConfig.trackErrors) {
+      return;
+    }
+
     nErrors++;
     if (e && "undefined" !== typeof e.filename && "undefined" !== typeof e.message) {
       // it is a valid error object
       if (
         -1 !== e.filename.indexOf("/lux.js?") ||
         -1 !== e.message.indexOf("LUX") || // Always send LUX errors.
-        (nErrors <= maxErrors && "function" === typeof _sample && _sample())
+        (nErrors <= userConfig.maxErrors && "function" === typeof _sample && _sample())
       ) {
         // Sample & limit other errors.
         // Send the error beacon.
         new Image().src =
-          _errorUrl +
+          userConfig.errorBeaconUrl +
           "?v=" +
           SCRIPT_VERSION +
           "&id=" +
@@ -46,7 +49,10 @@ LUX = (function () {
           "&l=" +
           encodeURIComponent(_getPageLabel()) +
           (connectionType() ? "&ct=" + connectionType() : "") +
-          "";
+          "&HN=" +
+          encodeURIComponent(document.location.hostname) +
+          "&PN=" +
+          encodeURIComponent(document.location.pathname);
       }
     }
   }
@@ -112,19 +118,11 @@ LUX = (function () {
   const perf = window.performance;
   const gMaxQuerystring = 8190; // split the beacon querystring if it gets longer than this
 
-  const userConfig = Config.fromObject(LUX);
-
-  const _beaconUrl = userConfig.beaconUrl;
-  const _samplerate = userConfig.samplerate;
-
   if (_sample()) {
-    logger.logEvent(LogEvent.SessionIsSampled, [_samplerate]);
+    logger.logEvent(LogEvent.SessionIsSampled, [userConfig.samplerate]);
   } else {
-    logger.logEvent(LogEvent.SessionIsNotSampled, [_samplerate]);
+    logger.logEvent(LogEvent.SessionIsNotSampled, [userConfig.samplerate]);
   }
-
-  const _auto = userConfig.auto;
-  const _sendBeaconOnPageHidden = userConfig.sendBeaconOnPageHidden;
 
   // Get a timestamp as close to navigationStart as possible.
   let _navigationStart = LUX.ns ? LUX.ns : now(); // create a _navigationStart
@@ -691,7 +689,7 @@ LUX = (function () {
             "e" +
             parseEval +
             "r" +
-            _samplerate + // sample rate
+            userConfig.samplerate + // sample rate
             (transferSize ? "x" + transferSize : "") +
             (gLuxSnippetStart ? "l" + gLuxSnippetStart : "") +
             "s" +
@@ -747,12 +745,12 @@ LUX = (function () {
   // _sample()
   // Return true if beacons for this page should be sampled.
   function _sample() {
-    if ("undefined" === typeof gUid || "undefined" === typeof _samplerate) {
+    if ("undefined" === typeof gUid || "undefined" === typeof userConfig.samplerate) {
       return false; // bail
     }
 
     const nThis = ("" + gUid).substr(-2); // number for THIS page - from 00 to 99
-    return parseInt(nThis) < _samplerate;
+    return parseInt(nThis) < userConfig.samplerate;
   }
 
   // Return a string of Customer Data formatted for beacon querystring.
@@ -1312,7 +1310,7 @@ LUX = (function () {
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
     // So we create a base URL that has all the necessary information:
     const baseUrl =
-      _beaconUrl +
+      userConfig.beaconUrl +
       "?v=" +
       SCRIPT_VERSION +
       "&id=" +
@@ -1473,7 +1471,7 @@ LUX = (function () {
         encodeURIComponent(document.location.hostname) +
         "&PN=" +
         encodeURIComponent(document.location.pathname);
-      const beaconUrl = _beaconUrl + querystring;
+      const beaconUrl = userConfig.beaconUrl + querystring;
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 
@@ -1515,7 +1513,7 @@ LUX = (function () {
         encodeURIComponent(document.location.hostname) +
         "&PN=" +
         encodeURIComponent(document.location.pathname);
-      const beaconUrl = _beaconUrl + querystring;
+      const beaconUrl = userConfig.beaconUrl + querystring;
       logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
     }
@@ -1828,7 +1826,7 @@ LUX = (function () {
 
   // Set "LUX.auto=false" to disable send results automatically and
   // instead you must call LUX.send() explicitly.
-  if (_auto) {
+  if (userConfig.auto) {
     if ("complete" == document.readyState) {
       // If onload has already passed, send the beacon now.
       _sendLux();
@@ -1841,43 +1839,38 @@ LUX = (function () {
   }
 
   // Add the unload handlers for auto mode, or when LUX.measureUntil is "pagehidden"
-  if (_sendBeaconOnPageHidden) {
+  if (userConfig.sendBeaconOnPageHidden) {
     _addUnloadHandlers();
   }
 
-  // Regardless of _auto, we need to register the IX handlers immediately.
+  // Regardless of userConfig.auto, we need to register the IX handlers immediately.
   _addIxHandlers();
 
   // This is the public API.
-  const _LUX = {
-    // functions
-    mark: _mark,
-    measure: _measure,
-    init: _init,
-    send: _sendLux,
-    addData: _addData,
-    getSessionId: _getUniqueId, // so customers can do their own sampling
-    getDebug: () => logger.getEvents(),
-    forceSample: function () {
-      logger.logEvent(LogEvent.ForceSampleCalled);
-      setUniqueId(createSyncId(true));
-    },
-    doUpdate: () => {
-      // Deprecated, intentionally empty.
-    },
-    cmd: _runCommand,
-
-    // properties
-    beaconUrl: _beaconUrl, // where to send the beacon
-    samplerate: _samplerate, // percentage of beacons to accept
-    auto: _auto, // whether to automatically send the beacon after onload
-    label: typeof LUX.label !== "undefined" ? LUX.label : undefined, // the "name" of this page or episode
-    jspagelabel: typeof LUX.jspagelabel !== "undefined" ? LUX.jspagelabel : undefined,
-    version: SCRIPT_VERSION, // use this for self-updating
-    ae: [], // array for error handler (ignored)
-    al: [], // array for Long Tasks (ignored)
-    debug: LUX.debug ? true : false,
+  const _LUX: LuxGlobal = userConfig;
+  // Functions
+  _LUX.mark = _mark;
+  _LUX.measure = _measure;
+  _LUX.init = _init;
+  _LUX.send = _sendLux;
+  _LUX.addData = _addData;
+  _LUX.getSessionId = _getUniqueId; // so customers can do their own sampling
+  _LUX.getDebug = () => logger.getEvents();
+  _LUX.forceSample = () => {
+    logger.logEvent(LogEvent.ForceSampleCalled);
+    setUniqueId(createSyncId(true));
   };
+  _LUX.doUpdate = () => {
+    // Deprecated, intentionally empty.
+  };
+  _LUX.cmd = _runCommand;
+
+  // Public properties
+  _LUX.version = SCRIPT_VERSION;
+
+  // "Private" properties
+  _LUX.ae = []; // array for error handler (ignored)
+  _LUX.al = []; // array for Long Tasks (ignored)
 
   /**
    * Run a command from the command queue

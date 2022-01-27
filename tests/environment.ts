@@ -13,10 +13,16 @@ class CustomEnvironment extends PuppeteerEnvironment {
 
     console.log(`Running tests in ${browserVersion}`);
 
+    this.global.requestInterceptor = new RequestInterceptor(this.global.page);
+    this.global.navigateTo = (url) => this.global.page.goto(url, { waitUntil: "networkidle0" });
+    this.global.reportErrors = true;
+
     this.global.page.setCacheEnabled(false);
 
     this.global.page.on("pageerror", (error) => {
-      console.error("[PAGE ERROR]", error);
+      if (this.global.reportErrors) {
+        console.error("[PAGE ERROR]", error);
+      }
     });
 
     this.global.page.on("console", (msg) => {
@@ -32,9 +38,6 @@ class CustomEnvironment extends PuppeteerEnvironment {
         }
       });
     });
-
-    this.global.requestInterceptor = new RequestInterceptor(this.global.page);
-    this.global.navigateTo = (url) => this.global.page.goto(url, { waitUntil: "networkidle0" });
   }
 
   async teardown() {

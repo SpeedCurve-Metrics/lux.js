@@ -3,12 +3,15 @@ export interface ConfigObject {
   beaconUrl: string;
   customerid?: string;
   debug?: boolean;
+  errorBeaconUrl: string;
   jspagelabel?: string;
   label?: string;
+  maxErrors: number;
   maxMeasureTime: number;
   measureUntil: "onload" | "pagehidden";
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
+  trackErrors: boolean;
 }
 
 export type UserConfig = Partial<ConfigObject>;
@@ -21,11 +24,15 @@ export function fromObject(obj: UserConfig): ConfigObject {
     beaconUrl: getProperty(obj, "beaconUrl", "https://lux.speedcurve.com/lux/"),
     customerid: getProperty(obj, "customerid", undefined),
     debug: getProperty(obj, "debug", false),
+    errorBeaconUrl: getProperty(obj, "errorBeaconUrl", "https://lux.speedcurve.com/error/"),
     jspagelabel: getProperty(obj, "jspagelabel", undefined),
+    label: getProperty(obj, "label", undefined),
+    maxErrors: getProperty(obj, "maxErrors", 5),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
     measureUntil: getProperty(obj, "measureUntil", "onload"),
     samplerate: getProperty(obj, "samplerate", 100),
     sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
+    trackErrors: getProperty(obj, "trackErrors", true),
   };
 }
 

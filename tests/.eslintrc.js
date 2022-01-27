@@ -5,6 +5,7 @@ module.exports = {
   },
   globals: {
     page: true,
+    reportErrors: true,
     requestInterceptor: true,
     navigateTo: true,
   },

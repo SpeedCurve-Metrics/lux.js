@@ -22,7 +22,7 @@ const server = createServer((req, res) => {
         res.writeHead(404);
         res.end("Not Found");
       } else {
-        let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';`;
+        let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/';`;
 
         if (parsedUrl.query.jspagelabel) {
           preamble += `LUX.jspagelabel=${JSON.stringify(parsedUrl.query.jspagelabel)};`;
@@ -32,9 +32,9 @@ const server = createServer((req, res) => {
         res.end(preamble + contents);
       }
     });
-  } else if (pathname == "/beacon/") {
-    res.writeHead(200, { "content-type": "application/javascript" });
-    res.end(`/* Beacon received at ${new Date()} */`);
+  } else if (pathname == "/beacon/" || pathname == "/error/") {
+    res.writeHead(200, { "content-type": "image/webp" });
+    res.end();
   } else {
     readFile(filePath, (err, contents) => {
       if (err) {

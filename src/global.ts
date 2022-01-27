@@ -8,12 +8,19 @@ type CommandArg = any;
 export interface LuxGlobal extends UserConfig {
   ac?: Command[];
   addData?: (name: string, value: unknown) => void;
+  ae?: unknown[];
+  al?: unknown[];
   cmd?: (cmd: Command) => void;
+  doUpdate?: () => void;
+  forceSample?: () => void;
   gaMarks?: PerformanceEntryList;
   gaMeasures?: PerformanceEntryList;
+  getDebug?: () => void;
+  getSessionId?: () => void;
   init?: () => void;
   mark?: typeof performance.mark;
   measure?: typeof performance.measure;
   ns?: number;
   send?: () => void;
+  version?: string;
 }
