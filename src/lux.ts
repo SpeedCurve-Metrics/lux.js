@@ -798,6 +798,7 @@ LUX = (function () {
     gSyncId = createSyncId();
     gUid = refreshUniqueId(gSyncId);
     gaPerfEntries.splice(0); // clear out the array of performance entries (do NOT redefine gaPerfEntries!)
+    nErrors = 0;
 
     // Clear flags then set the flag that init was called (ie, this is a SPA).
     gFlags = 0;

@@ -45,7 +45,7 @@ describe("LUX JavaScript error tracking", () => {
     expect(errorBeacon.searchParams.get("PN")).toEqual("/auto-false.html");
   });
 
-  test.only("errors can be limited", async () => {
+  test("errors can be limited", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
     await navigateTo("http://localhost:3000/auto-false.html");
@@ -55,6 +55,21 @@ describe("LUX JavaScript error tracking", () => {
     await page.addScriptTag({ content: "bam()" });
 
     expect(errorRequests.count()).toEqual(2);
+  });
+
+  test("max errors are reset for each page view", async () => {
+    const errorRequests = requestInterceptor.createRequestMatcher("/error/");
+
+    await navigateTo("http://localhost:3000/auto-false.html");
+    await page.evaluate("LUX.maxErrors = 2");
+    await page.evaluate("LUX.send()");
+    await page.addScriptTag({ content: "bar()" });
+    await page.addScriptTag({ content: "baz()" });
+    await page.addScriptTag({ content: "bam()" });
+    await page.evaluate("LUX.init()");
+    await page.addScriptTag({ content: "bam()" });
+
+    expect(errorRequests.count()).toEqual(3);
   });
 
   test("error reporting can be disabled", async () => {
