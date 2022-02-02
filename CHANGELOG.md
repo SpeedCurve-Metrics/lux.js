@@ -9,11 +9,17 @@ This is considered a major lux.js release and may contain some breaking changes.
 - `LUX.beaconMode` has been removed.
 - `LUX.getDebug()` now returns a different format.
 
+### New features
+
+- The [pathname](https://developer.mozilla.org/en-US/docs/Web/API/Location/pathname) of the current page is now tracked.
+- The synthetic onload time for SPAs can be marked with `LUX.markLoadTime()`, allowing `LUX.send()` to be called later in the page lifecycle.
+- JavaScript error tracking can be disabled by setting `LUX.errorTracking = false`.
+- The maximum number of JavaScript errors tracked per page view can be controlled with `LUX.maxErrors = <number>`.
+
 ### Improvements
 
 - Abandoned pages are now tracked by sending a beacon when the page state is **hidden**, rather than when the `unload` or `beforeunload` events are fired.
 - Developers who implement lux.js into a SPA by using `LUX.auto = false` can now opt-in to abandoned page tracking by setting `LUX.sendBeaconOnPageHidden = true`.
-- The pathname of the current page is now sent with every beacon.
 
 ### Bug fixes
 
