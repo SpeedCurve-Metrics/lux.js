@@ -1274,6 +1274,12 @@ LUX = (function () {
     return [curleft, curtop];
   }
 
+  // Mark the load time of the current page. Intended to be used in SPAs where it is not desirable to
+  // send the beacon as soon as the page has finished loading.
+  function _markLoadTime() {
+    _mark(gEndMark);
+  }
+
   // Beacon back the LUX data.
   function _sendLux() {
     logger.logEvent(LogEvent.SendCalled);
@@ -1289,8 +1295,14 @@ LUX = (function () {
       return;
     }
 
-    // Mark the "loadEventEnd" for this SPA page.
-    _mark(gEndMark);
+    const startMark = _getMark(gStartMark);
+    const endMark = _getMark(gEndMark);
+
+    if (!startMark || (endMark && endMark.startTime < startMark.startTime)) {
+      // Record the synthetic loadEventStart time for this page, unless it was already recorded
+      // with LUX.markLoadTime()
+      _markLoadTime();
+    }
 
     const sUT = userTimingValues(); // User Timing data
     const sET = elementTimingValues(); // Element Timing data
@@ -1852,6 +1864,7 @@ LUX = (function () {
   _LUX.mark = _mark;
   _LUX.measure = _measure;
   _LUX.init = _init;
+  _LUX.markLoadTime = _markLoadTime;
   _LUX.send = _sendLux;
   _LUX.addData = _addData;
   _LUX.getSessionId = _getUniqueId; // so customers can do their own sampling

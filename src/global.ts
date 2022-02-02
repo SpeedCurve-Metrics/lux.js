@@ -19,6 +19,7 @@ export interface LuxGlobal extends UserConfig {
   getSessionId?: () => void;
   init?: () => void;
   mark?: typeof performance.mark;
+  markLoadTime?: () => void;
   measure?: typeof performance.measure;
   ns?: number;
   send?: () => void;

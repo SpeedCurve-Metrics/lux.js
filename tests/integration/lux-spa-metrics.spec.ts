@@ -79,7 +79,7 @@ describe("LUX SPA", () => {
     const loadEventStart = extractCondensedValue(navigationTiming, "ls");
     const loadEventEnd = extractCondensedValue(navigationTiming, "le");
 
-    // We waited 50ms between LUX.init() and LUX.start(), so the load time should
+    // We waited 50ms between LUX.init() and LUX.send(), so the load time should
     // be at least 50ms. 60ms is an arbitrary upper limit to make sure we're not
     // over-reporting load time.
     expect(loadEventStart).toBeGreaterThanOrEqual(20);
@@ -90,5 +90,23 @@ describe("LUX SPA", () => {
     const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
 
     expect(hasFlag(beaconFlags, Flags.InitCalled)).toBe(true);
+  });
+
+  test("load time can be marked before the beacon is sent", async () => {
+    await navigateTo("http://localhost:3000/auto-false.html");
+    await page.evaluate("LUX.send()");
+
+    await page.evaluate("LUX.init()");
+    await page.waitForTimeout(10);
+    // await page.evaluate("LUX.markLoadTime()");
+    await page.waitForTimeout(50);
+    await page.evaluate("LUX.send()");
+
+    const beacon = luxRequests.getUrl(0);
+    const navigationTiming = beacon.searchParams.get("NT");
+    const loadEventStart = extractCondensedValue(navigationTiming, "ls");
+
+    expect(loadEventStart).toBeGreaterThan(10);
+    expect(loadEventStart).toBeLessThan(50);
   });
 });
