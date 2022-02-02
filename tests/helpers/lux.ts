@@ -1,3 +1,5 @@
+import { LogEvent, LogEventRecord } from "../../src/logger";
+
 /**
  * Extracts a single value from a LUX "condensed string" (a string of continuous
  * <key><val> pairs where <key> is a string and <val> is numeric)
@@ -37,4 +39,12 @@ export async function getPerformanceTimingMs(page, metric) {
  */
 export async function getElapsedMs(page) {
   return await page.evaluate("Math.round(performance.now())");
+}
+
+type DecodedLogEventRecord = [Date, string, ...unknown[]];
+
+const logEventLookup = Object.fromEntries(Object.entries(LogEvent).map((arr) => arr.reverse()));
+
+export function decodeEventLog(eventLog: LogEventRecord[]): DecodedLogEventRecord[] {
+  return eventLog.map(([date, eventId, ...args]) => [date, logEventLookup[eventId], ...args]);
 }

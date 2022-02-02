@@ -31,13 +31,13 @@ export const LogEvent = {
   PaintTimingNotSupported: 72,
 };
 
-type LogEventRecord = [number, number, ...unknown[]];
+export type LogEventRecord = [Date, number, ...unknown[]];
 
 export default class Logger {
   events: LogEventRecord[] = [];
 
   logEvent(event: number, args: unknown[] = []) {
-    this.events.push([Number(new Date()), event, args]);
+    this.events.push([new Date(), event, args]);
   }
 
   getEvents() {

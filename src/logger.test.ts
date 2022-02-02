@@ -10,7 +10,7 @@ describe("Logger", () => {
 
   test("events can be logged and retrieved", () => {
     const logger = new Logger();
-    const timestamp = Date.now();
+    const timestamp = new Date();
 
     logger.logEvent(LogEvent.EvaluationStart);
     logger.logEvent(LogEvent.AddDataCalled, ["varName", "value"]);
@@ -18,7 +18,7 @@ describe("Logger", () => {
 
     const events = logger.getEvents();
 
-    expect(events[0][0]).toBeGreaterThanOrEqual(timestamp);
+    expect(Number(events[0][0])).toBeGreaterThanOrEqual(Number(timestamp));
     expect(events[0][1]).toEqual(LogEvent.EvaluationStart);
     expect(events[1][1]).toEqual(LogEvent.AddDataCalled);
     expect(events[1][2]).toEqual(["varName", "value"]);
