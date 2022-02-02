@@ -1770,7 +1770,6 @@ LUX = (function () {
         }
       } catch (e) {
         logger.logEvent(LogEvent.PageLabelEvaluationError, [LUX.jspagelabel, e]);
-        console.log("Error evaluating page label", LUX.jspagelabel, e);
       }
     }
 
