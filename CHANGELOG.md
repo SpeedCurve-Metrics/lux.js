@@ -1,6 +1,6 @@
 # lux.js changelog
 
-## 2022-??-??: v300
+## 2022-02-14: v300
 
 This is considered a major lux.js release and may contain some breaking changes.
 
