@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>LUX interaction test page</title>
     <script>/*INJECT_SCRIPT*/</script>
+    <script src="/calculate-primes.js"></script>
     <script src="/js/lux.js?id=10001" defer crossorigin="anonymous"></script>
 </head>
 <body>
@@ -40,6 +41,7 @@
     <script>
         const button = document.querySelector("#button-with-js");
         button.addEventListener("click", () => {
+            calculatePrimes(0, 1_000_000);
             button.innerText = "Clicked!";
         });
     </script>
