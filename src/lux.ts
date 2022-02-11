@@ -1839,12 +1839,12 @@ LUX = (function () {
   // Set "LUX.auto=false" to disable send results automatically and
   // instead you must call LUX.send() explicitly.
   if (userConfig.auto) {
-    if ("complete" == document.readyState) {
+    if (document.readyState === "complete") {
       // If onload has already passed, send the beacon now.
       _sendLux();
     } else {
       // Ow, send the beacon slightly after window.onload.
-      addListener("load", function () {
+      addListener("load", () => {
         setTimeout(_sendLux, 200);
       });
     }
