@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LUX long tasks test page</title>
+    <script>/*INJECT_SCRIPT*/</script>
+    <script src="/calculate-primes.js"></script>
+    <script src="/js/lux.js?id=10001" defer crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>LUX long tasks test page</h1>
+
+    <p id="msg">Calculating primes... </p>
+
+    <button id="calculate-primes">Calculate more primes!</button>
+
+    <script>
+        let i = 0;
+        let step = 10000000;
+
+        const calculateMorePrimes = () => {
+            calculatePrimes(i * step, (i += 1) * step);
+            document.getElementById("msg").textContent += "Done.";
+        };
+
+        document.getElementById("calculate-primes").addEventListener("click", calculateMorePrimes);
+        calculateMorePrimes()
+    </script>
+</body>
+</html>

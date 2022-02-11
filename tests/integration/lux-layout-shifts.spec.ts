@@ -2,7 +2,7 @@ describe("LUX layout shifts", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
   test("CLS is measured", async () => {
-    await navigateTo("http://localhost:3000/default-with-layout-shift.html");
+    await navigateTo("http://localhost:3000/layout-shifts.html");
 
     const beacon = luxRequests.getUrl(0);
 

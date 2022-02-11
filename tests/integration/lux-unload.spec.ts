@@ -4,33 +4,37 @@ describe("LUX unload behaviour", () => {
   test("not automatically sending a beacon when the user navigates away from a page with LUX.auto = false", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     expect(luxRequests.count()).toEqual(0);
 
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     expect(luxRequests.count()).toEqual(0);
   });
 
   test("automatically sending a beacon when the user navigates away from the page", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-    await navigateTo("http://localhost:3000/auto-false-with-send-beacon-on-page-hidden.html");
+    await navigateTo(
+      "http://localhost:3000/default.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;"
+    );
     expect(luxRequests.count()).toEqual(0);
 
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     expect(luxRequests.count()).toEqual(1);
 
     const beacon = luxRequests.getUrl(0);
     const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
 
     expect(hasFlag(beaconFlags, Flags.BeaconSentFromUnloadHandler)).toBe(true);
-    expect(beacon.searchParams.get("l")).toEqual("LUX SPA test with sendBeaconOnPageHidden = true");
+    expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
   });
 
   test("automatically sending a beacon when the pagehide event fires", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-    await navigateTo("http://localhost:3000/auto-false-with-send-beacon-on-page-hidden.html");
+    await navigateTo(
+      "http://localhost:3000/default.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;"
+    );
     expect(luxRequests.count()).toEqual(0);
 
     await page.evaluate("document.dispatchEvent(new Event('pagehide'))");
@@ -45,7 +49,9 @@ describe("LUX unload behaviour", () => {
 
     // Delete the onpagehide property to trick lux.js into using the beforeunload event
     await page.evaluateOnNewDocument("delete window.onpagehide");
-    await navigateTo("http://localhost:3000/auto-false-with-send-beacon-on-page-hidden.html");
+    await navigateTo(
+      "http://localhost:3000/default.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;"
+    );
     expect(luxRequests.count()).toEqual(0);
 
     await page.evaluate("document.dispatchEvent(new Event('beforeunload'))");

@@ -8,7 +8,7 @@ describe("LUX SPA user timing", () => {
   });
 
   test("user timing marks and measures are recorded", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
 
     const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate("performance.mark('test-mark')");
@@ -29,7 +29,7 @@ describe("LUX SPA user timing", () => {
   });
 
   test("LUX.mark and LUX.measure work the same as performance.mark and performance.measure", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
 
     const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate("LUX.mark('test-mark')");
@@ -50,7 +50,7 @@ describe("LUX SPA user timing", () => {
   });
 
   test("user timing marks are relative to the previous LUX.init call", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
 
     await page.evaluate("LUX.send()");
     await page.evaluate("LUX.init()");
@@ -66,7 +66,7 @@ describe("LUX SPA user timing", () => {
   });
 
   test("global state is not affected by LUX", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
 
     await page.evaluate("performance.mark('my-mark')");
     await page.evaluate("performance.measure('my-measure', 'my-mark')");
@@ -79,7 +79,7 @@ describe("LUX SPA user timing", () => {
   });
 
   test("user timing marks and measures from previous beacons are not included", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
 
     await page.evaluate("performance.mark('first-test-mark')");
     await page.evaluate("performance.measure('first-test-measure', 'first-test-mark')");

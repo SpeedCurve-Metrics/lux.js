@@ -4,7 +4,7 @@ describe("LUX SPA CPU metrics", () => {
   test("long tasks are only reported for the SPA page they were associated with", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-    await navigateTo("http://localhost:3000/auto-false-with-cpu.html");
+    await navigateTo("http://localhost:3000/long-tasks.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
 
     let beacon = luxRequests.getUrl(0);

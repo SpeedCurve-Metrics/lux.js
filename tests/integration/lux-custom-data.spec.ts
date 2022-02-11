@@ -8,7 +8,7 @@ describe("LUX custom data", () => {
   });
 
   test("only valid customer data is sent", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.addData('stringVar', 'hello')");
     await page.evaluate("LUX.addData('emptyStringVar', '')");
     await page.evaluate("LUX.addData('numberVar', 123)");
@@ -33,7 +33,7 @@ describe("LUX custom data", () => {
   });
 
   test("custom data set before LUX.send is sent with the main beacon", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.addData('var1', 'hello')");
     await page.evaluate("LUX.send()");
 
@@ -64,7 +64,7 @@ describe("LUX custom data", () => {
   });
 
   test("custom data is retained between SPA pages", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.addData('var1', 'hello')");
     await page.evaluate("LUX.addData('var2', 'world')");
     await page.evaluate("LUX.send()");

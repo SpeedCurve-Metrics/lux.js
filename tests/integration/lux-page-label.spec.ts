@@ -8,14 +8,14 @@ describe("LUX page labels", () => {
       const beacon = luxRequests.getUrl(0);
       const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
 
-      expect(beacon.searchParams.get("l")).toEqual("LUX Auto Test");
+      expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
       expect(hasFlag(beaconFlags, Flags.PageLabelFromDocumentTitle)).toBe(true);
       expect(hasFlag(beaconFlags, Flags.PageLabelFromLabelProp)).toBe(false);
       expect(hasFlag(beaconFlags, Flags.PageLabelFromGlobalVariable)).toBe(false);
     });
 
     test("using a custom label", async () => {
-      await navigateTo("http://localhost:3000/default-with-label.html");
+      await navigateTo("http://localhost:3000/default.html?injectScript=LUX.label='Custom Label';");
       const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
       const beacon = luxRequests.getUrl(0);
       const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
@@ -32,7 +32,7 @@ describe("LUX page labels", () => {
       let beacon;
       const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-      await navigateTo("http://localhost:3000/auto-false.html");
+      await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
       await page.evaluate("LUX.label = 'First Label'");
       await page.evaluate("LUX.send()");
 
@@ -51,11 +51,11 @@ describe("LUX page labels", () => {
       let beacon;
       const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-      await navigateTo("http://localhost:3000/auto-false.html");
+      await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
       await page.evaluate("LUX.send()");
 
       beacon = luxRequests.getUrl(0);
-      expect(beacon.searchParams.get("l")).toEqual("LUX SPA Test");
+      expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
 
       await page.evaluate("LUX.init()");
       await page.evaluate("document.title = 'New Document Title'");
@@ -84,7 +84,9 @@ describe("LUX page labels", () => {
     });
 
     beforeAll(async () => {
-      await navigateTo("http://localhost:3000/auto-false-js-page-label.html");
+      await navigateTo(
+        "http://localhost:3000/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';"
+      );
     });
 
     test("can be taken from a global JS variable", async () => {
@@ -144,9 +146,7 @@ describe("LUX page labels", () => {
       await page.evaluate("window.config = {}");
       await page.evaluate("LUX.send()");
 
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual(
-        "LUX SPA Test With JS Page Label"
-      );
+      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("LUX default test page");
     });
 
     test("falls back to document title when JS variable evaluates to a falsey value", async () => {
@@ -154,9 +154,7 @@ describe("LUX page labels", () => {
       await page.evaluate("window.config.page[0].name = ''");
       await page.evaluate("LUX.send()");
 
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual(
-        "LUX SPA Test With JS Page Label"
-      );
+      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("LUX default test page");
     });
 
     test("internal LUX variables can't be accessed", async () => {
@@ -164,9 +162,7 @@ describe("LUX page labels", () => {
       await page.evaluate("LUX.jspagelabel = '_getPageLabel.toString()'");
       await page.evaluate("LUX.send()");
 
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual(
-        "LUX SPA Test With JS Page Label"
-      );
+      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("LUX default test page");
     });
   });
 });

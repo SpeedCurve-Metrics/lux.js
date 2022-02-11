@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LUX default test page</title>
+    <title>LUX JavaScript errors test page</title>
     <script>/*INJECT_SCRIPT*/</script>
     <script src="/js/lux.js?id=10001" defer crossorigin="anonymous"></script>
 </head>
 <body>
-    <h1>LUX default test page</h1>
+    <h1>LUX JavaScript errors test page</h1>
+    <script>foo.bar()</script>
+    <script>!!!</script>
 </body>
 </html>

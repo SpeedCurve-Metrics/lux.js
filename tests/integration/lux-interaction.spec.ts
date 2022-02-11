@@ -6,7 +6,7 @@ describe("LUX interaction", () => {
     let ixBeacon;
 
     beforeAll(async () => {
-      await navigateTo("http://localhost:3000/default-with-interaction.html");
+      await navigateTo("http://localhost:3000/interaction.html");
       await page.click("#button-with-id");
 
       luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
@@ -35,17 +35,17 @@ describe("LUX interaction", () => {
 
     test("only high level metrics are sent in the interaction beacon", () => {
       expect(ixBeacon.searchParams.get("HN")).toEqual("localhost");
-      expect(ixBeacon.searchParams.get("PN")).toEqual("/default-with-interaction.html");
+      expect(ixBeacon.searchParams.get("PN")).toEqual("/interaction.html");
 
       // Pathname should be the last query parameter
       const lastQueryParam = [...ixBeacon.searchParams.entries()].pop();
 
-      expect(lastQueryParam).toEqual(["PN", "/default-with-interaction.html"]);
+      expect(lastQueryParam).toEqual(["PN", "/interaction.html"]);
     });
   });
 
   test("gather IX metrics in a SPA", async () => {
-    await navigateTo("http://localhost:3000/auto-false-with-interaction.html");
+    await navigateTo("http://localhost:3000/interaction.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
     await page.waitForTimeout(100);
 

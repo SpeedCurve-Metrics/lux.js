@@ -13,7 +13,7 @@ describe("LUX beacon request", () => {
     const mediumString = new Array(5000).fill("A").join(""); // About 5KB
     const longString = new Array(8000).fill("A").join(""); // About 8KB (the URL length limit)
 
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(`performance.mark("${mediumString}")`);
     await page.evaluate("LUX.send()");
     expect(luxRequests.count()).toEqual(1);

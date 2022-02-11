@@ -1,8 +1,8 @@
 import { extractCondensedValue, parseNestedPairs } from "../helpers/lux";
 
 const testPages = [
-  ["default configuration", "default.html"],
-  ["default configuration with early longtasks", "default-with-snippet-longtasks.html"],
+  ["default page", "default.html"],
+  ["default page with early longtasks", "head-long-tasks.html"],
 ];
 
 describe.each(testPages)("%s", (_, testPage) => {
@@ -49,8 +49,8 @@ describe.each(testPages)("%s", (_, testPage) => {
   test("CPU stats are sent", () => {
     const cpuStats = parseNestedPairs(beacon.searchParams.get("CPU"));
 
-    // There should only be long tasks on the "default-with-snippet-longtasks" page
-    if (testPage === "default-with-snippet-longtasks.html") {
+    // There should only be long tasks on the "head-long-tasks" page
+    if (testPage === "head-long-tasks.html") {
       // Total "script" time
       expect(parseInt(cpuStats.s, 10)).toEqual(110);
 

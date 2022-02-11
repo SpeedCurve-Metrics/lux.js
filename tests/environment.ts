@@ -1,8 +1,9 @@
 import PuppeteerEnvironment from "jest-environment-puppeteer";
+import { HTTPResponse, PuppeteerLifeCycleEvent } from "puppeteer";
 import RequestInterceptor from "./request-interceptor";
 declare global {
   const requestInterceptor: RequestInterceptor;
-  const navigateTo: typeof page.goto;
+  const navigateTo: (url: string, waitUntil?: PuppeteerLifeCycleEvent) => Promise<HTTPResponse>;
 }
 
 class CustomEnvironment extends PuppeteerEnvironment {
@@ -13,9 +14,11 @@ class CustomEnvironment extends PuppeteerEnvironment {
 
     console.log(`Running tests in ${browserVersion}`);
 
-    this.global.requestInterceptor = new RequestInterceptor(this.global.page);
-    this.global.navigateTo = (url) => this.global.page.goto(url, { waitUntil: "networkidle0" });
     this.global.reportErrors = true;
+    this.global.requestInterceptor = new RequestInterceptor(this.global.page);
+    this.global.navigateTo = (url: string, waitUntil: PuppeteerLifeCycleEvent = "networkidle0") => {
+      return this.global.page.goto(url, { waitUntil });
+    };
 
     this.global.page.setCacheEnabled(false);
 

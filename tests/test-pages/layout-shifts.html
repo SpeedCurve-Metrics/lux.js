@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LUX layout shif test page</title>
+    <script>/*INJECT_SCRIPT*/</script>
+    <script src="/js/lux.js?id=10001" defer crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>Layout shift test page</h1>
+    <script>
+        for (let i = 1; i < 10; i++) {
+            const el = document.createElement("img");
+            el.src = `red.png?delay=${i * 10}`;
+            el.width = i * 30;
+
+            document.body.appendChild(el);
+        }
+    </script>
+</body>
+</html>

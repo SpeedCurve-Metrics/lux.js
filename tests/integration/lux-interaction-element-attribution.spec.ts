@@ -4,7 +4,7 @@ describe("LUX interaction element attribution", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
   beforeAll(async () => {
-    await navigateTo("http://localhost:3000/auto-false-with-interaction.html");
+    await navigateTo("http://localhost:3000/interaction.html?injectScript=LUX.auto=false;");
   });
 
   afterEach(async () => {

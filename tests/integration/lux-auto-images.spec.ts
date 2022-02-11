@@ -2,7 +2,7 @@ import { extractCondensedValue } from "../helpers/lux";
 
 describe("LUX auto images", () => {
   test("calculating the number of images on the page", async () => {
-    await navigateTo("http://localhost:3000/default-with-images.html");
+    await navigateTo("http://localhost:3000/images.html");
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const beacon = luxRequests.getUrl(0);
 

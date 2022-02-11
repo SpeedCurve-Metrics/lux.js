@@ -9,7 +9,7 @@ describe("LUX SPA", () => {
   });
 
   test("sending a LUX beacon only when LUX.send is called", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     expect(luxRequests.count()).toEqual(0);
 
     await page.evaluate("LUX.send()");
@@ -17,7 +17,7 @@ describe("LUX SPA", () => {
   });
 
   test("regular page metrics are sent for the first SPA page view", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
@@ -40,7 +40,7 @@ describe("LUX SPA", () => {
   });
 
   test("calling LUX.init before LUX.send does not lose data", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.init()");
     await page.evaluate("LUX.send()");
 
@@ -53,7 +53,7 @@ describe("LUX SPA", () => {
   });
 
   test("load time value for the first pages is the time between navigationStart and loadEventStart", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
     const beacon = luxRequests.getUrl(0);
     const navigationTiming = beacon.searchParams.get("NT");
@@ -67,7 +67,7 @@ describe("LUX SPA", () => {
   });
 
   test("load time value for subsequent pages is the time between LUX.init() and LUX.send()", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
 
     await page.evaluate("LUX.init()");
@@ -93,7 +93,7 @@ describe("LUX SPA", () => {
   });
 
   test("load time can be marked before the beacon is sent", async () => {
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
 
     await page.evaluate("LUX.init()");

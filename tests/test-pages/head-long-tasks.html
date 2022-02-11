@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LUX head long tasks test page</title>
+    <script>/*INJECT_SCRIPT*/</script>
+    <script>
+        // This page exists to test that the lux.js PerformanceObserver logic
+        // works correctly when the inline snippet's PerformanceObserver is not
+        // empty.
+        LUX_al.push({
+            entryType: "longtask",
+            startTime: 0,
+            duration: 50,
+            attribution: [{
+                name: "unknown",
+            }],
+        }, {
+            entryType: "longtask",
+            startTime: 0,
+            duration: 60,
+            attribution: [{
+                name: "unknown",
+            }],
+        });
+    </script>
+    <script src="/js/lux.js?id=10001" defer crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>LUX head long tasks test page</h1>
+</body>
+</html>

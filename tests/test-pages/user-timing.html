@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LUX user timing test page</title>
+    <script>
+        performance.mark("first-mark");
+    </script>
+    <script>/*INJECT_SCRIPT*/</script>
+    <script src="/js/lux.js?id=10001" defer crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>LUX user timing test page</h1>
+    <script>
+        performance.mark("test-mark");
+        performance.measure("test-measure", "first-mark");
+    </script>
+</body>
+</html>

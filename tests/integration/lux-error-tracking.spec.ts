@@ -11,7 +11,7 @@ describe("LUX JavaScript error tracking", () => {
     const beaconRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/default-with-errors.html");
+    await navigateTo("http://localhost:3000/javascript-errors.html");
 
     expect(beaconRequests.count()).toEqual(1);
     expect(errorRequests.count()).toEqual(2);
@@ -20,20 +20,20 @@ describe("LUX JavaScript error tracking", () => {
     const secondError = errorRequests.getUrl(1);
 
     expect(firstError.searchParams.get("msg")).toContain("ReferenceError: foo is not defined");
-    expect(firstError.searchParams.get("l")).toEqual("LUX Auto Test");
+    expect(firstError.searchParams.get("l")).toEqual("LUX JavaScript errors test page");
     expect(firstError.searchParams.get("HN")).toEqual("localhost");
-    expect(firstError.searchParams.get("PN")).toEqual("/default-with-errors.html");
+    expect(firstError.searchParams.get("PN")).toEqual("/javascript-errors.html");
 
     expect(secondError.searchParams.get("msg")).toContain("SyntaxError: Unexpected end of input");
-    expect(secondError.searchParams.get("l")).toEqual("LUX Auto Test");
+    expect(secondError.searchParams.get("l")).toEqual("LUX JavaScript errors test page");
     expect(secondError.searchParams.get("HN")).toEqual("localhost");
-    expect(secondError.searchParams.get("PN")).toEqual("/default-with-errors.html");
+    expect(secondError.searchParams.get("PN")).toEqual("/javascript-errors.html");
   });
 
   test("error reporting in a SPA", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.label = 'SPA Label'");
     await page.addScriptTag({ content: "foo.bar()" });
 
@@ -42,13 +42,15 @@ describe("LUX JavaScript error tracking", () => {
     expect(errorBeacon.searchParams.get("msg")).toContain("ReferenceError: foo is not defined");
     expect(errorBeacon.searchParams.get("l")).toEqual("SPA Label");
     expect(errorBeacon.searchParams.get("HN")).toEqual("localhost");
-    expect(errorBeacon.searchParams.get("PN")).toEqual("/auto-false.html");
+    expect(errorBeacon.searchParams.get("PN")).toEqual(
+      "/default.html"
+    );
   });
 
   test("errors can be limited", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.maxErrors = 2");
     await page.addScriptTag({ content: "bar()" });
     await page.addScriptTag({ content: "baz()" });
@@ -60,7 +62,7 @@ describe("LUX JavaScript error tracking", () => {
   test("max errors are reset for each page view", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.maxErrors = 2");
     await page.evaluate("LUX.send()");
     await page.addScriptTag({ content: "bar()" });
@@ -75,7 +77,7 @@ describe("LUX JavaScript error tracking", () => {
   test("error reporting can be disabled", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/auto-false.html");
+    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.trackErrors = false");
     await page.addScriptTag({ content: "foo.bar()" });
 
