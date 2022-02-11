@@ -36,7 +36,7 @@ describe("LUX unload behaviour", () => {
     await page.evaluate("document.dispatchEvent(new Event('pagehide'))");
     expect(luxRequests.count()).toEqual(1);
 
-    expect(hasFlag(beacon, Flags.BeaconSentFromUnloadHandler)).toBe(true);
+    expect(hasFlag(luxRequests.getUrl(0), Flags.BeaconSentFromUnloadHandler)).toBe(true);
   });
 
   test("automatically sending a beacon when the beforeunload event fires", async () => {
@@ -50,6 +50,6 @@ describe("LUX unload behaviour", () => {
     await page.evaluate("document.dispatchEvent(new Event('beforeunload'))");
     expect(luxRequests.count()).toEqual(1);
 
-    expect(hasFlag(beacon, Flags.BeaconSentFromUnloadHandler)).toBe(true);
+    expect(hasFlag(luxRequests.getUrl(0), Flags.BeaconSentFromUnloadHandler)).toBe(true);
   });
 });
