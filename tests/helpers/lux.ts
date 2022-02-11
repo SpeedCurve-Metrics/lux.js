@@ -1,4 +1,4 @@
-import { hasFlag } from "../../src/flags";
+import * as Flags from "../../src/flags";
 import { LogEvent, LogEventRecord } from "../../src/logger";
 
 export function getCpuStat(beacon: URL, key: string): number | null {
@@ -22,7 +22,7 @@ export function getNavTiming(beacon: URL, key: string): number | null {
 export function hasFlag(beacon: URL, flag: number): boolean {
   const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
 
-  return hasFlag(beaconFlags, flag);
+  return Flags.hasFlag(beaconFlags, flag);
 }
 
 /**
