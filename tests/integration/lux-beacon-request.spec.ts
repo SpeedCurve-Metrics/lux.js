@@ -2,7 +2,7 @@ describe("LUX beacon request", () => {
   test("beacon is sent with a GET request", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-    await navigateTo("http://localhost:3000/default.html");
+    await navigateTo("/default.html");
 
     expect(luxRequests.count()).toEqual(1);
     expect(luxRequests.get(0).method()).toEqual("GET");
@@ -13,7 +13,7 @@ describe("LUX beacon request", () => {
     const mediumString = new Array(5000).fill("A").join(""); // About 5KB
     const longString = new Array(8000).fill("A").join(""); // About 8KB (the URL length limit)
 
-    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(`performance.mark("${mediumString}")`);
     await page.evaluate("LUX.send()");
     expect(luxRequests.count()).toEqual(1);

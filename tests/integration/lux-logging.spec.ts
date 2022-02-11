@@ -4,7 +4,7 @@ describe("LUX logging", () => {
   test("logs can be retrieved", async () => {
     let logs = [];
 
-    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
     logs = await page.evaluate("LUX.getDebug()");
 
     expect(logs[0][1]).toEqual(LogEvent.EvaluationStart);

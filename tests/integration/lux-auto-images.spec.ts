@@ -1,16 +1,12 @@
-import { extractCondensedValue } from "../helpers/lux";
+import { getPageStat } from "../helpers/lux";
 
 describe("LUX auto images", () => {
   test("calculating the number of images on the page", async () => {
-    await navigateTo("http://localhost:3000/images.html");
+    await navigateTo("/images.html");
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const beacon = luxRequests.getUrl(0);
 
-    const pageStats = beacon.searchParams.get("PS");
-    const totalImages = extractCondensedValue(pageStats, "it");
-    const imagesAboveFold = extractCondensedValue(pageStats, "ia");
-
-    expect(totalImages).toEqual(3);
-    expect(imagesAboveFold).toEqual(2);
+    expect(getPageStat(beacon, "it")).toEqual(3);
+    expect(getPageStat(beacon, "ia")).toEqual(2);
   });
 });

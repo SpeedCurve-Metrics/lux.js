@@ -17,7 +17,7 @@ class CustomEnvironment extends PuppeteerEnvironment {
     this.global.reportErrors = true;
     this.global.requestInterceptor = new RequestInterceptor(this.global.page);
     this.global.navigateTo = (url: string, waitUntil: PuppeteerLifeCycleEvent = "networkidle0") => {
-      return this.global.page.goto(url, { waitUntil });
+      return this.global.page.goto(`http://localhost:3000${url}`, { waitUntil });
     };
 
     this.global.page.setCacheEnabled(false);

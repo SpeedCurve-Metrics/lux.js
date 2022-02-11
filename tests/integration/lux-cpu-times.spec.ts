@@ -1,35 +1,43 @@
-import { parseNestedPairs } from "../helpers/lux";
+import { getCpuStat } from "../helpers/lux";
 
 describe("LUX CPU timing", () => {
   test("detect and report long tasks on the page", async () => {
-    await navigateTo("http://localhost:3000/long-tasks.html");
+    await navigateTo("/long-tasks.html");
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const beacon = luxRequests.getUrl(0);
-    const cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
-    expect(parseInt(cpuMetrics.n, 10)).toEqual(1);
-    expect(parseInt(cpuMetrics.s, 10)).toBeGreaterThan(49);
+    const longTaskCount = getCpuStat(beacon, "n");
+    const longTaskTotal = getCpuStat(beacon, "s");
+    const longTaskMedian = getCpuStat(beacon, "d");
+    const longTaskMax = getCpuStat(beacon, "x");
+
+    expect(longTaskCount).toEqual(1);
+    expect(longTaskTotal).toBeGreaterThan(49);
 
     // The test page should have one long task, so the median should equal the total
-    expect(cpuMetrics.d).toEqual(cpuMetrics.s);
+    expect(longTaskMedian).toEqual(longTaskTotal);
 
     // And the max should equal the total
-    expect(cpuMetrics.x).toEqual(cpuMetrics.s);
+    expect(longTaskMax).toEqual(longTaskTotal);
   });
 
   test("detect and report long tasks that occured before the lux.js script", async () => {
-    await navigateTo("http://localhost:3000/long-tasks.html?noInlineSnippet");
+    await navigateTo("/long-tasks.html?noInlineSnippet");
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const beacon = luxRequests.getUrl(0);
-    const cpuMetrics = parseNestedPairs(beacon.searchParams.get("CPU"));
 
-    expect(parseInt(cpuMetrics.n, 10)).toEqual(1);
-    expect(parseInt(cpuMetrics.s, 10)).toBeGreaterThan(49);
+    const longTaskCount = getCpuStat(beacon, "n");
+    const longTaskTotal = getCpuStat(beacon, "s");
+    const longTaskMedian = getCpuStat(beacon, "d");
+    const longTaskMax = getCpuStat(beacon, "x");
+
+    expect(longTaskCount).toEqual(1);
+    expect(longTaskTotal).toBeGreaterThan(49);
 
     // The test page should have one long task, so the median should equal the total
-    expect(cpuMetrics.d).toEqual(cpuMetrics.s);
+    expect(longTaskMedian).toEqual(longTaskTotal);
 
     // And the max should equal the total
-    expect(cpuMetrics.x).toEqual(cpuMetrics.s);
+    expect(longTaskMax).toEqual(longTaskTotal);
   });
 });

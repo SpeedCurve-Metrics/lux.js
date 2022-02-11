@@ -11,7 +11,7 @@ describe("LUX JavaScript error tracking", () => {
     const beaconRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/javascript-errors.html");
+    await navigateTo("/javascript-errors.html");
 
     expect(beaconRequests.count()).toEqual(1);
     expect(errorRequests.count()).toEqual(2);
@@ -33,7 +33,7 @@ describe("LUX JavaScript error tracking", () => {
   test("error reporting in a SPA", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.label = 'SPA Label'");
     await page.addScriptTag({ content: "foo.bar()" });
 
@@ -42,15 +42,13 @@ describe("LUX JavaScript error tracking", () => {
     expect(errorBeacon.searchParams.get("msg")).toContain("ReferenceError: foo is not defined");
     expect(errorBeacon.searchParams.get("l")).toEqual("SPA Label");
     expect(errorBeacon.searchParams.get("HN")).toEqual("localhost");
-    expect(errorBeacon.searchParams.get("PN")).toEqual(
-      "/default.html"
-    );
+    expect(errorBeacon.searchParams.get("PN")).toEqual("/default.html");
   });
 
   test("errors can be limited", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.maxErrors = 2");
     await page.addScriptTag({ content: "bar()" });
     await page.addScriptTag({ content: "baz()" });
@@ -62,7 +60,7 @@ describe("LUX JavaScript error tracking", () => {
   test("max errors are reset for each page view", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.maxErrors = 2");
     await page.evaluate("LUX.send()");
     await page.addScriptTag({ content: "bar()" });
@@ -77,7 +75,7 @@ describe("LUX JavaScript error tracking", () => {
   test("error reporting can be disabled", async () => {
     const errorRequests = requestInterceptor.createRequestMatcher("/error/");
 
-    await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.trackErrors = false");
     await page.addScriptTag({ content: "foo.bar()" });
 

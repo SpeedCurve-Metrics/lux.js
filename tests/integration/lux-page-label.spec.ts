@@ -1,29 +1,28 @@
-import Flags, { hasFlag } from "../../src/flags";
+import Flags from "../../src/flags";
+import { hasFlag } from "../helpers/lux";
 
 describe("LUX page labels", () => {
   describe("in auto mode", () => {
     test("no custom label set", async () => {
-      await navigateTo("http://localhost:3000/default.html");
+      await navigateTo("/default.html");
       const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
       const beacon = luxRequests.getUrl(0);
-      const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
 
       expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromDocumentTitle)).toBe(true);
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromLabelProp)).toBe(false);
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromGlobalVariable)).toBe(false);
+      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(true);
+      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
+      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
     });
 
     test("using a custom label", async () => {
-      await navigateTo("http://localhost:3000/default.html?injectScript=LUX.label='Custom Label';");
+      await navigateTo("/default.html?injectScript=LUX.label='Custom Label';");
       const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
       const beacon = luxRequests.getUrl(0);
-      const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
 
       expect(beacon.searchParams.get("l")).toEqual("Custom Label");
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromLabelProp)).toBe(true);
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromDocumentTitle)).toBe(false);
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromGlobalVariable)).toBe(false);
+      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(true);
+      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
+      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
     });
   });
 
@@ -32,7 +31,7 @@ describe("LUX page labels", () => {
       let beacon;
       const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-      await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
+      await navigateTo("/default.html?injectScript=LUX.auto=false;");
       await page.evaluate("LUX.label = 'First Label'");
       await page.evaluate("LUX.send()");
 
@@ -51,7 +50,7 @@ describe("LUX page labels", () => {
       let beacon;
       const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
-      await navigateTo("http://localhost:3000/default.html?injectScript=LUX.auto=false;");
+      await navigateTo("/default.html?injectScript=LUX.auto=false;");
       await page.evaluate("LUX.send()");
 
       beacon = luxRequests.getUrl(0);
@@ -85,7 +84,7 @@ describe("LUX page labels", () => {
 
     beforeAll(async () => {
       await navigateTo(
-        "http://localhost:3000/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';"
+        "/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';"
       );
     });
 
@@ -95,11 +94,10 @@ describe("LUX page labels", () => {
       await page.evaluate("LUX.send()");
 
       const beacon = luxRequests.getUrl(0);
-      const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
       expect(beacon.searchParams.get("l")).toEqual("JS Label");
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromGlobalVariable)).toBe(true);
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromLabelProp)).toBe(false);
-      expect(hasFlag(beaconFlags, Flags.PageLabelFromDocumentTitle)).toBe(false);
+      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(true);
+      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
+      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
 
       await page.evaluate("LUX.init()");
       await page.evaluate("window.config.page[0].name = 'Another JS Label'");

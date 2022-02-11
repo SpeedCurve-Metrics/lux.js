@@ -1,4 +1,29 @@
+import { hasFlag } from "../../src/flags";
 import { LogEvent, LogEventRecord } from "../../src/logger";
+
+export function getCpuStat(beacon: URL, key: string): number | null {
+  const cpu = parseNestedPairs(beacon.searchParams.get("CPU"));
+
+  return parseInt(cpu[key], 10);
+}
+
+export function getLuxJsStat(beacon: URL, key: string): number | null {
+  return extractCondensedValue(beacon.searchParams.get("LJS"), key);
+}
+
+export function getPageStat(beacon: URL, key: string): number | null {
+  return extractCondensedValue(beacon.searchParams.get("PS"), key);
+}
+
+export function getNavTiming(beacon: URL, key: string): number | null {
+  return extractCondensedValue(beacon.searchParams.get("NT"), key);
+}
+
+export function hasFlag(beacon: URL, flag: number): boolean {
+  const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
+
+  return hasFlag(beaconFlags, flag);
+}
 
 /**
  * Extracts a single value from a LUX "condensed string" (a string of continuous

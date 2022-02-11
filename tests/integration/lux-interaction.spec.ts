@@ -6,7 +6,7 @@ describe("LUX interaction", () => {
     let ixBeacon;
 
     beforeAll(async () => {
-      await navigateTo("http://localhost:3000/interaction.html");
+      await navigateTo("/interaction.html");
       await page.click("#button-with-id");
 
       luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
@@ -45,7 +45,7 @@ describe("LUX interaction", () => {
   });
 
   test("gather IX metrics in a SPA", async () => {
-    await navigateTo("http://localhost:3000/interaction.html?injectScript=LUX.auto=false;");
+    await navigateTo("/interaction.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
     await page.waitForTimeout(100);
 

@@ -6,7 +6,7 @@ describe("LUX user timing", () => {
 
   beforeAll(async () => {
     luxRequests.reset();
-    await navigateTo("http://localhost:3000/user-timing.html");
+    await navigateTo("/user-timing.html");
     beacon = luxRequests.getUrl(0);
   });
 
