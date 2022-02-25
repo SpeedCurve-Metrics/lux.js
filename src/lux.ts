@@ -1309,7 +1309,6 @@ LUX = (function () {
     if (
       !customerid ||
       !gSyncId ||
-      !validDomain() ||
       !_sample() || // OUTSIDE the sampled range
       gbLuxSent // LUX data already sent
     ) {
@@ -1474,7 +1473,6 @@ LUX = (function () {
     if (
       !customerid ||
       !gSyncId ||
-      !validDomain() ||
       !_sample() || // OUTSIDE the sampled range
       gbIxSent || // IX data already sent
       !gbLuxSent // LUX has NOT been sent yet, so wait to include it there
@@ -1520,7 +1518,6 @@ LUX = (function () {
     if (
       !customerid ||
       !gSyncId ||
-      !validDomain() ||
       !_sample() || // OUTSIDE the sampled range
       !gbLuxSent // LUX has NOT been sent yet, so wait to include it there
     ) {
@@ -1810,15 +1807,6 @@ LUX = (function () {
     gFlags = addFlag(gFlags, Flags.PageLabelFromDocumentTitle);
 
     return document.title;
-  }
-
-  // Return true if the hostname of the current page is one of the listed domains.
-  function validDomain() {
-    // Our signup process is such that a customer almost always deploys lux.js BEFORE we
-    // enable LUX for their account. In which case, the list of domains is empty and no
-    // beacons will be sent. Further, that version of lux.js will be cached at the CDN
-    // and browser for a week. Instead, do the domain validation on the backend in VCL.
-    return true;
   }
 
   function _getCookie(name: string): string | undefined {
