@@ -1,6 +1,17 @@
 # lux.js changelog
 
-## 2022-02-14: v300
+## 2022-02-29: v301
+
+### New features
+
+- The synthetic onload time for SPAs can be marked with `LUX.markLoadTime()`, allowing `LUX.send()` to be called later in the page lifecycle.
+-
+
+### Bug fixes
+
+- Fixed a bug where JavaScript errors were only tracked on the first SPA page view.
+
+## 2022-02-22: v300
 
 This is considered a major lux.js release and may contain some breaking changes.
 
@@ -12,13 +23,12 @@ This is considered a major lux.js release and may contain some breaking changes.
 ### New features
 
 - The [pathname](https://developer.mozilla.org/en-US/docs/Web/API/Location/pathname) of the current page is now tracked.
-- The synthetic onload time for SPAs can be marked with `LUX.markLoadTime()`, allowing `LUX.send()` to be called later in the page lifecycle.
 - JavaScript error tracking can be disabled by setting `LUX.errorTracking = false`.
 - The maximum number of JavaScript errors tracked per page view can be controlled with `LUX.maxErrors = <number>`.
 
 ### Improvements
 
-- Abandoned pages are now tracked by sending a beacon when the page state is **hidden**, rather than when the `unload` or `beforeunload` events are fired.
+- An `unload` handler is no longer used to track abandoned pages, except in legacy web browsers. The `visibilitychange` and `pagehide` events are used instead.
 - Developers who implement lux.js into a SPA by using `LUX.auto = false` can now opt-in to abandoned page tracking by setting `LUX.sendBeaconOnPageHidden = true`.
 
 ### Bug fixes

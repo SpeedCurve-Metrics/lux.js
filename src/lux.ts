@@ -13,7 +13,7 @@ let LUX: LuxGlobal = window.LUX || {};
 let _navigationStart = LUX.ns ? LUX.ns : now();
 
 LUX = (function () {
-  const SCRIPT_VERSION = "300";
+  const SCRIPT_VERSION = "301";
   const logger = new Logger();
   const userConfig = Config.fromObject(LUX);
 
