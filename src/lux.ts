@@ -1300,8 +1300,8 @@ LUX = (function () {
   }
 
   // Beacon back the LUX data.
-  function _sendLux() {
-    logger.logEvent(LogEvent.SendCalled);
+  function _sendLux(calledFromLuxSend = false) {
+    logger.logEvent(LogEvent.SendCalled, [calledFromLuxSend]);
 
     clearMaxMeasureTimeout();
 
@@ -1901,7 +1901,7 @@ LUX = (function () {
   _LUX.measure = _measure;
   _LUX.init = _init;
   _LUX.markLoadTime = _markLoadTime;
-  _LUX.send = _sendLux;
+  _LUX.send = () => _sendLux(true);
   _LUX.addData = _addData;
   _LUX.getSessionId = _getUniqueId; // so customers can do their own sampling
   _LUX.getDebug = () => logger.getEvents();
