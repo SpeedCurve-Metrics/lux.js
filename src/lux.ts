@@ -1313,6 +1313,8 @@ LUX = (function () {
       return;
     }
 
+    logger.logEvent(LogEvent.DataCollectionStart);
+
     const startMark = _getMark(gStartMark);
     const endMark = _getMark(gEndMark);
 
@@ -1694,6 +1696,7 @@ LUX = (function () {
   function _addUnloadHandlers() {
     const onunload = () => {
       gFlags = addFlag(gFlags, Flags.BeaconSentFromUnloadHandler);
+      logger.logEvent(LogEvent.UnloadHandlerTriggered);
       _sendLux();
       _sendIx();
     };
@@ -1851,6 +1854,8 @@ LUX = (function () {
       const timeRemaining = userConfig.minMeasureTime - elapsedTime;
 
       if (timeRemaining <= 0) {
+        logger.logEvent(LogEvent.OnloadHandlerTriggered, [elapsedTime, userConfig.minMeasureTime]);
+
         if (document.readyState === "complete") {
           // If onload has already passed, send the beacon now.
           _sendLux();

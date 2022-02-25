@@ -41,13 +41,13 @@ function getMessageForEvent(event: LogEventRecord): string {
   switch (event[1]) {
     case LogEvent.EvaluationStart:
       if (args.length) {
-        return `lux.js v${args[0]} initialising`;
+        return `lux.js v${args[0]} is initialising.`;
       }
 
-      return "lux.js initialising";
+      return "lux.js is initialising.";
 
     case LogEvent.EvaluationEnd:
-      return "lux.js finished initialising";
+      return "lux.js has finished initialising.";
 
     case LogEvent.InitCalled:
       return "LUX.init()";
@@ -62,19 +62,30 @@ function getMessageForEvent(event: LogEventRecord): string {
       return `LUX.addData(${args.join(", ")})`;
 
     case LogEvent.SendCalled:
-      if (args.length && args[0]) {
-        return "User-initiated LUX.send()";
-      }
-
-      return "Self-initiated LUX.send()";
+      return "LUX.send()";
 
     case LogEvent.ForceSampleCalled:
       return "LUX.forceSample()";
 
+    case LogEvent.DataCollectionStart:
+      return "Beginning data collection. Events after this point may not be recorded for this page.";
+
+    case LogEvent.UnloadHandlerTriggered:
+      return "Unload handler was triggered.";
+
+    case LogEvent.OnloadHandlerTriggered:
+      message = `Onload handler was triggered after ${args[0]} ms.`;
+
+      if (args[1] > 0) {
+        message += `Minimum measure time was ${args[1]}`;
+      }
+
+      return message;
+
     case LogEvent.SessionIsSampled:
       return `Sample rate is ${args[0]}%. This session is being sampled.`;
 
-      case LogEvent.SessionIsNotSampled:
+    case LogEvent.SessionIsNotSampled:
       return `Sample rate is ${args[0]}%. This session is not being sampled.`;
 
     case LogEvent.MainBeaconSent:

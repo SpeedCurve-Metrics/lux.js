@@ -27,14 +27,11 @@
             }
         }
 
+        .b { font-weight: bold }
         .p-1 { padding: 1rem }
         .mt-1 { margin-top: 1rem }
         .right { text-align: right }
         .red { color: rgba(222, 2, 2, 0.8) }
-
-        label {
-            font-weight: bold;
-        }
 
         textarea {
             font-family: monospace;
@@ -53,8 +50,8 @@
         <h1>SpeedCurve RUM Debug Parser</h1>
 
         <div class="mt-1">
-            <label for="input">Paste the output from <code>LUX.getDebug()</code> below.</label>
-            <i>Hint: run <code>copy(LUX.getDebug())</code> into your DevTools console to copy the output to your clipboard.</i>
+            <label class="b" for="input">Paste the output from <code>LUX.getDebug()</code> below.</label>
+            <i>Hint: run <code class="b">copy(LUX.getDebug())</code> into your DevTools console to copy the output to your clipboard.</i>
         </div>
 
         <div class="mt-1">

@@ -8,6 +8,9 @@ export const LogEvent: Record<string, number> = {
   AddDataCalled: 6,
   SendCalled: 7,
   ForceSampleCalled: 8,
+  DataCollectionStart: 9,
+  UnloadHandlerTriggered: 10,
+  OnloadHandlerTriggered: 11,
 
   // Data collection events
   SessionIsSampled: 21,
