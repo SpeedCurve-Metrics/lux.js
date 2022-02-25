@@ -1,4 +1,4 @@
-export const LogEvent = {
+export const LogEvent: Record<string, number> = {
   // Internal events
   EvaluationStart: 1,
   EvaluationEnd: 2,
