@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>SpeedCurve RUM Debug Parser</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body, * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f3f7f9;
+            font-family: sans-serif;
+            font-size: 1rem;
+        }
+
+        .container {
+            margin: 0 auto;
+            max-width: 66.6%;
+        }
+
+        @media(max-width: 1111px) {
+            .container {
+                max-width: 88.8%;
+            }
+        }
+
+        .p-1 { padding: 1rem }
+        .mt-1 { margin-top: 1rem }
+        .right { text-align: right }
+        .red { color: rgba(222, 2, 2, 0.8) }
+
+        label {
+            font-weight: bold;
+        }
+
+        textarea {
+            font-family: monospace;
+            height: 333px;
+            width: 100%;
+        }
+
+        button {
+            padding: 0.4rem 2rem;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SpeedCurve RUM Debug Parser</h1>
+
+        <div class="mt-1">
+            <label for="input">Paste the output from <code>LUX.getDebug()</code> below.</label>
+            <i>Hint: run <code>copy(LUX.getDebug())</code> into your DevTools console to copy the output to your clipboard.</i>
+        </div>
+
+        <div class="mt-1">
+            <textarea class="p-1" id="input"></textarea>
+        </div>
+
+        <div class="mt-1 right">
+            <button id="parse">Parse</button>
+        </div>
+
+        <hr class="mt-1">
+
+        <h2>Parsed debug output</h2>
+
+        <ul class="mt-1" id="output"></ul>
+    </div>
+
+    <script src="debug-parser.js"></script>
+</body>
+</html>
