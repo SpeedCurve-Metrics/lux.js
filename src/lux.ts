@@ -4,6 +4,7 @@ import Logger, { LogEvent } from "./logger";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { InteractionInfo } from "./interaction";
+import { getEntriesByType } from "./performance";
 import now from "./now";
 
 let LUX: LuxGlobal = window.LUX || {};
@@ -119,8 +120,9 @@ LUX = (function () {
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
   let gCustomerDataTimeout: number; // setTimeout timer for sending a Customer Data beacon after onload
   let gMaxMeasureTimeout: number; // setTimeout timer for sending the beacon after a maximum measurement time
-  const perf = window.performance;
   const gMaxQuerystring = 8190; // split the beacon querystring if it gets longer than this
+
+  const perf = window.performance;
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [userConfig.samplerate]);
@@ -383,12 +385,10 @@ LUX = (function () {
 
   // Return an array of marks.
   function _getMarks(): PerformanceEntryList {
-    if (perf) {
-      if (perf.getEntriesByType) {
-        return perf.getEntriesByType("mark");
-      } else if (perf.webkitGetEntriesByType) {
-        return perf.webkitGetEntriesByType("mark");
-      }
+    const marks = getEntriesByType("mark");
+
+    if (marks.length) {
+      return marks;
     }
 
     return gaMarks;
@@ -396,12 +396,10 @@ LUX = (function () {
 
   // Return an array of measures.
   function _getMeasures(): PerformanceEntryList {
-    if (perf) {
-      if (perf.getEntriesByType) {
-        return perf.getEntriesByType("measure");
-      } else if (perf.webkitGetEntriesByType) {
-        return perf.webkitGetEntriesByType("measure");
-      }
+    const measures = getEntriesByType("measure");
+
+    if (measures.length) {
+      return measures;
     }
 
     return gaMeasures;
@@ -991,12 +989,13 @@ LUX = (function () {
 
   // Return First Contentful Paint or zero if not supported.
   function getFcp() {
-    if (perf && perf.getEntriesByType && perf.getEntriesByType("paint").length) {
-      for (let arr = perf.getEntriesByType("paint"), i = 0; i < arr.length; i++) {
-        const ppt = arr[i]; // PerformancePaintTiming object
-        if ("first-contentful-paint" === ppt.name) {
-          return Math.round(ppt.startTime);
-        }
+    const paintEntries = getEntriesByType("paint");
+
+    for (let i = 0; i < paintEntries.length; i++) {
+      const entry = paintEntries[i];
+
+      if (entry.name === "first-contentful-paint") {
+        return Math.round(entry.startTime);
       }
     }
 
@@ -1028,12 +1027,15 @@ LUX = (function () {
       let startRender;
 
       if (ns) {
-        if (perf && perf.getEntriesByType && perf.getEntriesByType("paint").length) {
+        const paintEntries = getEntriesByType("paint");
+
+        if (paintEntries.length) {
           // If Paint Timing API is supported, use it.
-          for (let arr = perf.getEntriesByType("paint"), i = 0; i < arr.length; i++) {
-            const ppt = arr[i]; // PerformancePaintTiming object
-            if ("first-paint" === ppt.name) {
-              startRender = Math.round(ppt.startTime);
+          for (let i = 0; i < paintEntries.length; i++) {
+            const entry = paintEntries[i];
+
+            if (entry.name === "first-paint") {
+              startRender = Math.round(entry.startTime);
               break;
             }
           }
@@ -1047,10 +1049,10 @@ LUX = (function () {
           // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
           startRender = Math.round(t.msFirstPaint - ns);
         }
+      }
 
-        if (startRender) {
-          return startRender;
-        }
+      if (startRender) {
+        return startRender;
       }
     }
 
@@ -1153,11 +1155,10 @@ LUX = (function () {
 
   // Return the main HTML document transfer size (in bytes).
   function docSize() {
-    if (perf && perf.getEntriesByType && perf.getEntriesByType("navigation").length) {
-      const aEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
-      if (aEntries && aEntries.length > 0 && aEntries[0]["encodedBodySize"]) {
-        return aEntries[0]["encodedBodySize"];
-      }
+    const aEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
+
+    if (aEntries.length && aEntries[0]["encodedBodySize"]) {
+      return aEntries[0]["encodedBodySize"];
     }
 
     return 0; // ERROR - NOT FOUND
