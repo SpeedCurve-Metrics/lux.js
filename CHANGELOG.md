@@ -5,7 +5,7 @@
 ### New features
 
 - The synthetic onload time for SPAs can be marked with `LUX.markLoadTime()`, allowing `LUX.send()` to be called later in the page lifecycle.
--
+- Added the [`LUX.getDebug() parser`](https://speedcurve-metrics.github.io/lux.js/debug-parser.html) to help interpret the debug messages.
 
 ### Bug fixes
 

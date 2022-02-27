@@ -40,11 +40,7 @@ function getMessageForEvent(event: LogEventRecord): string {
 
   switch (event[1]) {
     case LogEvent.EvaluationStart:
-      if (args.length) {
-        return `lux.js v${args[0]} is initialising.`;
-      }
-
-      return "lux.js is initialising.";
+      return `lux.js v${args[0]} is initialising.`;
 
     case LogEvent.EvaluationEnd:
       return "lux.js has finished initialising.";
