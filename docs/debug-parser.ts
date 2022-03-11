@@ -1,6 +1,7 @@
 import { LogEvent, LogEventRecord } from "../src/logger";
 
 const input = document.querySelector("#input") as HTMLTextAreaElement;
+const eventCounter = document.querySelector("#event-counter") as HTMLSpanElement;
 const output = document.querySelector("#output");
 const parseBtn = document.querySelector("#parse");
 
@@ -19,13 +20,22 @@ parseBtn.addEventListener("click", () => {
     output.appendChild(li(`Could not parse input: ${err}`, "red"));
   }
 
+  eventCounter.innerText = `(${inputEvents.length} events)`;
+
   inputEvents.forEach((event: LogEventRecord) => {
     const date = new Date(event[0]);
     const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    const message = getMessageForEvent(event);
 
-    output.appendChild(li(`${dateString}: ${getMessageForEvent(event)}`));
+    if (message) {
+      output.appendChild(li(`${dateString}: ${message}`));
+    }
   });
 });
+
+function argsAsString(args: any[]): string {
+  return args.map((v) => JSON.stringify(v)).join(", ");
+}
 
 function getMessageForEvent(event: LogEventRecord): string {
   const eventName = Object.keys(LogEvent).find((k) => LogEvent[k] === event[1]);
@@ -35,7 +45,7 @@ function getMessageForEvent(event: LogEventRecord): string {
   let message = eventName || "Unknown Event";
 
   if (args.length) {
-    message += ` (${args.join(", ")})`;
+    message += ` (${argsAsString(args)})`;
   }
 
   switch (event[1]) {
@@ -49,13 +59,13 @@ function getMessageForEvent(event: LogEventRecord): string {
       return "LUX.init()";
 
     case LogEvent.MarkCalled:
-      return `LUX.mark(${args.join(", ")})`;
+      return `LUX.mark(${argsAsString(args)})`;
 
     case LogEvent.MeasureCalled:
-      return `LUX.measure(${args.join(", ")})`;
+      return `LUX.measure(${argsAsString(args)})`;
 
     case LogEvent.AddDataCalled:
-      return `LUX.addData(${args.join(", ")})`;
+      return `LUX.addData(${argsAsString(args)})`;
 
     case LogEvent.SendCalled:
       return "LUX.send()";
@@ -64,7 +74,7 @@ function getMessageForEvent(event: LogEventRecord): string {
       return "LUX.forceSample()";
 
     case LogEvent.DataCollectionStart:
-      return "Beginning data collection. Events after this point may not be recorded for this page.";
+      return "Beginning data collection. New events after this point may not be recorded for this page.";
 
     case LogEvent.UnloadHandlerTriggered:
       return "Unload handler was triggered.";
@@ -95,6 +105,26 @@ function getMessageForEvent(event: LogEventRecord): string {
 
     case LogEvent.CustomDataBeaconSent:
       return `Supplementary custom data beacon sent: ${args[0]}`;
+
+    case LogEvent.PerformanceEntryReceived:
+      if (args[0].entryType === "layout-shift") {
+        return `Received layout shift with value of ${args[0].value.toFixed(3)}`;
+      } else if (args[0].entryType === "longtask") {
+        return `Received long task with duration of ${args[0].duration} ms`;
+      } else if (args[0].entryType === "largest-contentful-paint") {
+        return `Received LCP entry at ${args[0].startTime} ms`;
+      } else if (args[0].entryType === "element") {
+        return `Received element timing entry for ${args[0].identifier} at ${args[0].startTime} ms`;
+      }
+
+      return `Received ${args[0].entryType} entry`;
+
+    case LogEvent.PerformanceEntryProcessed:
+      if (args[0].entryType === "largest-contentful-paint") {
+        return `Picked LCP from entry at ${args[0].startTime} ms`;
+      }
+
+      return "";
 
     case LogEvent.PerformanceObserverError:
       return `Error while initialising PerformanceObserver: ${args[0]}`;
