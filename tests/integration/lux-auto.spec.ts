@@ -156,7 +156,7 @@ describe.each(testPages)("%s", (_, testPage) => {
     expect(getLuxJsStat(beacon, "f")).toBeGreaterThanOrEqual(0);
     expect(getLuxJsStat(beacon, "c")).toBeGreaterThanOrEqual(0);
     expect(getLuxJsStat(beacon, "n")).toBeGreaterThanOrEqual(0);
-    expect(getLuxJsStat(beacon, "e")).toBeGreaterThanOrEqual(0);
+    expect(getLuxJsStat(beacon, "e")).toBeGreaterThan(0);
     expect(getLuxJsStat(beacon, "r")).toEqual(100);
     expect(getLuxJsStat(beacon, "x")).toBeGreaterThan(0);
     expect(getLuxJsStat(beacon, "l")).toBeGreaterThan(0);

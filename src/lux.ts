@@ -11,6 +11,7 @@ let LUX: LuxGlobal = window.LUX || {};
 
 // Get a timestamp as close to navigationStart as possible.
 let _navigationStart = LUX.ns ? LUX.ns : now();
+let LUX_t_end = LUX_t_start;
 
 LUX = (function () {
   const SCRIPT_VERSION = "301";
@@ -1942,4 +1943,4 @@ LUX = (function () {
 
 window.LUX = LUX;
 
-const LUX_t_end = now();
+LUX_t_end = now();
