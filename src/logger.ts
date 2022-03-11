@@ -20,6 +20,10 @@ export const LogEvent: Record<string, number> = {
   InteractionBeaconSent: 25,
   CustomDataBeaconSent: 26,
 
+  // Metric information
+  PerformanceEntryReceived: 41,
+  PerformanceEntryProcessed: 42,
+
   // Errors
   PerformanceObserverError: 51,
   InputEventPermissionError: 52,

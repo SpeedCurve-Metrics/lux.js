@@ -71,9 +71,10 @@ LUX = (function () {
   const gaPerfEntries = gaSnippetLongTasks.slice(); // array of Long Tasks (prefer the array from the snippet)
 
   if (typeof PerformanceObserver === "function") {
-    const perfObserver = new PerformanceObserver(function (list) {
-      // Keep an array of perf objects to process later.
-      list.getEntries().forEach(function (entry) {
+    const perfObserver = new PerformanceObserver((list) => {
+      list.getEntries().forEach((entry) => {
+        logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
+
         // Only record long tasks that weren't already recorded by the PerformanceObserver in the snippet
         if (entry.entryType !== "longtask" || gaPerfEntries.indexOf(entry) === -1) {
           gaPerfEntries.push(entry);
@@ -486,6 +487,7 @@ LUX = (function () {
       for (let i = 0; i < gaPerfEntries.length; i++) {
         const pe = gaPerfEntries[i] as PerformanceElementTiming;
         if ("element" === pe.entryType && pe.identifier && pe.startTime) {
+          logger.logEvent(LogEvent.PerformanceEntryProcessed, [pe]);
           aET.push(pe.identifier + "|" + Math.round(pe.startTime));
         }
       }
@@ -540,6 +542,8 @@ LUX = (function () {
           // callback from setTimeout(200) happened. Do not include anything that started after tEnd.
           continue;
         }
+
+        logger.logEvent(LogEvent.PerformanceEntryProcessed, [p]);
 
         const type = p.attribution[0].name; // TODO - is there ever more than 1 attribution???
         if (!hCPU[type]) {
@@ -627,6 +631,7 @@ LUX = (function () {
       if ("layout-shift" !== p.entryType || p.hadRecentInput) {
         continue;
       }
+      logger.logEvent(LogEvent.PerformanceEntryProcessed, [p]);
       DCLS += p.value;
     }
 
@@ -1010,6 +1015,7 @@ LUX = (function () {
       for (let i = gaPerfEntries.length - 1; i >= 0; i--) {
         const pe = gaPerfEntries[i];
         if ("largest-contentful-paint" === pe.entryType) {
+          logger.logEvent(LogEvent.PerformanceEntryProcessed, [pe]);
           return Math.round(pe.startTime);
         }
       }
