@@ -8,11 +8,13 @@ export default [
       {
         file: "dist/lux.js",
         format: "iife",
+        sourcemap: true,
       },
       {
         file: "dist/lux.min.js",
         format: "iife",
         plugins: [terser()],
+        sourcemap: true,
       },
     ],
     plugins: [
