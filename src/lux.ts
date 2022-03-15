@@ -139,6 +139,8 @@ LUX = (function () {
     gFlags = addFlag(gFlags, Flags.NavTimingNotSupported);
   }
 
+  logger.logEvent(LogEvent.NavigationStart, [_navigationStart]);
+
   ////////////////////// FID BEGIN
   // FIRST INPUT DELAY (FID)
   // The basic idea behind FID is to attach various input event listeners and measure the time
