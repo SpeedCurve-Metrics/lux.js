@@ -22,15 +22,31 @@ parseBtn.addEventListener("click", () => {
 
   eventCounter.innerText = `(${inputEvents.length} events)`;
 
+  let navigationStart = Number(new Date(inputEvents[0][0]));
+
+  for (const event of inputEvents) {
+    if (event[1] === LogEvent.NavigationStart) {
+      navigationStart = (event[2] as [number])[0];
+      break;
+    }
+  }
+
   inputEvents.forEach((event: LogEventRecord) => {
-    const date = new Date(event[0]);
-    const dateString = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+    const timestamp = Number(new Date(event[0])) - navigationStart;
     const message = getMessageForEvent(event);
 
     if (message) {
-      output.appendChild(li(`${dateString}: ${message}`));
+      output.appendChild(li(`${new Intl.NumberFormat().format(timestamp)} ms: ${message}`));
     }
   });
+
+  const startTime = new Date(navigationStart);
+
+  output.prepend(
+    li(
+      `0 ms: Navigation started at ${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString()}`
+    )
+  );
 });
 
 function argsAsString(args: any[]): string {
@@ -105,6 +121,9 @@ function getMessageForEvent(event: LogEventRecord): string {
 
     case LogEvent.CustomDataBeaconSent:
       return `Supplementary custom data beacon sent: ${args[0]}`;
+
+    case LogEvent.NavigationStart:
+      return "";
 
     case LogEvent.PerformanceEntryReceived:
       if (args[0].entryType === "layout-shift") {
