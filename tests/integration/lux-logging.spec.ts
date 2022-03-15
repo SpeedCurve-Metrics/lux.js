@@ -3,16 +3,20 @@ import { LogEvent } from "../../src/logger";
 describe("LUX logging", () => {
   test("logs can be retrieved", async () => {
     let logs = [];
+    let eventNames = [];
 
     await navigateTo("/default.html?injectScript=LUX.auto=false;");
     logs = await page.evaluate("LUX.getDebug()");
+    eventNames = logs.map((event) => event[1]);
 
-    expect(logs[0][1]).toEqual(LogEvent.EvaluationStart);
-    expect(logs[logs.length - 1][1]).toEqual(LogEvent.EvaluationEnd);
+    expect(eventNames[0]).toEqual(LogEvent.EvaluationStart);
+    expect(eventNames).toContain(LogEvent.EvaluationEnd);
+    expect(eventNames).not.toContain(LogEvent.MainBeaconSent);
 
     await page.evaluate("LUX.send()");
     logs = await page.evaluate("LUX.getDebug()");
+    eventNames = logs.map((event) => event[1]);
 
-    expect(logs[logs.length - 1][1]).toEqual(LogEvent.MainBeaconSent);
+    expect(eventNames).toContain(LogEvent.MainBeaconSent);
   });
 });
