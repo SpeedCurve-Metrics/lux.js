@@ -27,6 +27,7 @@ This is considered a major lux.js release and may contain some breaking changes.
 - The [pathname](https://developer.mozilla.org/en-US/docs/Web/API/Location/pathname) of the current page is now tracked.
 - JavaScript error tracking can be disabled by setting `LUX.errorTracking = false`.
 - The maximum number of JavaScript errors tracked per page view can be controlled with `LUX.maxErrors = <number>`.
+- The maximum measure time can be controlled by setting `LUX.maxMeasureTime = <number>`. After this time, data collection will stop and the beacon will automatically be sent. This can be useful to prevent dynamic content like adverts from affecting your CLS and LCP scores late in the page load. The time is specified in milliseconds, and the default value is `60_000` (1 minute).
 
 ### Improvements
 
