@@ -82,7 +82,7 @@ describe("LUX SPA", () => {
     expect(loadEventStart).toEqual(loadEventEnd);
 
     // Check that the InitCalled flag was set
-    const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
+    const beaconFlags = parseInt(beacon.searchParams.get("fl"));
 
     expect(hasFlag(beaconFlags, Flags.InitCalled)).toBe(true);
   });

@@ -20,17 +20,17 @@ describe("LUX interaction", () => {
       expect(luxRequests.count()).toEqual(2);
 
       // Click time
-      expect(parseInt(ixMetrics.c, 10)).toBeGreaterThan(1);
+      expect(parseInt(ixMetrics.c)).toBeGreaterThan(1);
 
       // Click attribution
       expect(ixMetrics.ci).toEqual("button-with-id");
 
       // Click coordinates
-      expect(parseInt(ixMetrics.cx, 10)).toBeGreaterThan(0);
-      expect(parseInt(ixMetrics.cy, 10)).toBeGreaterThan(0);
+      expect(parseInt(ixMetrics.cx)).toBeGreaterThan(0);
+      expect(parseInt(ixMetrics.cy)).toBeGreaterThan(0);
 
       // FID
-      expect(parseInt(ixBeacon.searchParams.get("FID"), 10)).toBeGreaterThan(0);
+      expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThan(0);
     });
 
     test("only high level metrics are sent in the interaction beacon", () => {
@@ -57,10 +57,10 @@ describe("LUX interaction", () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
-    const fid = parseInt(ixBeacon.searchParams.get("FID"), 10);
+    const fid = parseInt(ixBeacon.searchParams.get("FID"));
 
-    expect(parseInt(ixMetrics.c, 10)).toBeGreaterThan(20);
-    expect(parseInt(ixMetrics.c, 10)).toBeLessThan(100);
+    expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
+    expect(parseInt(ixMetrics.c)).toBeLessThan(100);
     expect(fid).toBeGreaterThan(0);
     expect(fid).toBeLessThan(100);
   });

@@ -20,7 +20,7 @@ describe.each(testPages)("%s", (_, testPage) => {
   });
 
   test("LUX version is included in the beacon", () => {
-    expect(parseInt(beacon.searchParams.get("v"), 10)).toBeGreaterThan(200);
+    expect(parseInt(beacon.searchParams.get("v"))).toBeGreaterThan(200);
   });
 
   test("customer ID is detected correctly", () => {

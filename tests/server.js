@@ -59,7 +59,7 @@ const server = createServer(async (req, res) => {
       };
 
       if (parsedUrl.query.delay) {
-        setTimeout(sendResponse, parseInt(parsedUrl.query.delay, 10));
+        setTimeout(sendResponse, parseInt(parsedUrl.query.delay));
       } else {
         sendResponse();
       }

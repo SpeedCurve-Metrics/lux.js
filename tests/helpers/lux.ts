@@ -4,7 +4,7 @@ import { LogEvent, LogEventRecord } from "../../src/logger";
 export function getCpuStat(beacon: URL, key: string): number | null {
   const cpu = parseNestedPairs(beacon.searchParams.get("CPU"));
 
-  return parseInt(cpu[key], 10);
+  return parseInt(cpu[key]);
 }
 
 export function getLuxJsStat(beacon: URL, key: string): number | null {
@@ -20,7 +20,7 @@ export function getNavTiming(beacon: URL, key: string): number | null {
 }
 
 export function hasFlag(beacon: URL, flag: number): boolean {
-  const beaconFlags = parseInt(beacon.searchParams.get("fl"), 10);
+  const beaconFlags = parseInt(beacon.searchParams.get("fl"));
 
   return Flags.hasFlag(beaconFlags, flag);
 }
@@ -32,7 +32,7 @@ export function hasFlag(beacon: URL, flag: number): boolean {
 export function extractCondensedValue(timingString: string, key: string): number | null {
   const matches = timingString.match(new RegExp(`${key}(\\d+)`));
 
-  return matches ? parseInt(matches[1], 10) : null;
+  return matches ? parseInt(matches[1]) : null;
 }
 
 /**
