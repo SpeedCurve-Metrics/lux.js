@@ -1,3 +1,5 @@
+import now from "./now";
+
 export const LogEvent: Record<string, number> = {
   // Internal events
   EvaluationStart: 1,
@@ -39,13 +41,13 @@ export const LogEvent: Record<string, number> = {
   PaintTimingNotSupported: 72,
 };
 
-export type LogEventRecord = [Date, number, ...unknown[]];
+export type LogEventRecord = [number, number, ...unknown[]];
 
 export default class Logger {
   events: LogEventRecord[] = [];
 
   logEvent(event: number, args: unknown[] = []) {
-    this.events.push([new Date(), event, args]);
+    this.events.push([now(), event, args]);
   }
 
   getEvents() {
