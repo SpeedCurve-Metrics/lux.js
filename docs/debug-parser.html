@@ -66,6 +66,12 @@
 
         <h2>Parsed debug output <span id="event-counter"></span></h2>
 
+        <div class="event-filters">
+            <label><input type="checkbox" checked class="event-filter" data-event="addData"> LUX.addData()</label>
+            <label><input type="checkbox" checked class="event-filter" data-event="userTiming"> LUX.mark/measure()</label>
+            <label><input type="checkbox" class="event-filter" data-event="beaconUrl"> Show beacon URL</label>
+        </div>
+
         <ul class="mt-1" id="output"></ul>
     </div>
 

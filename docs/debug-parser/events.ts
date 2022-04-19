@@ -1,60 +1,13 @@
-import { LogEvent, LogEventRecord } from "../src/logger";
+import { LogEvent, LogEventRecord } from "../../src/logger";
 
-const input = document.querySelector("#input") as HTMLTextAreaElement;
-const eventCounter = document.querySelector("#event-counter") as HTMLSpanElement;
-const output = document.querySelector("#output");
-const parseBtn = document.querySelector("#parse");
-
-if (!input || !output || !parseBtn) {
-  throw new Error("Cannot start debug parser.");
-}
-
-parseBtn.addEventListener("click", () => {
-  output.innerHTML = "";
-
-  let inputEvents = [];
-
-  try {
-    inputEvents = JSON.parse(input.value);
-  } catch (err) {
-    output.appendChild(li(`Could not parse input: ${err}`, "red"));
-  }
-
-  eventCounter.innerText = `(${inputEvents.length} events)`;
-
-  let navigationStart = Number(new Date(inputEvents[0][0]));
-
-  for (const event of inputEvents) {
-    if (event[1] === LogEvent.NavigationStart) {
-      navigationStart = (event[2] as [number])[0];
-      break;
-    }
-  }
-
-  inputEvents.forEach((event: LogEventRecord) => {
-    const timestamp = Number(new Date(event[0])) - navigationStart;
-    const message = getMessageForEvent(event);
-
-    if (message) {
-      output.appendChild(li(`${new Intl.NumberFormat().format(timestamp)} ms: ${message}`));
-    }
-  });
-
-  const startTime = new Date(navigationStart);
-
-  output.prepend(
-    li(
-      `0 ms: Navigation started at ${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString()}`
-    )
-  );
-});
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function argsAsString(args: any[]): string {
   return args.map((v) => JSON.stringify(v)).join(", ");
 }
 
-function getMessageForEvent(event: LogEventRecord): string {
+export function getMessageForEvent(event: LogEventRecord, filters: string[]): string {
   const eventName = Object.keys(LogEvent).find((k) => LogEvent[k] === event[1]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const args = event[2] as any[];
 
   // Fallback message is the raw event name and any arguments
@@ -75,13 +28,25 @@ function getMessageForEvent(event: LogEventRecord): string {
       return "LUX.init()";
 
     case LogEvent.MarkCalled:
-      return `LUX.mark(${argsAsString(args)})`;
+      if (filters.includes("userTiming")) {
+        return `LUX.mark(${argsAsString(args)})`;
+      }
+
+      return "";
 
     case LogEvent.MeasureCalled:
-      return `LUX.measure(${argsAsString(args)})`;
+      if (filters.includes("userTiming")) {
+        return `LUX.measure(${argsAsString(args)})`;
+      }
+
+      return "";
 
     case LogEvent.AddDataCalled:
-      return `LUX.addData(${argsAsString(args)})`;
+      if (filters.includes("addData")) {
+        return `LUX.addData(${argsAsString(args)})`;
+      }
+
+      return "";
 
     case LogEvent.SendCalled:
       return "LUX.send()";
@@ -111,36 +76,70 @@ function getMessageForEvent(event: LogEventRecord): string {
       return `Sample rate is ${args[0]}%. This session is not being sampled.`;
 
     case LogEvent.MainBeaconSent:
-      return `Main beacon sent: ${args[0]}`;
+      message = "Main beacon sent";
+
+      if (filters.includes("beaconUrl")) {
+        message += `: ${args[0]}`;
+      }
+
+      return message;
 
     case LogEvent.UserTimingBeaconSent:
-      return `Supplementary user timing beacon sent: ${args[0]}`;
+      message = "Supplementary user timing beacon sent";
+
+      if (filters.includes("beaconUrl")) {
+        message += `: ${args[0]}`;
+      }
+
+      return message;
 
     case LogEvent.InteractionBeaconSent:
-      return `Supplementary user interaction beacon sent: ${args[0]}`;
+      message = "Supplementary user interaction beacon sent";
+
+      if (filters.includes("beaconUrl")) {
+        message += `: ${args[0]}`;
+      }
+
+      return message;
 
     case LogEvent.CustomDataBeaconSent:
-      return `Supplementary custom data beacon sent: ${args[0]}`;
+      message = "Supplementary custom data beacon sent";
+
+      if (filters.includes("beaconUrl")) {
+        message += `: ${args[0]}`;
+      }
+
+      return message;
 
     case LogEvent.NavigationStart:
       return "";
 
     case LogEvent.PerformanceEntryReceived:
       if (args[0].entryType === "layout-shift") {
-        return `Received layout shift with value of ${args[0].value.toFixed(3)}`;
+        return `Received layout shift at ${args[0].startTime.toFixed()} ms with value of ${args[0].value.toFixed(
+          3
+        )}`;
       } else if (args[0].entryType === "longtask") {
         return `Received long task with duration of ${args[0].duration} ms`;
       } else if (args[0].entryType === "largest-contentful-paint") {
-        return `Received LCP entry at ${args[0].startTime} ms`;
+        return `Received LCP entry at ${args[0].startTime.toFixed()} ms`;
       } else if (args[0].entryType === "element") {
-        return `Received element timing entry for ${args[0].identifier} at ${args[0].startTime} ms`;
+        return `Received element timing entry for ${
+          args[0].identifier
+        } at ${args[0].startTime.toFixed()} ms`;
       }
 
-      return `Received ${args[0].entryType} entry`;
+      message = `Received ${args[0].entryType} entry`;
+
+      if (args[0].startTime) {
+        message += ` at ${args[0].startTime.toFixed()} ms`;
+      }
+
+      return message;
 
     case LogEvent.PerformanceEntryProcessed:
       if (args[0].entryType === "largest-contentful-paint") {
-        return `Picked LCP from entry at ${args[0].startTime} ms`;
+        return `Picked LCP from entry at ${args[0].startTime.toFixed()} ms`;
       }
 
       return "";
@@ -174,13 +173,4 @@ function getMessageForEvent(event: LogEventRecord): string {
   }
 
   return message;
-}
-
-function li(textContent: string, className?: string): HTMLLIElement {
-  const el = document.createElement("li");
-
-  el.textContent = textContent;
-  el.className = className || "";
-
-  return el;
 }

@@ -24,7 +24,7 @@ export default [
     ],
   },
   {
-    input: "docs/debug-parser.ts",
+    input: "docs/debug-parser/index.ts",
     output: {
       file: "docs/debug-parser.js",
       format: "iife",
