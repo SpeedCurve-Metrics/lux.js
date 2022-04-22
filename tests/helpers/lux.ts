@@ -1,5 +1,4 @@
 import * as Flags from "../../src/flags";
-import { LogEvent, LogEventRecord } from "../../src/logger";
 
 export function getCpuStat(beacon: URL, key: string): number | null {
   const cpu = parseNestedPairs(beacon.searchParams.get("CPU"));
@@ -64,12 +63,4 @@ export async function getPerformanceTimingMs(page, metric) {
  */
 export async function getElapsedMs(page) {
   return await page.evaluate("Math.round(performance.now())");
-}
-
-type DecodedLogEventRecord = [Date, string, ...unknown[]];
-
-const logEventLookup = Object.fromEntries(Object.entries(LogEvent).map((arr) => arr.reverse()));
-
-export function decodeEventLog(eventLog: LogEventRecord[]): DecodedLogEventRecord[] {
-  return eventLog.map(([date, eventId, ...args]) => [date, logEventLookup[eventId], ...args]);
 }
