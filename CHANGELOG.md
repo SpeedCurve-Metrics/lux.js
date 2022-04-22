@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2022-05-??: v302
+
+### Bug fixes
+
+- `LUX.mark()` and `LUX.measure()` are now fully compatible with their native counterparts `performance.mark()` and `performance.measure()`. In previous versions of lux.js these functions did not support an options object as the second parameter.
+
 ## 2022-04-25: v301
 
 ### New features
