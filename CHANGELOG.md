@@ -1,6 +1,6 @@
 # lux.js changelog
 
-## 2022-04-19: v301
+## 2022-04-25: v301
 
 ### New features
 
