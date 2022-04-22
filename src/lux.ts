@@ -253,61 +253,94 @@ LUX = (function () {
     return msSinceNavigationStart;
   }
 
-  // set a mark
-  // NOTE: It's possible to set multiple marks with the same name.
-  function _mark(name: string) {
-    logger.logEvent(LogEvent.MarkCalled, [name]);
+  type PerfMarkFn = typeof performance.mark;
+
+  // This is a wrapper around performance.mark that falls back to a polyfill when the User Timing
+  // API isn't supported.
+  function _mark(...args: Parameters<PerfMarkFn>): ReturnType<PerfMarkFn> {
+    logger.logEvent(LogEvent.MarkCalled, args);
 
     if (performance.mark) {
-      return performance.mark(name);
-    } else if (performance.webkitMark) {
-      return performance.webkitMark(name);
+      // Use the native performance.mark where possible...
+      return performance.mark(...args);
     }
 
-    gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
+    // ...Otherwise provide a polyfill
+    const name = args[0];
+    const detail = args[1]?.detail || null;
+    const startTime = args[1]?.startTime || _now();
 
-    // Shim
     const entry = {
-      name: name,
-      detail: null,
       entryType: "mark",
-      startTime: _now(),
       duration: 0,
+      name,
+      detail,
+      startTime,
     } as PerformanceMark;
 
     gaMarks.push(entry);
+    gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
 
     return entry;
   }
 
-  // compute a measurement (delta)
-  function _measure(name: string, startMarkName?: string, endMarkName?: string) {
-    logger.logEvent(LogEvent.MeasureCalled, [name, startMarkName, endMarkName]);
+  type PerfMeasureFn = typeof performance.measure;
 
-    if (typeof startMarkName === "undefined" && _getMark(gStartMark)) {
-      // If a start mark is not specified, but the user has called _init() to set a new start,
-      // then use the new start base time (similar to navigationStart) as the start mark.
-      startMarkName = gStartMark;
+  // This is a wrapper around performance.measure that falls back to a polyfill when the User Timing
+  // API isn't supported.
+  function _measure(...args: Parameters<PerfMeasureFn>): ReturnType<PerfMeasureFn> {
+    logger.logEvent(LogEvent.MeasureCalled, args);
+
+    const name = args[0];
+    let startMarkName = args[1] as string;
+    let endMarkName = args[2];
+    let options;
+
+    if (typeof startMarkName === "object") {
+      options = args[1] as PerformanceMeasureOptions;
+      startMarkName = options.start as string;
+      endMarkName = options.end as string;
+    }
+
+    if (typeof startMarkName === "undefined") {
+      // Without a start mark specified, performance.measure defaults to using navigationStart
+      if (_getMark(gStartMark)) {
+        // For SPAs that have already called LUX.init(), we use our internal start mark instead of
+        // navigationStart
+        startMarkName = gStartMark;
+      } else {
+        // For regular page views, we need to patch the navigationStart behaviour because IE11 throws
+        // a SyntaxError without a start mark
+        startMarkName = "navigationStart";
+      }
+
+      // Since we've potentially modified the start mark, we need to shove it back into whichever
+      // argument it belongs in.
+      if (options) {
+        // If  options were provided, we need to avoid specifying a start mark if an end mark and
+        // duration were already specified.
+        if (!options.end || !options.duration) {
+          (args[1] as PerformanceMeasureOptions).start = startMarkName;
+        }
+      } else {
+        args[1] = startMarkName;
+      }
     }
 
     if (performance.measure) {
-      // IE 11 does not handle null and undefined correctly
-      if (startMarkName) {
-        if (endMarkName) {
-          return performance.measure(name, startMarkName, endMarkName);
-        } else {
-          return performance.measure(name, startMarkName);
-        }
-      } else {
-        return performance.measure(name);
-      }
-    } else if (performance.webkitMeasure) {
-      return performance.webkitMeasure(name, startMarkName, endMarkName);
+      // Use the native performance.measure where possible...
+      return performance.measure(...args);
     }
 
-    // shim:
-    let startTime = 0,
-      endTime = _now();
+    // ...Otherwise provide a polyfill
+    let startTime = 0;
+    let endTime = _now();
+    const throwError = (missingMark: string) => {
+      throw new DOMException(
+        `Failed to execute 'measure' on 'Performance': The mark '${missingMark}' does not exist`
+      );
+    };
+
     if (startMarkName) {
       const startMark = _getMark(startMarkName);
       if (startMark) {
@@ -316,9 +349,7 @@ LUX = (function () {
         // the mark name can also be a property from Navigation Timing
         startTime = timing[startMarkName as PerfTimingKey] - timing.navigationStart;
       } else {
-        throw new DOMException(
-          `Failed to execute 'measure' on 'Performance': The mark '${startMarkName}' does not exist`
-        );
+        throwError(startMarkName);
       }
     }
 
@@ -330,22 +361,31 @@ LUX = (function () {
         // the mark name can also be a property from Navigation Timing
         endTime = timing[endMarkName as PerfTimingKey] - timing.navigationStart;
       } else {
-        throw new DOMException(
-          `Failed to execute 'measure' on 'Performance': The mark '${endMarkName}' does not exist`
-        );
+        throwError(endMarkName);
       }
     }
 
-    // Shim
+    let duration = endTime - startTime;
+    let detail = null;
+
+    if (options) {
+      if (options.duration) {
+        duration = options.duration;
+      }
+
+      detail = options.detail;
+    }
+
     const entry = {
-      name: name,
-      detail: null,
       entryType: "measure",
-      startTime: startTime,
-      duration: endTime - startTime,
+      name,
+      detail,
+      startTime,
+      duration,
     } as PerformanceMeasure;
 
     gaMeasures.push(entry);
+    gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
 
     return entry;
   }
@@ -398,34 +438,32 @@ LUX = (function () {
     // hash that has the max value for each name.
     const hUT: Record<string, number> = {};
     const startMark = _getMark(gStartMark);
-    const endMark = _getMark(gEndMark);
 
     // marks
     const aMarks = _getMarks();
     if (aMarks) {
       aMarks.forEach(function (m) {
-        if (m === startMark || m === endMark) {
+        const name = m.name;
+
+        if (name === gStartMark || name === gEndMark) {
           // Don't include the internal marks in the beacon
           return;
         }
 
-        const name = m.name;
-
         // For user timing values taken in a SPA page load, we need to adjust them
-        // so that they're zeroed against the last LUX.init() call. We zero every
-        // UT value except for the internal LUX start mark.
-        const tZero = name !== gStartMark && startMark ? startMark.startTime : 0;
-        const markTime = Math.round(m.startTime - tZero);
+        // so that they're zeroed against the last LUX.init() call.
+        const tZero = startMark ? startMark.startTime : 0;
+        const markStartTime = Math.round(m.startTime - tZero);
 
-        if (markTime < 0) {
+        if (markStartTime < 0) {
           // Exclude marks that were taken before the current SPA page view
           return;
         }
 
         if (typeof hUT[name] === "undefined") {
-          hUT[name] = markTime;
+          hUT[name] = markStartTime;
         } else {
-          hUT[name] = Math.max(markTime, hUT[name]);
+          hUT[name] = Math.max(markStartTime, hUT[name]);
         }
       });
     }
@@ -440,12 +478,12 @@ LUX = (function () {
         }
 
         const name = m.name;
-        const measureTime = Math.round(m.duration);
+        const duration = Math.round(m.duration);
 
         if (typeof hUT[name] === "undefined") {
-          hUT[name] = measureTime;
+          hUT[name] = duration;
         } else {
-          hUT[name] = Math.max(measureTime, hUT[name]);
+          hUT[name] = Math.max(duration, hUT[name]);
         }
       });
     }
