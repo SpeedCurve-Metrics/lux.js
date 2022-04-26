@@ -29,6 +29,14 @@ describe("Config.fromObject()", () => {
     expect(config.trackErrors).toEqual(false);
   });
 
+  it("allows sendBeaconOnPageHidden to be false in auto mode", () => {
+    const config = Config.fromObject({
+      sendBeaconOnPageHidden: false,
+    });
+
+    expect(config.sendBeaconOnPageHidden).toEqual(false);
+  });
+
   it("disables sendBeaconOnPageHidden when auto is set to false", () => {
     const config = Config.fromObject({
       auto: false,
