@@ -30,8 +30,6 @@ declare global {
 
   interface Performance {
     webkitGetEntriesByType: typeof performance.getEntriesByType;
-    webkitMark: typeof performance.mark;
-    webkitMeasure: typeof performance.measure;
   }
 
   /**
