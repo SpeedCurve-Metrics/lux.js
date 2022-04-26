@@ -9,7 +9,7 @@
 
 ### Other
 
-- Some legacy vendor-specific code has been removed: lux.js no longer uses `chrome.loadTimes()`, `performance.webkitMark()`, and `performance.webkitMeasure()`. Browsers that supported these vendor functions will now use polyfills or fallbacks.
+- Some legacy vendor-specific code has been removed: lux.js no longer uses `chrome.loadTimes()` or any `performance.webkit*` functions. Browsers that supported these vendor functions will now use polyfills or fallbacks.
 
 ## 2022-04-25: v301
 

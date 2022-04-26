@@ -18,12 +18,6 @@ export function getEntriesByType(type: string): PerformanceEntryList {
     if (entries && entries.length) {
       return entries;
     }
-  } else if (typeof performance.webkitGetEntriesByType === "function") {
-    const entries = performance.webkitGetEntriesByType(type);
-
-    if (entries && entries.length) {
-      return entries;
-    }
   }
 
   return [];
