@@ -6,10 +6,6 @@ declare global {
     LUX?: LuxGlobal;
     LUX_ae?: ErrorEvent[];
     LUX_al?: PerformanceEntryList;
-
-    chrome: {
-      loadTimes?: () => ChromeLoadTimes;
-    };
   }
 
   // Internet Explorer 8 compatibility
@@ -24,10 +20,6 @@ declare global {
   }
 
   // Vendor-specific APIs
-  interface ChromeLoadTimes {
-    firstPaintTime: number;
-  }
-
   interface Performance {
     webkitGetEntriesByType: typeof performance.getEntriesByType;
   }

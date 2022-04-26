@@ -1067,12 +1067,6 @@ LUX = (function () {
               break;
             }
           }
-        } else if (window.chrome && typeof window.chrome.loadTimes === "function") {
-          // If chrome, get first paint time from `chrome.loadTimes`. Need extra error handling.
-          const loadTimes = window.chrome.loadTimes();
-          if (loadTimes) {
-            startRender = Math.round(loadTimes.firstPaintTime * 1000 - ns);
-          }
         } else if (t.msFirstPaint) {
           // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
           startRender = Math.round(t.msFirstPaint - ns);
