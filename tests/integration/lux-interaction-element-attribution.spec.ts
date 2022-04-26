@@ -36,6 +36,14 @@ describe("LUX interaction element attribution", () => {
     expect(ixMetrics.ci).toEqual("content");
   });
 
+  test("span inside a button should use the button text", async () => {
+    await page.click(".span-in-button");
+    await page.evaluate("LUX.send()");
+    const ixBeacon = luxRequests.getUrl(0);
+    const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
+    expect(ixMetrics.ci).toEqual("Button with span");
+  });
+
   test("link with ID should use its own ID", async () => {
     await page.click("#link-with-id");
     await page.evaluate("LUX.send()");
@@ -68,16 +76,24 @@ describe("LUX interaction element attribution", () => {
     expect(ixMetrics.ci).toEqual("content");
   });
 
-  test("child of an element with data-sctrack should use its own ID if it has one", async () => {
+  test("element with data-sctrack and ID should use data-sctrack", async () => {
+    await page.click(".nav-link-sctrack");
+    await page.evaluate("LUX.send()");
+    const ixBeacon = luxRequests.getUrl(0);
+    const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
+    expect(ixMetrics.ci).toEqual("nav-link-with-sctrack");
+  });
+
+  test("element whose ancestor has data-sctrack should use data-sctrack even with its own ID", async () => {
     await page.click("#nav-link-with-id");
     await page.evaluate("LUX.send()");
     const ixBeacon = luxRequests.getUrl(0);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
-    expect(ixMetrics.ci).toEqual("nav-link-with-id");
+    expect(ixMetrics.ci).toEqual("navigation");
   });
 
-  test("child of an element with data-sctrack should use the data-sctrack attribute if it has no ID", async () => {
-    await page.click(".nav-link-no-id");
+  test("link with no text or ID should use the ancestor's data-sctrack attribute", async () => {
+    await page.click(".nav-link-no-text-or-id");
     await page.evaluate("LUX.send()");
     const ixBeacon = luxRequests.getUrl(0);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));

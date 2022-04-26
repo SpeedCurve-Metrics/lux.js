@@ -5,6 +5,7 @@
 ### Bug fixes
 
 - `LUX.mark()` and `LUX.measure()` are now fully compatible with their native counterparts `performance.mark()` and `performance.measure()`. In previous versions of lux.js these functions did not support an options object as the second parameter.
+- Interaction element attribution for elements with the `data-sctrack` attribute has been fixed. In previous version of lux.js the `data-sctrack` attribute only took priority on the element that was interacted with. It now takes priority even when it has been set on an ancestor element. See [the `data-sctrack` documentation](https://support.speedcurve.com/docs/rum-js-api#data-sctrack) for more information.
 
 ## 2022-04-25: v301
 

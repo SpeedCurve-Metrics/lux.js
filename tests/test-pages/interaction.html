@@ -6,14 +6,24 @@
     <script>/*INJECT_SCRIPT*/</script>
     <script src="/calculate-primes.js"></script>
     <script src="/js/lux.js?id=10001" defer crossorigin="anonymous"></script>
+    <style>
+        /* Make sure all interactive elements have dimensions and are visible so that Puppeteer
+           can find them */
+        a, button, input {
+            border: 1px solid blue;
+            min-height: 2px;
+            min-width: 2px;
+        }
+    </style>
 </head>
 <body>
     <h1>LUX interaction test page</h1>
 
     <header>
         <ul data-sctrack="navigation">
-            <li><a class="nav-link-no-id" href="#">Nav link with no ID</a></li>
+            <li><a class="nav-link-no-text-or-id" href="#"></a></li>
             <li><a id="nav-link-with-id" href="#">Nav link with ID</a></li>
+            <li><a class="nav-link-sctrack" data-sctrack="nav-link-with-sctrack" href="#">Nav link with data-sctrack and no ID</a></li>
         </ul>
     </header>
 
@@ -21,7 +31,9 @@
         <button type="button" id="button-with-js">Button with event listener</button>
         <button type="button" class="button-no-id">Button without ID</button>
         <button type="button" id="button-with-id">Button with ID</button>
+        <button type="button" id="button-with-id-and-sctrack" data-sctrack="button-prefer-sctrack">Button with ID and data-sctrack</button>
         <button type="button" class="button-no-text"></button>
+        <button type="button"><span class="span-in-button">Button with span</span></button>
 
         <a class="link-no-id" href="#">Link without ID</a>
         <a id="link-with-id" href="#">Link with ID</a>

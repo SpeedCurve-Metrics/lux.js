@@ -3,7 +3,7 @@ import * as Config from "./config";
 import Logger, { LogEvent } from "./logger";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
-import { InteractionInfo } from "./interaction";
+import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import { performance, timing, getEntriesByType, PerfTimingKey } from "./performance";
 import now from "./now";
 
@@ -1591,61 +1591,6 @@ LUX = (function () {
   // Most of the time, however, IX happens *after* LUX, so we send a separate IX beacon but
   // only beacon back the first interaction that happens.
 
-  /**
-   * Get the interaction attribution name for an element
-   *
-   * @param {HTMLElement} el
-   * @returns string
-   */
-  function interactionAttributionForElement(el: Element) {
-    // Default to using the element's own ID if it has one
-    if (el.id) {
-      return el.id;
-    }
-
-    // The next preference is to find an ancestor with the "data-sctrack" attribute
-    let ancestor = el;
-
-    // We also store the first ancestor ID that we find, so we can use it as
-    // a fallback later.
-    let ancestorId;
-
-    while (ancestor.parentNode && (ancestor.parentNode as Element).tagName) {
-      ancestor = ancestor.parentNode as Element;
-
-      if (ancestor.hasAttribute("data-sctrack")) {
-        return ancestor.getAttribute("data-sctrack");
-      }
-
-      if (ancestor.id && !ancestorId) {
-        ancestorId = ancestor.id;
-      }
-    }
-
-    // The next preference is to use the text content of a button or link
-    const isSubmitInput = el.tagName === "INPUT" && (el as HTMLInputElement).type === "submit";
-    const isButton = el.tagName === "BUTTON";
-    const isLink = el.tagName === "A";
-
-    if (isSubmitInput && (el as HTMLInputElement).value) {
-      return (el as HTMLInputElement).value;
-    }
-
-    type ButtonOrLinkElement = HTMLButtonElement | HTMLLinkElement;
-
-    if ((isButton || isLink) && (el as ButtonOrLinkElement).innerText) {
-      return (el as ButtonOrLinkElement).innerText;
-    }
-
-    // The next preference is to use the first ancestor ID
-    if (ancestorId) {
-      return ancestorId;
-    }
-
-    // No suitable attribute was found
-    return "";
-  }
-
   function _scrollHandler() {
     // Leave handlers IN PLACE so we can track which ID is clicked/keyed.
     // _removeIxHandlers();
@@ -1661,7 +1606,7 @@ LUX = (function () {
       ghIx["k"] = Math.round(_now());
 
       if (e && e.target) {
-        const trackId = interactionAttributionForElement(e.target as Element);
+        const trackId = interactionAttributionForElement(e.target as HTMLElement);
         if (trackId) {
           ghIx["ki"] = trackId;
         }
@@ -1692,7 +1637,7 @@ LUX = (function () {
           ghIx["cx"] = e.clientX;
           ghIx["cy"] = e.clientY;
         }
-        const trackId = interactionAttributionForElement(e.target as Element);
+        const trackId = interactionAttributionForElement(e.target as HTMLElement);
         if (trackId) {
           ghIx["ci"] = trackId;
         }
