@@ -53,7 +53,7 @@
     <script>
         const button = document.querySelector("#button-with-js");
         button.addEventListener("click", () => {
-            calculatePrimes(0, 1_000_000);
+            calculatePrimes(0, Math.random() * 2_000_000);
             button.innerText = "Clicked!";
         });
     </script>

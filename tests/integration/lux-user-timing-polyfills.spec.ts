@@ -1,4 +1,4 @@
-import { getElapsedMs, parseNestedPairs } from "../helpers/lux";
+import { getElapsedMs, parseUserTiming } from "../helpers/lux";
 
 describe("LUX user timing polyfills", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
@@ -14,13 +14,13 @@ describe("LUX user timing polyfills", () => {
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
-    const UT = parseNestedPairs(beacon.searchParams.get("UT"));
+    const UT = parseUserTiming(beacon.searchParams.get("UT"));
     const nativeEntries = await page.evaluate("performance.getEntriesByName('test-mark')");
 
     // The mark and measure values will vary from test to test, so there is ~10ms margin of error.
     // To test the mark, we get the current timestamp just before creating the mark.
-    expect(parseInt(UT["test-mark"])).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(parseInt(UT["test-mark"])).toBeLessThan(timeBeforeMark + 10);
+    expect(UT["test-mark"].startTime).toBeGreaterThanOrEqual(timeBeforeMark);
+    expect(UT["test-mark"].startTime).toBeLessThan(timeBeforeMark + 10);
 
     // Double-check that the polyfill was used and not the native implementation
     expect(nativeEntries.length).toEqual(0);
@@ -32,10 +32,10 @@ describe("LUX user timing polyfills", () => {
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
-    const UT = parseNestedPairs(beacon.searchParams.get("UT"));
+    const UT = parseUserTiming(beacon.searchParams.get("UT"));
     const nativeEntries = await page.evaluate("performance.getEntriesByName('test-mark')");
 
-    expect(parseInt(UT["test-mark"])).toEqual(10);
+    expect(UT["test-mark"].startTime).toEqual(10);
     expect(nativeEntries.length).toEqual(0);
   });
 
@@ -46,10 +46,11 @@ describe("LUX user timing polyfills", () => {
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
-    const UT = parseNestedPairs(beacon.searchParams.get("UT"));
+    const UT = parseUserTiming(beacon.searchParams.get("UT"));
 
-    expect(parseInt(UT["test-measure"])).toBeGreaterThanOrEqual(timeBeforeMeasure);
-    expect(parseInt(UT["test-measure"])).toBeLessThan(timeBeforeMeasure + 10);
+    expect(UT["test-measure"].startTime).toEqual(0);
+    expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(timeBeforeMeasure);
+    expect(UT["test-measure"].duration).toBeLessThan(timeBeforeMeasure + 10);
   });
 
   test("LUX.measure(name, startMark)", async () => {
@@ -62,10 +63,11 @@ describe("LUX user timing polyfills", () => {
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
-    const UT = parseNestedPairs(beacon.searchParams.get("UT"));
+    const UT = parseUserTiming(beacon.searchParams.get("UT"));
 
-    expect(parseInt(UT["test-measure"])).toBeGreaterThanOrEqual(30);
-    expect(parseInt(UT["test-measure"])).toBeLessThan(40);
+    expect(UT["test-measure"].startTime).toEqual(UT["start-mark"].startTime);
+    expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(30);
+    expect(UT["test-measure"].duration).toBeLessThan(40);
   });
 
   test("LUX.measure(name, startMark, endMark)", async () => {
@@ -79,10 +81,12 @@ describe("LUX user timing polyfills", () => {
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
-    const UT = parseNestedPairs(beacon.searchParams.get("UT"));
+    const UT = parseUserTiming(beacon.searchParams.get("UT"));
 
-    expect(parseInt(UT["test-measure"])).toBeGreaterThanOrEqual(30);
-    expect(parseInt(UT["test-measure"])).toBeLessThan(40);
+    expect(UT["test-measure"].startTime).toEqual(UT["start-mark"].startTime);
+    expect(UT["test-measure"].duration).toEqual(
+      UT["end-mark"].startTime - UT["start-mark"].startTime
+    );
   });
 
   test("LUX.measure(name, undefined, endMark)", async () => {
@@ -95,10 +99,10 @@ describe("LUX user timing polyfills", () => {
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
-    const UT = parseNestedPairs(beacon.searchParams.get("UT"));
+    const UT = parseUserTiming(beacon.searchParams.get("UT"));
 
-    expect(parseInt(UT["test-measure"])).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(parseInt(UT["test-measure"])).toBeLessThan(timeBeforeMark + 10);
+    expect(UT["test-measure"].startTime).toEqual(0);
+    expect(UT["test-measure"].duration).toEqual(UT["end-mark"].startTime);
   });
 
   test("LUX.measure(name, options)", async () => {
@@ -107,36 +111,47 @@ describe("LUX user timing polyfills", () => {
     );
     await page.evaluate("LUX.mark('start-mark')");
     await page.waitForTimeout(30);
-    const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate("LUX.mark('end-mark')");
 
-    // Equivalent of mark(name, startMark)
-    await page.evaluate("LUX.measure('test-measure-1', { start: 'start-mark' })");
+    const timeBeforeMeasure = await getElapsedMs(page);
+    await page.evaluate(`
+      // Equivalent of mark(name, startMark)
+      LUX.measure('test-measure-1', { start: 'start-mark' });
 
-    // Equivalent of mark(name, startMark, endMark)
-    await page.evaluate("LUX.measure('test-measure-2', { start: 'start-mark', end: 'end-mark' })");
+      // Equivalent of mark(name, startMark, endMark)
+      LUX.measure('test-measure-2', { start: 'start-mark', end: 'end-mark' });
 
-    // Equivalent of mark(name, undefined, endMark)
-    await page.evaluate("LUX.measure('test-measure-3', { end: 'end-mark' })");
+      // Equivalent of mark(name, undefined, endMark)
+      LUX.measure('test-measure-3', { end: 'end-mark' });
 
-    // Specifying a duration with a start mark
-    await page.evaluate("LUX.measure('test-measure-4', { start: 'start-mark', duration: 400 })");
+      // Specifying a duration with a start mark
+      LUX.measure('test-measure-4', { start: 'start-mark', duration: 400 });
 
-    // Specifying a duration with a start mark
-    await page.evaluate("LUX.measure('test-measure-5', { end: 'end-mark', duration: 500 })");
+      // Specifying a duration with a start mark
+      LUX.measure('test-measure-5', { end: 'end-mark', duration: 500 });
+    `);
 
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
-    const UT = parseNestedPairs(beacon.searchParams.get("UT"));
+    const UT = parseUserTiming(beacon.searchParams.get("UT"));
+    const startMarkTime = UT["start-mark"].startTime;
+    const endMarkTime = UT["end-mark"].startTime;
 
-    expect(parseInt(UT["test-measure-1"])).toBeGreaterThanOrEqual(30);
-    expect(parseInt(UT["test-measure-1"])).toBeLessThan(40);
-    expect(parseInt(UT["test-measure-2"])).toBeGreaterThanOrEqual(30);
-    expect(parseInt(UT["test-measure-2"])).toBeLessThan(40);
-    expect(parseInt(UT["test-measure-3"])).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(parseInt(UT["test-measure-3"])).toBeLessThan(timeBeforeMark + 10);
-    expect(parseInt(UT["test-measure-4"])).toEqual(400);
-    expect(parseInt(UT["test-measure-5"])).toEqual(500);
+    expect(UT["test-measure-1"].startTime).toEqual(startMarkTime);
+    expect(UT["test-measure-1"].duration).toBeGreaterThanOrEqual(timeBeforeMeasure - startMarkTime);
+    expect(UT["test-measure-1"].duration).toBeLessThan(timeBeforeMeasure - startMarkTime + 10);
+
+    expect(UT["test-measure-2"].startTime).toEqual(startMarkTime);
+    expect(UT["test-measure-3"].duration).toEqual(endMarkTime);
+
+    expect(UT["test-measure-3"].startTime).toEqual(0);
+    expect(UT["test-measure-3"].duration).toEqual(endMarkTime);
+
+    expect(UT["test-measure-4"].startTime).toEqual(startMarkTime);
+    expect(UT["test-measure-4"].duration).toEqual(400);
+
+    expect(UT["test-measure-5"].startTime).toEqual(0);
+    expect(UT["test-measure-5"].duration).toEqual(500);
   });
 });

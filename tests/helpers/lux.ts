@@ -43,9 +43,36 @@ export function parseNestedPairs(nestedPairString: string): Record<string, strin
     nestedPairString.split(",").map((pair) => {
       const parts = pair.split("|");
 
-      return [parts[0], parts[1]];
+      return [parts[0], parts.slice(1).join("|")];
     })
   );
+}
+
+interface UserTimingItem {
+  startTime: number;
+  duration?: number;
+}
+
+export function parseUserTiming(userTimingString: string): Record<string, UserTimingItem> {
+  const pairs = parseNestedPairs(userTimingString);
+  const userTiming = {};
+
+  for (const [key, value] of Object.entries(pairs)) {
+    if (value.indexOf("|") > -1) {
+      const parts = value.split("|");
+
+      userTiming[key] = {
+        startTime: parseInt(parts[0]),
+        duration: parseInt(parts[1]),
+      };
+    } else {
+      userTiming[key] = {
+        startTime: parseInt(value),
+      };
+    }
+  }
+
+  return userTiming;
 }
 
 /**
