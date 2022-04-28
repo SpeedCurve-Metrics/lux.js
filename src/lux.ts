@@ -14,7 +14,7 @@ let _navigationStart = LUX.ns ? LUX.ns : now();
 let LUX_t_end = LUX_t_start;
 
 LUX = (function () {
-  const SCRIPT_VERSION = "301";
+  const SCRIPT_VERSION = "302";
   const logger = new Logger();
   const userConfig = Config.fromObject(LUX);
 
