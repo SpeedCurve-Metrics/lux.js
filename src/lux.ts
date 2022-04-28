@@ -430,73 +430,76 @@ LUX = (function () {
     return gaMeasures;
   }
 
+  interface UserTimingEntry {
+    startTime: number;
+    duration?: number;
+  }
+
   // Return a string of User Timing Metrics formatted for beacon querystring.
   function userTimingValues(): string {
     // The User Timing spec allows for there to be multiple marks with the same name,
     // and multiple measures with the same name. But we can only send back one value
-    // for a name, so we always take the MAX value. We do this by first creating a
-    // hash that has the max value for each name.
-    const hUT: Record<string, number> = {};
+    // for a name, so we always take the maximum value.
+    const hUT: Record<string, UserTimingEntry> = {};
     const startMark = _getMark(gStartMark);
 
+    // For user timing values taken in a SPA page load, we need to adjust them
+    // so that they're zeroed against the last LUX.init() call.
+    const tZero = startMark ? startMark.startTime : 0;
+
     // marks
-    const aMarks = _getMarks();
-    if (aMarks) {
-      aMarks.forEach(function (m) {
-        const name = m.name;
+    _getMarks().forEach((mark) => {
+      const name = mark.name;
 
-        if (name === gStartMark || name === gEndMark) {
-          // Don't include the internal marks in the beacon
-          return;
-        }
+      if (name === gStartMark || name === gEndMark) {
+        // Don't include the internal marks in the beacon
+        return;
+      }
 
-        // For user timing values taken in a SPA page load, we need to adjust them
-        // so that they're zeroed against the last LUX.init() call.
-        const tZero = startMark ? startMark.startTime : 0;
-        const markStartTime = Math.round(m.startTime - tZero);
+      const startTime = Math.round(mark.startTime - tZero);
 
-        if (markStartTime < 0) {
-          // Exclude marks that were taken before the current SPA page view
-          return;
-        }
+      if (startTime < 0) {
+        // Exclude marks that were taken before the current SPA page view
+        return;
+      }
 
-        if (typeof hUT[name] === "undefined") {
-          hUT[name] = markStartTime;
-        } else {
-          hUT[name] = Math.max(markStartTime, hUT[name]);
-        }
-      });
-    }
+      if (typeof hUT[name] === "undefined") {
+        hUT[name] = { startTime };
+      } else {
+        hUT[name].startTime = Math.max(startTime, hUT[name].startTime);
+      }
+    });
 
     // measures
-    const aMeasures = _getMeasures();
-    if (aMeasures) {
-      aMeasures.forEach(function (m) {
-        if (startMark && m.startTime < startMark.startTime) {
-          // Exclude measures that were taken before the current SPA page view
-          return;
-        }
+    _getMeasures().forEach((measure) => {
+      if (startMark && measure.startTime < startMark.startTime) {
+        // Exclude measures that were taken before the current SPA page view
+        return;
+      }
 
-        const name = m.name;
-        const duration = Math.round(m.duration);
+      const name = measure.name;
+      const startTime = Math.round(measure.startTime - tZero);
+      const duration = Math.round(measure.duration);
 
-        if (typeof hUT[name] === "undefined") {
-          hUT[name] = duration;
-        } else {
-          hUT[name] = Math.max(duration, hUT[name]);
-        }
-      });
-    }
-
-    // OK. hUT is now a hash (associative array) whose keys are the names of the
-    // marks & measures, and the value is the max value. Here we create a tuple
-    // for each name|value pair and then join them.
-    const aUT: string[] = [];
-    const aNames = Object.keys(hUT);
-
-    aNames.forEach(function (name) {
-      aUT.push(name + "|" + hUT[name]);
+      if (typeof hUT[name] === "undefined" || startTime > hUT[name].startTime) {
+        hUT[name] = { startTime, duration };
+      }
     });
+
+    // Convert the user timing values into a delimited string. This string takes the format
+    // markName|startTime,measureName|startTime|duration,[markName...]
+    const aUT: string[] = [];
+
+    for (const utName in hUT) {
+      const { startTime, duration } = hUT[utName];
+      const utParts = [utName, startTime];
+
+      if (typeof duration !== "undefined") {
+        utParts.push(duration);
+      }
+
+      aUT.push(utParts.join("|"));
+    }
 
     return aUT.join(",");
   }
