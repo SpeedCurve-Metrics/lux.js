@@ -1754,7 +1754,7 @@ LUX = (function () {
 
   // Return the current page label.
   function _getPageLabel() {
-    if (typeof LUX.label !== "undefined") {
+    if (LUX.label) {
       gFlags = addFlag(gFlags, Flags.PageLabelFromLabelProp);
 
       return LUX.label;

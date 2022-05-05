@@ -2,6 +2,10 @@
 
 ## 2022-05-??: v303
 
+### Bug fixes
+
+- `LUX.label` is now ignored if the value is falsey.
+
 ### Improvements
 
 - Keyboard interaction tracking is now done by listening for the `keydown` event instead of the deprecated `keypress` event.

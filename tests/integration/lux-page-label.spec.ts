@@ -24,6 +24,17 @@ describe("LUX page labels", () => {
       expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
       expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
     });
+
+    test("custom label is null", async () => {
+      await navigateTo("/default.html?injectScript=LUX.label=null;");
+      const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+      const beacon = luxRequests.getUrl(0);
+
+      expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
+      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(true);
+      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
+      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
+    });
   });
 
   describe("in a SPA", () => {
