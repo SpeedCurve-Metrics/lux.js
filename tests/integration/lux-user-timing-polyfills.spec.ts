@@ -93,7 +93,6 @@ describe("LUX user timing polyfills", () => {
     await navigateTo(
       "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
     );
-    const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate("LUX.mark('end-mark')");
     await page.evaluate("LUX.measure('test-measure', undefined, 'end-mark')");
     await page.evaluate("LUX.send()");
