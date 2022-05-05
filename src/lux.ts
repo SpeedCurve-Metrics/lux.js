@@ -1694,13 +1694,13 @@ LUX = (function () {
 
   function _addIxHandlers() {
     addListener("scroll", _scrollHandler);
-    addListener("keypress", _keyHandler);
+    addListener("keydown", _keyHandler);
     addListener("mousedown", _clickHandler);
   }
 
   function _removeIxHandlers() {
     removeListener("scroll", _scrollHandler);
-    removeListener("keypress", _keyHandler);
+    removeListener("keydown", _keyHandler);
     removeListener("mousedown", _clickHandler);
   }
 

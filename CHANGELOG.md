@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2022-05-??: v303
+
+### Improvements
+
+- Keyboard interaction tracking is now done by listening for the `keydown` event instead of the deprecated `keypress` event.
+
 ## 2022-05-??: v302
 
 ### Improvements
