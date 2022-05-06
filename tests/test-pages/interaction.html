@@ -52,10 +52,13 @@
 
     <script>
         const button = document.querySelector("#button-with-js");
-        button.addEventListener("click", () => {
+        const onInput = () => {
             calculatePrimes(0, Math.random() * 2_000_000);
             button.innerText = "Clicked!";
-        });
+        };
+
+        button.addEventListener("click", onInput);
+        button.addEventListener("keydown", onInput);
     </script>
 </body>
 </html>
