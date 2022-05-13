@@ -39,6 +39,19 @@ describe("LUX unload behaviour", () => {
     expect(hasFlag(luxRequests.getUrl(0), Flags.BeaconSentFromUnloadHandler)).toBe(true);
   });
 
+  test("send a beacon when the pagehide event fires even if minMeasureTime has not elapsed", async () => {
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+
+    await navigateTo(
+      "/default.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;LUX.minMeasureTime=60000"
+    );
+
+    await page.evaluate("document.dispatchEvent(new Event('pagehide'))");
+    expect(luxRequests.count()).toEqual(1);
+
+    expect(hasFlag(luxRequests.getUrl(0), Flags.BeaconSentFromUnloadHandler)).toBe(true);
+  });
+
   test("automatically sending a beacon when the beforeunload event fires", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
