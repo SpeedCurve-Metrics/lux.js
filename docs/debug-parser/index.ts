@@ -1,5 +1,5 @@
 import { LogEvent, LogEventRecord } from "../../src/logger";
-import { getMessageForEvent } from "./events";
+import { getMessageForEvent, isBeaconEvent } from "./events";
 import { getFilters } from "./filters";
 
 const input = document.querySelector("#input") as HTMLTextAreaElement;
@@ -46,7 +46,25 @@ function renderOutput(output: Element) {
     const message = getMessageForEvent(event, filters);
 
     if (message) {
-      output.appendChild(li(`${new Intl.NumberFormat().format(timestamp)} ms: ${message}`));
+      if (isBeaconEvent(event[1])) {
+        const item = li(`${new Intl.NumberFormat().format(timestamp)} ms: ${message}`);
+        item.classList.add("tooltip-container");
+
+        const beaconUrl = new URL((event[2] as string[])[0]);
+        const tooltip = document.createElement("span");
+        tooltip.className = "tooltip";
+        tooltip.innerHTML = `
+          <b>Page label:</b> ${beaconUrl.searchParams.get("l")}<br>
+          <b>Hostname:</b> ${beaconUrl.searchParams.get("HN")}<br>
+          <b>Path:</b> ${beaconUrl.searchParams.get("PN")}<br>
+          <b>lux.js version:</b> ${beaconUrl.searchParams.get("v")}<br>
+        `;
+
+        item.appendChild(tooltip);
+        output.appendChild(item);
+      } else {
+        output.appendChild(li(`${new Intl.NumberFormat().format(timestamp)} ms: ${message}`));
+      }
     }
   });
 

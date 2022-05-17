@@ -14,6 +14,7 @@
             background-color: #f3f7f9;
             font-family: sans-serif;
             font-size: 1rem;
+            padding-bottom: 100px;
         }
 
         .container {
@@ -42,6 +43,29 @@
         button {
             padding: 0.4rem 2rem;
             font-size: 1.5rem;
+        }
+
+        .tooltip-container {
+            cursor: help;
+            position: relative;
+            text-decoration: underline dotted;
+        }
+
+        .tooltip-container:hover .tooltip {
+            display: block;
+        }
+
+        .tooltip {
+            background: #777;
+            border-radius: 10px;
+            color: #fff;
+            content: attr(data-tooltip);
+            display: none;
+            padding: 10px;
+            position: absolute;
+            text-align: center;
+            top: 133%;
+            width: 400px;
         }
     </style>
 </head>

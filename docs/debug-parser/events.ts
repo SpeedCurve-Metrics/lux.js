@@ -5,6 +5,15 @@ function argsAsString(args: any[]): string {
   return args.map((v) => JSON.stringify(v)).join(", ");
 }
 
+export function isBeaconEvent(event: number) {
+  return [
+    LogEvent.MainBeaconSent,
+    LogEvent.CustomDataBeaconSent,
+    LogEvent.InteractionBeaconSent,
+    LogEvent.UserTimingBeaconSent,
+  ].includes(event);
+}
+
 export function getMessageForEvent(event: LogEventRecord, filters: string[]): string {
   const eventName = Object.keys(LogEvent).find((k) => LogEvent[k] === event[1]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
