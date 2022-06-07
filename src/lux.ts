@@ -365,7 +365,7 @@ LUX = (function () {
       }
     }
 
-    let duration = endTime - startTime;
+    let duration = Math.round(endTime) - Math.round(startTime);
     let detail = null;
 
     if (options) {
