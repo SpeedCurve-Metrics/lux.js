@@ -70,7 +70,9 @@ describe("LUX interaction", () => {
 
     await page.evaluate("LUX.init()");
     await page.waitForTimeout(20);
-    await page.click("button");
+    await page.click("button", {
+      delay: 5,
+    });
     await page.evaluate("LUX.send()");
 
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
@@ -81,6 +83,5 @@ describe("LUX interaction", () => {
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThan(100);
     expect(fid).toBeGreaterThan(0);
-    expect(fid).toBeLessThan(100);
   });
 });

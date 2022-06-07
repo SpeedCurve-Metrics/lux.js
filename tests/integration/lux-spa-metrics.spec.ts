@@ -87,20 +87,20 @@ describe("LUX SPA", () => {
     expect(hasFlag(beaconFlags, Flags.InitCalled)).toBe(true);
   });
 
-  test("load time can be marked before the beacon is sent", async () => {
+  test.only("load time can be marked before the beacon is sent", async () => {
     await navigateTo("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
 
     await page.evaluate("LUX.init()");
     await page.waitForTimeout(10);
-    // await page.evaluate("LUX.markLoadTime()");
+    await page.evaluate("LUX.markLoadTime()");
     await page.waitForTimeout(50);
     await page.evaluate("LUX.send()");
 
     const beacon = luxRequests.getUrl(0);
     const loadEventStart = getNavTiming(beacon, "ls");
 
-    expect(loadEventStart).toBeGreaterThan(10);
+    expect(loadEventStart).toBeGreaterThanOrEqual(10);
     expect(loadEventStart).toBeLessThan(50);
   });
 });
