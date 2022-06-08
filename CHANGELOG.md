@@ -1,24 +1,17 @@
 # lux.js changelog
 
-## 2022-05-??: v303
-
-### Bug fixes
-
-- `LUX.label` is now ignored if the value is falsey.
-
-### Improvements
-
-- Keyboard interaction tracking is now done by listening for the `keydown` event instead of the deprecated `keypress` event.
-
-## 2022-05-??: v302
+## 2022-06-??: v302
 
 ### Improvements
 
 - The start time of user timing measures is now recorded. In previous versions of lux.js only the duration was recorded.
+- Keyboard interaction tracking is now done by listening for the `keydown` event instead of the deprecated `keypress` event.
+- Custom data variables can now be removed by specifying their value as `null` or `undefined`. For example `LUX.addData("var1", null)` or `LUX.addData("var1", undefined)` will both remove any previously-set values for `var1`.
 ### Bug fixes
 
 - `LUX.mark()` and `LUX.measure()` are now fully compatible with their native counterparts `performance.mark()` and `performance.measure()`. In previous versions of lux.js these functions did not support an options object as the second parameter.
 - Interaction element attribution for elements with the `data-sctrack` attribute has been fixed. In previous version of lux.js the `data-sctrack` attribute only took priority on the element that was interacted with. It now takes priority even when it has been set on an ancestor element. See [the `data-sctrack` documentation](https://support.speedcurve.com/docs/rum-js-api#data-sctrack) for more information.
+- `LUX.label` is now ignored if the value is falsey.
 
 ### Other
 

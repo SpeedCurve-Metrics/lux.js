@@ -43,6 +43,27 @@ describe("LUX custom data", () => {
     expect(customData["var1"]).toEqual("hello");
   });
 
+  test("custom data can be removed", async () => {
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
+    await page.evaluate("LUX.addData('var1', 'hello')");
+    await page.evaluate("LUX.addData('var2', 'world')");
+    await page.evaluate("LUX.addData('var3', 'and')");
+    await page.evaluate("LUX.addData('var4', 'others')");
+
+    await page.evaluate("LUX.addData('var2', null)");
+    await page.evaluate("LUX.addData('var3', undefined)");
+    await page.evaluate("LUX.addData('var4')");
+    await page.evaluate("LUX.send()");
+
+    const beacon = luxRequests.getUrl(0);
+    const customData = parseNestedPairs(beacon.searchParams.get("CD"));
+
+    expect(customData["var1"]).toEqual("hello");
+    expect(customData["var2"]).toBeUndefined();
+    expect(customData["var3"]).toBeUndefined();
+    expect(customData["var4"]).toBeUndefined();
+  });
+
   test("custom data set after LUX.send is sent in a separate beacon", async () => {
     await navigateTo("/default.html");
     await page.evaluate("LUX.addData('var1', 'hello')");
@@ -77,5 +98,20 @@ describe("LUX custom data", () => {
 
     expect(customData["var1"]).toEqual("hello");
     expect(customData["var2"]).toEqual("doggo");
+  });
+
+  test("custom data is not retained between full page navigations", async () => {
+    await navigateTo("/default.html?injectScript=LUX.addData('var1', 'hello');");
+
+    let beacon = luxRequests.getUrl(0);
+    const customData = parseNestedPairs(beacon.searchParams.get("CD"));
+
+    expect(customData["var1"]).toEqual("hello");
+
+    await navigateTo("/default.html");
+
+    beacon = luxRequests.getUrl(1);
+
+    expect(beacon.searchParams.get("CD")).toBeNull();
   });
 });

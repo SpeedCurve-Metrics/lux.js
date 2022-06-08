@@ -750,10 +750,16 @@ LUX = (function () {
   function _addData(name: string, value: unknown) {
     logger.logEvent(LogEvent.AddDataCalled, [name, value]);
 
-    const typeN = typeof name;
     const typeV = typeof value;
-    if ("string" === typeN && ("string" === typeV || "number" === typeV || "boolean" === typeV)) {
-      ghData[name] = value;
+
+    if (typeof name === "string") {
+      if (typeV === "string" || typeV === "number" || typeV === "boolean") {
+        ghData[name] = value;
+      }
+
+      if (typeV === "undefined" || value === null) {
+        delete ghData[name];
+      }
     }
 
     if (gbLuxSent) {
