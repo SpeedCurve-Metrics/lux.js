@@ -87,7 +87,7 @@ describe("LUX SPA", () => {
     expect(hasFlag(beaconFlags, Flags.InitCalled)).toBe(true);
   });
 
-  test.only("load time can be marked before the beacon is sent", async () => {
+  test("load time can be marked before the beacon is sent", async () => {
     await navigateTo("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
 
