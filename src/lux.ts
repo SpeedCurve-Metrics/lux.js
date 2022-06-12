@@ -1429,7 +1429,7 @@ LUX = (function () {
       navigationType() + // reload
       (navigator.deviceMemory ? "dm" + Math.round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
-      (gFirstInputDelay ? "&FID=" + gFirstInputDelay : "") +
+      (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
       (gFlags ? "&fl=" + gFlags : "") +
       (sET ? "&ET=" + sET : "") + // element timing

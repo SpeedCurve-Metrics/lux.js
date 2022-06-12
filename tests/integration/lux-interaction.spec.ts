@@ -76,13 +76,12 @@ describe("LUX interaction", () => {
     });
     await page.evaluate("LUX.send()");
 
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
     const fid = parseInt(ixBeacon.searchParams.get("FID"));
 
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThan(100);
-    expect(fid).toBeGreaterThan(0);
+    expect(fid).toBeGreaterThanOrEqual(0);
   });
 });
