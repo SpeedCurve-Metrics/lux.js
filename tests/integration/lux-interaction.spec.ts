@@ -64,6 +64,7 @@ describe("LUX interaction", () => {
   });
 
   test("gather IX metrics in a SPA", async () => {
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     await navigateTo("/interaction.html?injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
     await page.waitForTimeout(100);

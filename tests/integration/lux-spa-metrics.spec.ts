@@ -97,8 +97,8 @@ describe("LUX SPA", () => {
     await page.waitForTimeout(50);
     await page.evaluate("LUX.send()");
 
-    const beacon = luxRequests.getUrl(0);
-    const loadEventStart = getNavTiming(beacon, "ls");
+    const beacon = luxRequests.getUrl(1);
+    const loadEventStart = getNavTiming(beacon, "le");
 
     expect(loadEventStart).toBeGreaterThanOrEqual(10);
     expect(loadEventStart).toBeLessThan(50);
