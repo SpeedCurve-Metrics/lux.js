@@ -33,6 +33,7 @@ export default [
     plugins: [
       typescript({
         include: ["docs/**", "src/**"],
+        declaration: false,
       }),
     ],
   },
