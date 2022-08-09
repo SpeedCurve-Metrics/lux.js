@@ -9,6 +9,11 @@ const SERVER_PORT = 3000;
 const testPagesDir = path.join(__dirname, "test-pages");
 const inlineSnippet = readFileSync(path.join(testPagesDir, "lux-inline-snippet.js"));
 
+const headers = (contentType) => ({
+  "content-type": contentType,
+  connection: "close",
+});
+
 const server = createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
@@ -30,10 +35,10 @@ const server = createServer(async (req, res) => {
     const contents = await readFile(path.join(__dirname, "..", "dist", "lux.min.js"));
     let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/';`;
 
-    res.writeHead(200, { "content-type": contentType });
+    res.writeHead(200, headers(contentType));
     res.end(preamble + contents);
   } else if (pathname == "/beacon/" || pathname == "/error/") {
-    res.writeHead(200, { "content-type": "image/webp" });
+    res.writeHead(200, headers("image/webp"));
     res.end();
   } else {
     try {
@@ -54,7 +59,7 @@ const server = createServer(async (req, res) => {
       }
 
       const sendResponse = () => {
-        res.writeHead(200, { "content-type": contentType });
+        res.writeHead(200, headers(contentType));
         res.end(contents);
       };
 
