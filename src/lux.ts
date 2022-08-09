@@ -1295,8 +1295,14 @@ LUX = (function () {
 
   // Mark the load time of the current page. Intended to be used in SPAs where it is not desirable to
   // send the beacon as soon as the page has finished loading.
-  function _markLoadTime() {
-    _mark(END_MARK);
+  function _markLoadTime(time?: number) {
+    logger.logEvent(LogEvent.MarkLoadTimeCalled, [time]);
+
+    if (time) {
+      _mark(END_MARK, { startTime: time });
+    } else {
+      _mark(END_MARK);
+    }
   }
 
   function createMaxMeasureTimeout() {

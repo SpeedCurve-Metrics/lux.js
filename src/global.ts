@@ -1,7 +1,7 @@
 import { UserConfig } from "./config";
 
 export type Command = [CommandFunction, ...CommandArg[]];
-type CommandFunction = "addData" | "init" | "mark" | "measure" | "send";
+type CommandFunction = "addData" | "init" | "mark" | "markLoadTime" | "measure" | "send";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CommandArg = any;
 
@@ -19,7 +19,7 @@ export interface LuxGlobal extends UserConfig {
   getSessionId?: () => void;
   init?: () => void;
   mark?: typeof performance.mark;
-  markLoadTime?: () => void;
+  markLoadTime?: (time?: number) => void;
   measure?: typeof performance.measure;
   ns?: number;
   send?: () => void;
