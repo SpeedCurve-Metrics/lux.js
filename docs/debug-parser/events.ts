@@ -36,6 +36,9 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
     case LogEvent.InitCalled:
       return "LUX.init()";
 
+    case LogEvent.MarkLoadTimeCalled:
+      return `LUX.markLoadTime(${argsAsString(args)})`;
+
     case LogEvent.MarkCalled:
       if (filters.includes("userTiming")) {
         return `LUX.mark(${argsAsString(args)})`;
