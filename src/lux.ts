@@ -1,29 +1,33 @@
-import LUX_t_start from "./start-marker";
+import scriptStartTime from "./start-marker";
 import * as Config from "./config";
 import Logger, { LogEvent } from "./logger";
+import { END_MARK, START_MARK } from "./constants";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
-import { performance, timing, getEntriesByType, PerfTimingKey } from "./performance";
+import {
+  msSinceNavigationStart,
+  performance,
+  timing,
+  getEntriesByType,
+  PerfTimingKey,
+} from "./performance";
 import now from "./now";
 
-let LUX: LuxGlobal = window.LUX || {};
-
-// Get a timestamp as close to navigationStart as possible.
-let _navigationStart = LUX.ns ? LUX.ns : now();
-let LUX_t_end = LUX_t_start;
+let LUX = (window.LUX as LuxGlobal) || {};
+let scriptEndTime = scriptStartTime;
 
 LUX = (function () {
   const SCRIPT_VERSION = "302";
   const logger = new Logger();
-  const userConfig = Config.fromObject(LUX);
+  const globalConfig = Config.fromObject(LUX);
 
   logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION]);
 
   // Log JS errors.
   let nErrors = 0;
   function errorHandler(e: ErrorEvent) {
-    if (!userConfig.trackErrors) {
+    if (!globalConfig.trackErrors) {
       return;
     }
 
@@ -33,11 +37,11 @@ LUX = (function () {
       // Always send LUX errors
       const isLuxError = e.filename.indexOf("/lux.js?") > -1 || e.message.indexOf("LUX") > -1;
 
-      if (isLuxError || (nErrors <= userConfig.maxErrors && _sample())) {
+      if (isLuxError || (nErrors <= globalConfig.maxErrors && _sample())) {
         // Sample & limit other errors.
         // Send the error beacon.
         new Image().src =
-          userConfig.errorBeaconUrl +
+          globalConfig.errorBeaconUrl +
           "?v=" +
           SCRIPT_VERSION +
           "&id=" +
@@ -114,8 +118,6 @@ LUX = (function () {
   let gbNavSent = 0; // have we sent the Nav Timing beacon yet? (avoid sending twice for SPA)
   let gbIxSent = 0; // have we sent the IX data? (avoid sending twice for SPA)
   let gbFirstPV = 1; // this is the first page view (vs. a SPA "soft nav")
-  const gStartMark = "LUX_start"; // the name of the mark that corresponds to "navigationStart" for SPA
-  const gEndMark = "LUX_end"; // the name of the mark that corresponds to "loadEventStart" for SPA
   const gSessionTimeout = 30 * 60; // number of seconds after which we consider a session to have "timed out" (used for calculating bouncerate)
   let gSyncId = createSyncId(); // if we send multiple beacons, use this to sync them (eg, LUX & IX) (also called "luxid")
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
@@ -124,22 +126,19 @@ LUX = (function () {
   const gMaxQuerystring = 8190; // split the beacon querystring if it gets longer than this
 
   if (_sample()) {
-    logger.logEvent(LogEvent.SessionIsSampled, [userConfig.samplerate]);
+    logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
   } else {
-    logger.logEvent(LogEvent.SessionIsNotSampled, [userConfig.samplerate]);
+    logger.logEvent(LogEvent.SessionIsNotSampled, [globalConfig.samplerate]);
   }
 
-  let gLuxSnippetStart = 0;
-  if (timing.navigationStart) {
-    _navigationStart = timing.navigationStart;
-    // Record when the LUX snippet was evaluated relative to navigationStart.
-    gLuxSnippetStart = LUX.ns ? LUX.ns - _navigationStart : 0;
-  } else {
+  const gLuxSnippetStart = LUX.ns ? LUX.ns - timing.navigationStart : 0;
+
+  if (!performance.timing) {
     logger.logEvent(LogEvent.NavTimingNotSupported);
     gFlags = addFlag(gFlags, Flags.NavTimingNotSupported);
   }
 
-  logger.logEvent(LogEvent.NavigationStart, [_navigationStart]);
+  logger.logEvent(LogEvent.NavigationStart, [timing.navigationStart]);
 
   ////////////////////// FID BEGIN
   // FIRST INPUT DELAY (FID)
@@ -236,21 +235,16 @@ LUX = (function () {
    * in SPAs.
    */
   function _now(absolute?: boolean) {
-    const msSinceNavigationStart = now() - _navigationStart;
-    const startMark = _getMark(gStartMark);
+    const sinceNavigationStart = msSinceNavigationStart();
+    const startMark = _getMark(START_MARK);
 
     // For SPA page views, we use our internal mark as a reference point
     if (startMark && !absolute) {
-      return msSinceNavigationStart - startMark.startTime;
+      return sinceNavigationStart - startMark.startTime;
     }
 
     // For "regular" page views, we can use performance.now() if it's available...
-    if (performance.now) {
-      return performance.now();
-    }
-
-    // ... or we can use navigationStart as a reference point
-    return msSinceNavigationStart;
+    return sinceNavigationStart;
   }
 
   type PerfMarkFn = typeof performance.mark;
@@ -304,10 +298,10 @@ LUX = (function () {
 
     if (typeof startMarkName === "undefined") {
       // Without a start mark specified, performance.measure defaults to using navigationStart
-      if (_getMark(gStartMark)) {
+      if (_getMark(START_MARK)) {
         // For SPAs that have already called LUX.init(), we use our internal start mark instead of
         // navigationStart
-        startMarkName = gStartMark;
+        startMarkName = START_MARK;
       } else {
         // For regular page views, we need to patch the navigationStart behaviour because IE11 throws
         // a SyntaxError without a start mark
@@ -317,7 +311,7 @@ LUX = (function () {
       // Since we've potentially modified the start mark, we need to shove it back into whichever
       // argument it belongs in.
       if (options) {
-        // If  options were provided, we need to avoid specifying a start mark if an end mark and
+        // If options were provided, we need to avoid specifying a start mark if an end mark and
         // duration were already specified.
         if (!options.end || !options.duration) {
           (args[1] as PerformanceMeasureOptions).start = startMarkName;
@@ -441,7 +435,7 @@ LUX = (function () {
     // and multiple measures with the same name. But we can only send back one value
     // for a name, so we always take the maximum value.
     const hUT: Record<string, UserTimingEntry> = {};
-    const startMark = _getMark(gStartMark);
+    const startMark = _getMark(START_MARK);
 
     // For user timing values taken in a SPA page load, we need to adjust them
     // so that they're zeroed against the last LUX.init() call.
@@ -451,7 +445,7 @@ LUX = (function () {
     _getMarks().forEach((mark) => {
       const name = mark.name;
 
-      if (name === gStartMark || name === gEndMark) {
+      if (name === START_MARK || name === END_MARK) {
         // Don't include the internal marks in the beacon
         return;
       }
@@ -535,7 +529,7 @@ LUX = (function () {
     if (gaPerfEntries.length) {
       // Long Task start times are relative to NavigationStart which is "0".
       // But if it is a SPA then the relative start time is gStartMark.
-      const startMark = _getMark(gStartMark);
+      const startMark = _getMark(START_MARK);
       const tZero = startMark ? startMark.startTime : 0;
 
       // Do not include Long Tasks that start after the page is done.
@@ -544,7 +538,7 @@ LUX = (function () {
 
       if (startMark) {
         // For SPA page loads (determined by the presence of a start mark), "done" is gEndMark.
-        const endMark = _getMark(gEndMark);
+        const endMark = _getMark(END_MARK);
 
         if (endMark) {
           tEnd = endMark.startTime;
@@ -701,7 +695,7 @@ LUX = (function () {
           const fb = Math.round(r.responseStart - r.requestStart); // first byte
           const content = Math.round(r.responseEnd - r.responseStart);
           const networkDuration = dns + tcp + fb + content;
-          const parseEval = LUX_t_end - LUX_t_start;
+          const parseEval = scriptEndTime - scriptStartTime;
           const transferSize = r.encodedBodySize ? r.encodedBodySize : 0;
           // Instead of a delimiter use a 1-letter abbreviation as a separator.
           sLuxjs =
@@ -718,11 +712,11 @@ LUX = (function () {
             "e" +
             parseEval +
             "r" +
-            userConfig.samplerate + // sample rate
-            (transferSize ? "x" + transferSize : "") +
-            (gLuxSnippetStart ? "l" + gLuxSnippetStart : "") +
+            globalConfig.samplerate + // sample rate
+            (typeof transferSize === "number" ? "x" + transferSize : "") +
+            (typeof gLuxSnippetStart === "number" ? "l" + gLuxSnippetStart : "") +
             "s" +
-            (LUX_t_start - _navigationStart) + // when lux.js started getting evaluated relative to navigationStart
+            (scriptStartTime - timing.navigationStart) + // when lux.js started getting evaluated relative to navigationStart
             "";
         }
       }
@@ -780,12 +774,12 @@ LUX = (function () {
   // _sample()
   // Return true if beacons for this page should be sampled.
   function _sample() {
-    if (typeof gUid === "undefined" || typeof userConfig.samplerate === "undefined") {
+    if (typeof gUid === "undefined" || typeof globalConfig.samplerate === "undefined") {
       return false; // bail
     }
 
     const nThis = ("" + gUid).substr(-2); // number for THIS page - from 00 to 99
-    return parseInt(nThis) < userConfig.samplerate;
+    return parseInt(nThis) < globalConfig.samplerate;
   }
 
   // Return a string of Customer Data formatted for beacon querystring.
@@ -810,7 +804,7 @@ LUX = (function () {
     // Some customers (incorrectly) call LUX.init on the very first page load of a SPA. This would
     // cause some first-page-only data (like paint metrics) to be lost. To prevent this, we silently
     // bail from this function when we detect an unnecessary LUX.init call.
-    const endMark = _getMark(gEndMark);
+    const endMark = _getMark(END_MARK);
 
     if (!endMark) {
       return;
@@ -840,7 +834,7 @@ LUX = (function () {
     gFlags = addFlag(gFlags, Flags.InitCalled);
 
     // Mark the "navigationStart" for this SPA page.
-    _mark(gStartMark);
+    _mark(START_MARK);
 
     // Reset the maximum measure timeout
     createMaxMeasureTimeout();
@@ -959,9 +953,9 @@ LUX = (function () {
 
   function getNavTiming() {
     let s = "";
-    let ns = _navigationStart;
-    const startMark = _getMark(gStartMark);
-    const endMark = _getMark(gEndMark);
+    let ns = timing.navigationStart;
+    const startMark = _getMark(START_MARK);
+    const endMark = _getMark(END_MARK);
     if (startMark && endMark) {
       // This is a SPA page view, so send the SPA marks & measures instead of Nav Timing.
       const start = Math.round(startMark.startTime); // the start mark is "zero"
@@ -1059,31 +1053,20 @@ LUX = (function () {
   // Return null if not supported.
   function getStartRender() {
     if (performance.timing) {
-      const t = timing;
-      const ns = t.navigationStart;
-      let startRender;
+      const paintEntries = getEntriesByType("paint");
 
-      if (ns) {
-        const paintEntries = getEntriesByType("paint");
+      if (paintEntries.length) {
+        // If Paint Timing API is supported, use it.
+        for (let i = 0; i < paintEntries.length; i++) {
+          const entry = paintEntries[i];
 
-        if (paintEntries.length) {
-          // If Paint Timing API is supported, use it.
-          for (let i = 0; i < paintEntries.length; i++) {
-            const entry = paintEntries[i];
-
-            if (entry.name === "first-paint") {
-              startRender = Math.round(entry.startTime);
-              break;
-            }
+          if (entry.name === "first-paint") {
+            return Math.round(entry.startTime);
           }
-        } else if (t.msFirstPaint) {
-          // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
-          startRender = Math.round(t.msFirstPaint - ns);
         }
-      }
-
-      if (startRender) {
-        return startRender;
+      } else if (timing.msFirstPaint) {
+        // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
+        return Math.round(timing.msFirstPaint - timing.navigationStart);
       }
     }
 
@@ -1313,7 +1296,7 @@ LUX = (function () {
   // Mark the load time of the current page. Intended to be used in SPAs where it is not desirable to
   // send the beacon as soon as the page has finished loading.
   function _markLoadTime() {
-    _mark(gEndMark);
+    _mark(END_MARK);
   }
 
   function createMaxMeasureTimeout() {
@@ -1321,7 +1304,7 @@ LUX = (function () {
     gMaxMeasureTimeout = window.setTimeout(() => {
       gFlags = addFlag(gFlags, Flags.BeaconSentAfterTimeout);
       _sendLux();
-    }, userConfig.maxMeasureTime - _now());
+    }, globalConfig.maxMeasureTime - _now());
   }
 
   function clearMaxMeasureTimeout() {
@@ -1346,8 +1329,8 @@ LUX = (function () {
 
     logger.logEvent(LogEvent.DataCollectionStart);
 
-    const startMark = _getMark(gStartMark);
-    const endMark = _getMark(gEndMark);
+    const startMark = _getMark(START_MARK);
+    const endMark = _getMark(END_MARK);
 
     if (!startMark || (endMark && endMark.startTime < startMark.startTime)) {
       // Record the synthetic loadEventStart time for this page, unless it was already recorded
@@ -1374,7 +1357,7 @@ LUX = (function () {
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
     // So we create a base URL that has all the necessary information:
     const baseUrl =
-      userConfig.beaconUrl +
+      globalConfig.beaconUrl +
       "?v=" +
       SCRIPT_VERSION +
       "&id=" +
@@ -1534,7 +1517,7 @@ LUX = (function () {
         encodeURIComponent(document.location.hostname) +
         "&PN=" +
         encodeURIComponent(document.location.pathname);
-      const beaconUrl = userConfig.beaconUrl + querystring;
+      const beaconUrl = globalConfig.beaconUrl + querystring;
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 
@@ -1575,7 +1558,7 @@ LUX = (function () {
         encodeURIComponent(document.location.hostname) +
         "&PN=" +
         encodeURIComponent(document.location.pathname);
-      const beaconUrl = userConfig.beaconUrl + querystring;
+      const beaconUrl = globalConfig.beaconUrl + querystring;
       logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
     }
@@ -1824,13 +1807,16 @@ LUX = (function () {
 
   // Set "LUX.auto=false" to disable send results automatically and
   // instead you must call LUX.send() explicitly.
-  if (userConfig.auto) {
+  if (globalConfig.auto) {
     const sendBeaconAfterMinimumMeasureTime = () => {
       const elapsedTime = _now();
-      const timeRemaining = userConfig.minMeasureTime - elapsedTime;
+      const timeRemaining = globalConfig.minMeasureTime - elapsedTime;
 
       if (timeRemaining <= 0) {
-        logger.logEvent(LogEvent.OnloadHandlerTriggered, [elapsedTime, userConfig.minMeasureTime]);
+        logger.logEvent(LogEvent.OnloadHandlerTriggered, [
+          elapsedTime,
+          globalConfig.minMeasureTime,
+        ]);
 
         if (document.readyState === "complete") {
           // If onload has already passed, send the beacon now.
@@ -1851,7 +1837,7 @@ LUX = (function () {
   }
 
   // Add the unload handlers for auto mode, or when LUX.measureUntil is "pagehidden"
-  if (userConfig.sendBeaconOnPageHidden) {
+  if (globalConfig.sendBeaconOnPageHidden) {
     _addUnloadHandlers();
   }
 
@@ -1861,43 +1847,43 @@ LUX = (function () {
   // Set the maximum measurement timer
   createMaxMeasureTimeout();
 
-  // This is the public API.
-  const _LUX: LuxGlobal = userConfig;
+  /**
+   * LUX functions and properties must be attached to the existing global object to ensure that
+   * changes made to the global object are reflected in the "internal" LUX object, and vice versa.
+   */
+  const globalLux = globalConfig as LuxGlobal;
+
   // Functions
-  _LUX.mark = _mark;
-  _LUX.measure = _measure;
-  _LUX.init = _init;
-  _LUX.markLoadTime = _markLoadTime;
-  _LUX.send = () => {
+  globalLux.mark = _mark;
+  globalLux.measure = _measure;
+  globalLux.init = _init;
+  globalLux.markLoadTime = _markLoadTime;
+  globalLux.send = () => {
     logger.logEvent(LogEvent.SendCalled);
     _sendLux();
   };
-  _LUX.addData = _addData;
-  _LUX.getSessionId = _getUniqueId; // so customers can do their own sampling
-  _LUX.getDebug = () => logger.getEvents();
-  _LUX.forceSample = () => {
+  globalLux.addData = _addData;
+  globalLux.getSessionId = _getUniqueId; // so customers can do their own sampling
+  globalLux.getDebug = () => logger.getEvents();
+  globalLux.forceSample = () => {
     logger.logEvent(LogEvent.ForceSampleCalled);
     setUniqueId(createSyncId(true));
   };
-  _LUX.doUpdate = () => {
+  globalLux.doUpdate = () => {
     // Deprecated, intentionally empty.
   };
-  _LUX.cmd = _runCommand;
+  globalLux.cmd = _runCommand;
 
   // Public properties
-  _LUX.version = SCRIPT_VERSION;
-
-  // "Private" properties
-  _LUX.ae = []; // array for error handler (ignored)
-  _LUX.al = []; // array for Long Tasks (ignored)
+  globalLux.version = SCRIPT_VERSION;
 
   /**
    * Run a command from the command queue
    */
   function _runCommand([fn, ...args]: Command) {
-    if (typeof _LUX[fn] === "function") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (_LUX[fn] as any).apply(_LUX, args);
+    if (typeof globalLux[fn] === "function") {
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      (globalLux[fn] as Function).apply(globalLux, args);
     }
   }
 
@@ -1913,9 +1899,9 @@ LUX = (function () {
 
   logger.logEvent(LogEvent.EvaluationEnd);
 
-  return _LUX;
+  return globalLux;
 })();
 
 window.LUX = LUX;
 
-LUX_t_end = now();
+scriptEndTime = now();
