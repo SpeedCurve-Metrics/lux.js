@@ -14,6 +14,8 @@ import {
 } from "./performance";
 import now from "./now";
 
+declare const __ENABLE_POLYFILLS: boolean;
+
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
 
@@ -256,22 +258,24 @@ LUX = (function () {
     }
 
     // ...Otherwise provide a polyfill
-    const name = args[0];
-    const detail = args[1]?.detail || null;
-    const startTime = args[1]?.startTime || _now();
+    if (__ENABLE_POLYFILLS) {
+      const name = args[0];
+      const detail = args[1]?.detail || null;
+      const startTime = args[1]?.startTime || _now();
 
-    const entry = {
-      entryType: "mark",
-      duration: 0,
-      name,
-      detail,
-      startTime,
-    } as PerformanceMark;
+      const entry = {
+        entryType: "mark",
+        duration: 0,
+        name,
+        detail,
+        startTime,
+      } as PerformanceMark;
 
-    gaMarks.push(entry);
-    gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
+      gaMarks.push(entry);
+      gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
 
-    return entry;
+      return entry;
+    }
   }
 
   // This is a wrapper around performance.measure that falls back to a polyfill when the User Timing
@@ -321,61 +325,63 @@ LUX = (function () {
     }
 
     // ...Otherwise provide a polyfill
-    let startTime = typeof startMarkName === "number" ? startMarkName : 0;
-    let endTime = typeof endMarkName === "number" ? endMarkName : _now();
-    const throwError = (missingMark: string) => {
-      throw new DOMException(
-        `Failed to execute 'measure' on 'Performance': The mark '${missingMark}' does not exist`
-      );
-    };
+    if (__ENABLE_POLYFILLS) {
+      let startTime = typeof startMarkName === "number" ? startMarkName : 0;
+      let endTime = typeof endMarkName === "number" ? endMarkName : _now();
+      const throwError = (missingMark: string) => {
+        throw new DOMException(
+          `Failed to execute 'measure' on 'Performance': The mark '${missingMark}' does not exist`
+        );
+      };
 
-    if (typeof startMarkName === "string") {
-      const startMark = _getMark(startMarkName);
-      if (startMark) {
-        startTime = startMark.startTime;
-      } else if (timing[startMarkName as PerfTimingKey]) {
-        // the mark name can also be a property from Navigation Timing
-        startTime = timing[startMarkName as PerfTimingKey] - timing.navigationStart;
-      } else {
-        throwError(startMarkName);
-      }
-    }
-
-    if (typeof endMarkName === "string") {
-      const endMark = _getMark(endMarkName);
-      if (endMark) {
-        endTime = endMark.startTime;
-      } else if (timing[endMarkName as PerfTimingKey]) {
-        // the mark name can also be a property from Navigation Timing
-        endTime = timing[endMarkName as PerfTimingKey] - timing.navigationStart;
-      } else {
-        throwError(endMarkName);
-      }
-    }
-
-    let duration = Math.round(endTime) - Math.round(startTime);
-    let detail = null;
-
-    if (options) {
-      if (options.duration) {
-        duration = options.duration;
+      if (typeof startMarkName === "string") {
+        const startMark = _getMark(startMarkName);
+        if (startMark) {
+          startTime = startMark.startTime;
+        } else if (timing[startMarkName as PerfTimingKey]) {
+          // the mark name can also be a property from Navigation Timing
+          startTime = timing[startMarkName as PerfTimingKey] - timing.navigationStart;
+        } else {
+          throwError(startMarkName);
+        }
       }
 
-      detail = options.detail;
+      if (typeof endMarkName === "string") {
+        const endMark = _getMark(endMarkName);
+        if (endMark) {
+          endTime = endMark.startTime;
+        } else if (timing[endMarkName as PerfTimingKey]) {
+          // the mark name can also be a property from Navigation Timing
+          endTime = timing[endMarkName as PerfTimingKey] - timing.navigationStart;
+        } else {
+          throwError(endMarkName);
+        }
+      }
+
+      let duration = Math.round(endTime) - Math.round(startTime);
+      let detail = null;
+
+      if (options) {
+        if (options.duration) {
+          duration = options.duration;
+        }
+
+        detail = options.detail;
+      }
+
+      const entry = {
+        entryType: "measure",
+        name,
+        detail,
+        startTime,
+        duration,
+      } as PerformanceMeasure;
+
+      gaMeasures.push(entry);
+      gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
+
+      return entry;
     }
-
-    const entry = {
-      entryType: "measure",
-      name,
-      detail,
-      startTime,
-      duration,
-    } as PerformanceMeasure;
-
-    gaMeasures.push(entry);
-    gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
-
-    return entry;
   }
 
   // Return THE LAST mark that matches the name.
@@ -1058,7 +1064,7 @@ LUX = (function () {
             return Math.round(entry.startTime);
           }
         }
-      } else if (timing.msFirstPaint) {
+      } else if (timing.msFirstPaint && __ENABLE_POLYFILLS) {
         // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
         return Math.round(timing.msFirstPaint - timing.navigationStart);
       }
@@ -1637,7 +1643,7 @@ LUX = (function () {
   function addListener(type: string, callback: (event: any) => void, useCapture = false) {
     if (window.addEventListener) {
       window.addEventListener(type, callback, useCapture);
-    } else if (window.attachEvent) {
+    } else if (window.attachEvent && __ENABLE_POLYFILLS) {
       window.attachEvent("on" + type, callback as EventListener);
     }
   }
@@ -1647,7 +1653,7 @@ LUX = (function () {
   function removeListener(type: string, callback: (event: any) => void, useCapture = false) {
     if (window.removeEventListener) {
       window.removeEventListener(type, callback, useCapture);
-    } else if (window.detachEvent) {
+    } else if (window.detachEvent && __ENABLE_POLYFILLS) {
       window.detachEvent("on" + type, callback);
     }
   }
