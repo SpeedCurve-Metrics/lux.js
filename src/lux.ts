@@ -292,14 +292,14 @@ LUX = (function () {
     logger.logEvent(LogEvent.MeasureCalled, args);
 
     const name = args[0];
-    let startMarkName = args[1] as string;
-    let endMarkName = args[2];
+    let startMarkName = args[1] as string | number;
+    let endMarkName = args[2] as string | number;
     let options;
 
     if (typeof startMarkName === "object") {
       options = args[1] as PerformanceMeasureOptions;
-      startMarkName = options.start as string;
-      endMarkName = options.end as string;
+      startMarkName = options.start as string | number;
+      endMarkName = options.end as string | number;
     }
 
     if (typeof startMarkName === "undefined") {
@@ -333,15 +333,15 @@ LUX = (function () {
     }
 
     // ...Otherwise provide a polyfill
-    let startTime = 0;
-    let endTime = _now();
+    let startTime = typeof startMarkName === "number" ? startMarkName : 0;
+    let endTime = typeof endMarkName === "number" ? endMarkName : _now();
     const throwError = (missingMark: string) => {
       throw new DOMException(
         `Failed to execute 'measure' on 'Performance': The mark '${missingMark}' does not exist`
       );
     };
 
-    if (startMarkName) {
+    if (typeof startMarkName === "string") {
       const startMark = _getMark(startMarkName);
       if (startMark) {
         startTime = startMark.startTime;
@@ -353,7 +353,7 @@ LUX = (function () {
       }
     }
 
-    if (endMarkName) {
+    if (typeof endMarkName === "string") {
       const endMark = _getMark(endMarkName);
       if (endMark) {
         endTime = endMark.startTime;

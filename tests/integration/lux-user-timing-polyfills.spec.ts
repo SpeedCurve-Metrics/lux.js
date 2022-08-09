@@ -128,6 +128,9 @@ describe("LUX user timing polyfills", () => {
 
       // Specifying a duration with a start mark
       LUX.measure('test-measure-5', { end: 'end-mark', duration: 500 });
+
+      // Specifying a start timestamp
+      LUX.measure('test-measure-6', { start: ${timeBeforeMeasure} });
     `);
 
     await page.evaluate("LUX.send()");
@@ -142,7 +145,7 @@ describe("LUX user timing polyfills", () => {
     expect(UT["test-measure-1"].duration).toBeLessThan(timeBeforeMeasure - startMarkTime + 10);
 
     expect(UT["test-measure-2"].startTime).toEqual(startMarkTime);
-    expect(UT["test-measure-3"].duration).toEqual(endMarkTime);
+    expect(UT["test-measure-2"].duration).toEqual(endMarkTime - startMarkTime);
 
     expect(UT["test-measure-3"].startTime).toEqual(0);
     expect(UT["test-measure-3"].duration).toEqual(endMarkTime);
@@ -152,5 +155,7 @@ describe("LUX user timing polyfills", () => {
 
     expect(UT["test-measure-5"].startTime).toEqual(0);
     expect(UT["test-measure-5"].duration).toEqual(500);
+
+    expect(UT["test-measure-6"].startTime).toEqual(timeBeforeMeasure);
   });
 });

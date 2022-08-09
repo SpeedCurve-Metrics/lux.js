@@ -163,6 +163,18 @@ describe("LUX user timing wrappers", () => {
         // Specifying a duration with a start mark
         LUX.measure('lux-measure-5', { end: 'end-mark', duration: 500 });
         performance.measure('perf-measure-5', { end: 'end-mark', duration: 500 });
+
+        // Specifying a start timestamp
+        LUX.measure('lux-measure-6', { start: 100 });
+        performance.measure('perf-measure-6', { start: 100 });
+
+        // Specifying an end timestamp
+        LUX.measure('lux-measure-7', { end: 500 });
+        performance.measure('perf-measure-7', { end: 500 });
+
+        // Specifying a start and end timestamp
+        LUX.measure('lux-measure-8', { start: 100, end: 500 });
+        performance.measure('perf-measure-8', { start: 100, end: 500 });
       `);
 
       await page.evaluate("LUX.send()");
@@ -170,23 +182,41 @@ describe("LUX user timing wrappers", () => {
       const beacon = luxRequests.getUrl(0);
       const UT = parseUserTiming(beacon.searchParams.get("UT"));
 
+      // Validate the LUX measures against the spec measures
       expect(UT["lux-measure-1"].startTime).toEqual(UT["perf-measure-2"].startTime);
       expect(UT["lux-measure-1"].duration).toBeGreaterThan(UT["perf-measure-1"].duration - 3);
       expect(UT["lux-measure-1"].duration).toBeLessThan(UT["perf-measure-1"].duration + 3);
+
       expect(UT["lux-measure-2"].startTime).toEqual(UT["perf-measure-2"].startTime);
       expect(UT["lux-measure-2"].duration).toEqual(UT["perf-measure-2"].duration);
+
       expect(UT["lux-measure-3"].startTime).toEqual(UT["perf-measure-3"].startTime);
       expect(UT["lux-measure-3"].duration).toEqual(UT["perf-measure-3"].duration);
+
       expect(UT["lux-measure-4"].startTime).toEqual(UT["perf-measure-4"].startTime);
       expect(UT["lux-measure-4"].duration).toEqual(UT["perf-measure-4"].duration);
+
       expect(UT["lux-measure-5"].startTime).toEqual(UT["perf-measure-5"].startTime);
       expect(UT["lux-measure-5"].duration).toEqual(UT["perf-measure-5"].duration);
 
+      expect(UT["lux-measure-6"].startTime).toEqual(UT["perf-measure-6"].startTime);
+      expect(UT["lux-measure-6"].duration).toEqual(UT["perf-measure-6"].duration);
+
+      expect(UT["lux-measure-7"].startTime).toEqual(UT["perf-measure-7"].startTime);
+      expect(UT["lux-measure-7"].duration).toEqual(UT["perf-measure-7"].duration);
+
+      expect(UT["lux-measure-8"].startTime).toEqual(UT["perf-measure-8"].startTime);
+      expect(UT["lux-measure-8"].duration).toEqual(UT["perf-measure-8"].duration);
+
+      // Validate the results against some known markers
       expect(UT["lux-measure-1"].duration).toBeGreaterThanOrEqual(30);
       expect(UT["lux-measure-2"].duration).toBeGreaterThanOrEqual(30);
       expect(UT["lux-measure-3"].duration).toBeGreaterThanOrEqual(timeBeforeMark);
       expect(UT["lux-measure-4"].duration).toEqual(400);
       expect(UT["lux-measure-5"].duration).toEqual(500);
+      expect(UT["lux-measure-6"].duration).toBeGreaterThanOrEqual(30);
+      expect(UT["lux-measure-7"].duration).toEqual(500);
+      expect(UT["lux-measure-8"].duration).toEqual(400);
     });
   });
 });
