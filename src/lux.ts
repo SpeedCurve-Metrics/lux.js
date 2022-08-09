@@ -108,10 +108,8 @@ LUX = (function () {
   // Bitmask of flags for this session & page
   let gFlags = 0;
 
-  // array of marks where each element is a hash
-  const gaMarks = typeof LUX.gaMarks !== "undefined" ? LUX.gaMarks : [];
-  // array of measures where each element is a hash
-  const gaMeasures = typeof LUX.gaMeasures !== "undefined" ? LUX.gaMeasures : [];
+  const gaMarks: PerformanceEntryList = [];
+  const gaMeasures: PerformanceEntryList = [];
   let ghIx: InteractionInfo = {}; // hash for Interaction Metrics (scroll, click, keyboard)
   const ghData: Record<string, unknown> = {}; // hash for data that is specific to the customer (eg, userid, conversion info)
   let gbLuxSent = 0; // have we sent the LUX data? (avoid sending twice in unload)
@@ -247,11 +245,9 @@ LUX = (function () {
     return sinceNavigationStart;
   }
 
-  type PerfMarkFn = typeof performance.mark;
-
   // This is a wrapper around performance.mark that falls back to a polyfill when the User Timing
   // API isn't supported.
-  function _mark(...args: Parameters<PerfMarkFn>): ReturnType<PerfMarkFn> {
+  function _mark(...args: Parameters<LuxGlobal["mark"]>): ReturnType<LuxGlobal["mark"]> | void {
     logger.logEvent(LogEvent.MarkCalled, args);
 
     if (performance.mark) {
@@ -278,11 +274,9 @@ LUX = (function () {
     return entry;
   }
 
-  type PerfMeasureFn = typeof performance.measure;
-
   // This is a wrapper around performance.measure that falls back to a polyfill when the User Timing
   // API isn't supported.
-  function _measure(...args: Parameters<PerfMeasureFn>): ReturnType<PerfMeasureFn> {
+  function _measure(...args: Parameters<LuxGlobal["measure"]>): ReturnType<LuxGlobal["measure"]> {
     logger.logEvent(LogEvent.MeasureCalled, args);
 
     const name = args[0];

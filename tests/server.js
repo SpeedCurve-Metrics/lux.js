@@ -7,7 +7,7 @@ const url = require("url");
 const SERVER_PORT = 3000;
 
 const testPagesDir = path.join(__dirname, "test-pages");
-const inlineSnippet = readFileSync(path.join(testPagesDir, "lux-inline-snippet.js"));
+const distDir = path.join(__dirname, "..", "dist");
 
 const headers = (contentType) => ({
   "content-type": contentType,
@@ -15,6 +15,7 @@ const headers = (contentType) => ({
 });
 
 const server = createServer(async (req, res) => {
+  const inlineSnippet = readFileSync(path.join(distDir, "lux-snippet.js"));
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
 
@@ -32,7 +33,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (pathname === "/js/lux.js") {
-    const contents = await readFile(path.join(__dirname, "..", "dist", "lux.min.js"));
+    const contents = await readFile(path.join(distDir, "lux.min.js"));
     let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/';`;
 
     res.writeHead(200, headers(contentType));

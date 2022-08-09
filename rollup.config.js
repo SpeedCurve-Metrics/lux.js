@@ -23,6 +23,22 @@ export default [
       }),
     ],
   },
+
+  {
+    input: "src/snippet.ts",
+    output: {
+      file: "dist/lux-snippet.js",
+      name: "LUX",
+      format: "iife",
+      plugins: [terser()],
+    },
+    plugins: [
+      typescript({
+        include: ["src/**"],
+      }),
+    ],
+  },
+
   {
     input: "docs/debug-parser/index.ts",
     output: {
