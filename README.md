@@ -17,3 +17,18 @@ This repository contains the source code for lux.js, SpeedCurve's real user moni
 5. Copy `dist/lux.min.js` to [`rum-backend/js/lux.min.test.js`](https://github.com/SpeedCurve-Metrics/rum-backend/blob/main/js/lux.min.test.js)
 6. Deploy rum-backend and check that the RUM data coming in from our test/beta accounts looks valid
 7. Copy `dist/lux.min.js` to [`rum-backend/js/lux.min.js`](https://github.com/SpeedCurve-Metrics/rum-backend/blob/main/js/lux.min.js) and follow the documentation in the rum-backend repository to version the new script
+
+## Publishing in GitHub Packages
+
+This repo is used in `speedcurve-app` as an NPM package.
+Package page: [lux.js](https://github.com/SpeedCurve-Metrics/lux.js/packages/1586797) 
+
+To publish a new version to [private GitHub Packages](https://github.com/orgs/SpeedCurve-Metrics/packages):  
+1. Navigate to your local version of the repo e.g. `cd ~/MyProjects/lux.js`
+2. Add environment variable with personal access token from 1Password (search `GitHub Packages NPM personal access token`):
+```
+export NPM_AUTH_TOKEN="%token%"
+```
+3. Run `npm publish` (use username `speedcurve-bot` and token from previous step if it requies login)
+ 
+Read more: [Working with the npm registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry)
