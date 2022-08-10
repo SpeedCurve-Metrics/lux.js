@@ -7,6 +7,8 @@
 - The start time of user timing measures is now recorded. In previous versions of lux.js only the duration was recorded.
 - Keyboard interaction tracking is now done by listening for the `keydown` event instead of the deprecated `keypress` event.
 - Custom data variables can now be removed by specifying their value as `null` or `undefined`. For example `LUX.addData("var1", null)` or `LUX.addData("var1", undefined)` will both remove any previously-set values for `var1`.
+- `LUX.markLoadTime` now accepts an optional `time` parameter. For example `LUX.markLoadTime(200)` will record the load time for a SPA page view as 200 ms.
+
 ### Bug fixes
 
 - `LUX.mark()` and `LUX.measure()` are now fully compatible with their native counterparts `performance.mark()` and `performance.measure()`. In previous versions of lux.js these functions did not support an options object as the second parameter.
@@ -91,5 +93,6 @@ This is considered a major lux.js release and may contain some breaking changes.
 - Fixed a bug where SPAs that didn't set a page label would always use the initial `document.title` value as the page label. Now the page label is updated whenever `document.title` changes.
 
 ## 2020-07-12: v206
+
 - Start render measurements that occur after the document onload event are no longer ignored.
 - The event listeners used to measure FID are now explicitly bound to the global scope to work around a Chrome bug affecting some instrumentation libraries [like Sentry](https://github.com/getsentry/sentry-javascript/issues/2074).
