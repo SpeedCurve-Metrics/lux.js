@@ -39,7 +39,19 @@ export default [
       file: "dist/lux-snippet.js",
       name: "LUX",
       format: "iife",
-      plugins: [terser()],
+      plugins: [
+        terser(),
+
+        /**
+         * This is a bit of a hack to ensure that the named export is always in the global scope.
+         * Rollup formats the export as `var [name] = function() { [default export] }()`, which
+         * is fine when the snippet is placed in the global scope. However our customers may either
+         * purposefully or inadvertently place the snippet in a scoped block that results in the
+         * `LUX` variable not being declared in the global scope. To ensure `LUX` is always in the
+         * global scope, we use the replace plugin to remove the `var` from the minified snippet.
+         */
+        replace({ "var LUX=": "LUX=" }),
+      ],
     },
     plugins: [
       typescript({
