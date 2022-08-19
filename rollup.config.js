@@ -39,6 +39,7 @@ export default [
       file: "dist/lux-snippet.js",
       name: "LUX",
       format: "iife",
+      strict: false,
       plugins: [
         terser(),
 
