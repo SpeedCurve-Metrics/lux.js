@@ -1,4 +1,4 @@
-import Flags, { addFlag, hasFlag } from "./flags";
+import Flags, { addFlag, hasFlag, removeFlag } from "./flags";
 
 describe("Flags", () => {
   test("every flag is unique", () => {
@@ -18,7 +18,7 @@ describe("Flags", () => {
     }
   });
 
-  test("adding flags and testing for flags", () => {
+  test("adding & removing flags, and testing for flags", () => {
     let flags = 0;
 
     flags = addFlag(flags, Flags.VisibilityStateNotVisible);
@@ -27,5 +27,8 @@ describe("Flags", () => {
     flags = addFlag(flags, Flags.PageLabelFromGlobalVariable);
     expect(hasFlag(flags, Flags.VisibilityStateNotVisible)).toBe(true);
     expect(hasFlag(flags, Flags.PageLabelFromGlobalVariable)).toBe(true);
+
+    flags = removeFlag(flags, Flags.VisibilityStateNotVisible);
+    expect(hasFlag(flags, Flags.VisibilityStateNotVisible)).toBe(false);
   });
 });

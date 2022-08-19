@@ -14,6 +14,10 @@ export function addFlag(flags: number, flag: number): number {
   return flags | flag;
 }
 
+export function removeFlag(flags: number, flag: number): number {
+  return flags & ~flag;
+}
+
 export function hasFlag(flags: number, flag: number): boolean {
   return (flags & flag) === flag;
 }
