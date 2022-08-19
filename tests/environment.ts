@@ -30,10 +30,11 @@ class CustomEnvironment extends PuppeteerEnvironment {
 
     this.global.page.on("console", (msg) => {
       const type = msg.type();
+      const isTimer = ["time", "timeEnd"].includes(type);
 
       Promise.all(msg.args().map((arg) => arg.jsonValue())).then((args) => {
         if (args.length) {
-          if (typeof console[type] === "function") {
+          if (typeof console[type] === "function" && !isTimer) {
             console[type](...["[PAGE CONSOLE]"].concat(args));
           } else {
             console.log(...["[PAGE CONSOLE]"].concat(args));
