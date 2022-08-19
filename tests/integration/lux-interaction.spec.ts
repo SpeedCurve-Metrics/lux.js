@@ -22,8 +22,15 @@ describe("LUX interaction", () => {
     // Click coordinates
     expect(parseInt(ixMetrics.cx)).toBeGreaterThan(0);
     expect(parseInt(ixMetrics.cy)).toBeGreaterThan(0);
+  });
 
-    // FID
+  test("FID is gathered for clicks", async () => {
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+    await navigateTo("/interaction.html");
+    await page.click("#button-with-js");
+
+    const ixBeacon = luxRequests.getUrl(1);
+
     expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThan(0);
   });
 
@@ -42,15 +49,23 @@ describe("LUX interaction", () => {
 
     // Key press attribution
     expect(ixMetrics.ki).toEqual("button-with-id");
+  });
 
-    // FID
+  test("FID is gathered for keypress", async () => {
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+    await navigateTo("/interaction.html");
+    const button = await page.$("#button-with-js");
+    await button.press("Enter");
+
+    const ixBeacon = luxRequests.getUrl(1);
+
     expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThan(0);
   });
 
   test("only high level metrics are sent in the interaction beacon", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     await navigateTo("/interaction.html");
-    await page.click("#button-with-id");
+    await page.click("#button-with-js");
 
     const ixBeacon = luxRequests.getUrl(1);
 
@@ -71,9 +86,7 @@ describe("LUX interaction", () => {
 
     await page.evaluate("LUX.init()");
     await page.waitForTimeout(20);
-    await page.click("button", {
-      delay: 5,
-    });
+    await page.click("button");
     await page.evaluate("LUX.send()");
 
     const ixBeacon = luxRequests.getUrl(1);
@@ -82,6 +95,7 @@ describe("LUX interaction", () => {
 
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThan(100);
-    expect(fid).toBeGreaterThanOrEqual(0);
+
+    expect(fid).toBeGreaterThan(0);
   });
 });

@@ -212,7 +212,7 @@ LUX = (function () {
 
       const delay = now - eventTimeStamp;
 
-      if ("pointerdown" == evt.type) {
+      if (evt.type === "pointerdown") {
         // special case
         onPointerDown(delay);
       } else {
