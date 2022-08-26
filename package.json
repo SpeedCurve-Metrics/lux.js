@@ -1,5 +1,6 @@
 {
-  "name": "lux.js",
+  "name": "@speedcurve-metrics/lux.js",
+  "version": "1.0.2",
   "scripts": {
     "build": "npm run rollup",
     "rollup": "rollup -c rollup.config.js",
@@ -38,5 +39,13 @@
   },
   "prettier": {
     "printWidth": 100
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/speedcurve-metrics"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:speedcurve-metrics/lux.js.git",
+    "directory": "@speedcurve-metrics/lux.js"
   }
 }
