@@ -1,6 +1,6 @@
 {
   "name": "@speedcurve-metrics/lux.js",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "scripts": {
     "build": "npm run rollup",
     "rollup": "rollup -c rollup.config.js",
@@ -10,6 +10,7 @@
     "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts' 'docs/debug-parser/**/*.ts'",
     "lint-fix": "npm run lint -- --fix",
     "test": "npm run type-check && npm run lint && npm run jest",
+    "test-unit": "npm run jest /tests/unit --watchAll",
     "watch": "npm run rollup -- --watch"
   },
   "devDependencies": {
