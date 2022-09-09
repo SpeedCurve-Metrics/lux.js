@@ -1,6 +1,6 @@
 {
   "name": "@speedcurve-metrics/lux.js",
-  "version": "1.0.4",
+  "version": "3.3.0",
   "scripts": {
     "build": "npm run rollup",
     "rollup": "rollup -c rollup.config.js",
