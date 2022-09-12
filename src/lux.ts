@@ -1770,6 +1770,7 @@ LUX = (function () {
         }
         // exits loop when first match is found
         if (label.length) {
+          gFlags = addFlag(gFlags, Flags.PageLabelFromPagegroup);
           return label;
         }
       }

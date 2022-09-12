@@ -8,6 +8,7 @@ const Flags = {
   PageLabelFromDocumentTitle: 1 << 6,
   PageLabelFromLabelProp: 1 << 7,
   PageLabelFromGlobalVariable: 1 << 8,
+  PageLabelFromPagegroup: 1 << 9,
 };
 
 export function addFlag(flags: number, flag: number): number {
