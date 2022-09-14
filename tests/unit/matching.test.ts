@@ -71,22 +71,3 @@ describe("Test subdomain matching", () => {
     expect(Matching.isMatching("*.speedcurve.com/*/bar", "speedcurve.com/foo/baz/bar")).toBe(false);
   });
 });
-
-describe("Test cleanUrl method", () => {
-  test("cleanUrl returns null if URL is invalid", () => {
-    expect(Matching.cleanUrl("speedcurve.com")).toBe(null);
-    expect(Matching.cleanUrl("random string")).toBe(null);
-    expect(Matching.cleanUrl("https://invalid domain")).toBe(null);
-  });
-
-  test("cleanUrl returns modyfied URL", () => {
-    expect(Matching.cleanUrl("https://speedcurve.com/pathname/")).toBe("speedcurve.com/pathname/");
-    expect(Matching.cleanUrl("https://speedcurve.com/pathname/?ok")).toBe(
-      "speedcurve.com/pathname/"
-    );
-    expect(Matching.cleanUrl("https://www.speedcurve.com/path/name/?ok")).toBe(
-      "www.speedcurve.com/path/name/"
-    );
-    expect(Matching.cleanUrl("http://app.speedcurve.com/")).toBe("app.speedcurve.com/");
-  });
-});
