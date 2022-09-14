@@ -1758,8 +1758,9 @@ LUX = (function () {
       const pagegroups = LUX.pagegroups;
       const url = `${document.location.hostname}${document.location.pathname}`;
       let label = '';
-      for (let [pagegroup, rules] of Object.entries(pagegroups)) {
-        if (rules.constructor.name == "Array") {
+      for (const pagegroup in pagegroups) {
+        const rules = pagegroups[pagegroup];
+        if (Array.isArray(rules)) {
           rules.every((rule: string) => {
             if (Matching.isMatching(rule, url)) {
                 label = pagegroup;
