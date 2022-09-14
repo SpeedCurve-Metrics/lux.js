@@ -1757,14 +1757,14 @@ LUX = (function () {
     } else if (typeof LUX.pagegroups !== "undefined") {
       const pagegroups = LUX.pagegroups;
       const url = `${document.location.hostname}${document.location.pathname}`;
-      let label = '';
+      let label = "";
       for (const pagegroup in pagegroups) {
         const rules = pagegroups[pagegroup];
         if (Array.isArray(rules)) {
           rules.every((rule: string) => {
             if (Matching.isMatching(rule, url)) {
-                label = pagegroup;
-                return false; // stop when first match is found
+              label = pagegroup;
+              return false; // stop when first match is found
             }
             return true;
           });
@@ -1775,7 +1775,8 @@ LUX = (function () {
           return label;
         }
       }
-    } else if (typeof LUX.jspagelabel !== "undefined") {
+    }
+    if (typeof LUX.jspagelabel !== "undefined") {
       const evaluateJsPageLabel = Function(`"use strict"; return ${LUX.jspagelabel}`);
 
       try {
