@@ -13,6 +13,10 @@ export interface ConfigObject {
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   trackErrors: boolean;
+  pagegroups?: PageGroups;
+}
+interface PageGroups {
+  [key: string]: string[];
 }
 
 export type UserConfig = Partial<ConfigObject>;
@@ -35,6 +39,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     samplerate: getProperty(obj, "samplerate", 100),
     sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
     trackErrors: getProperty(obj, "trackErrors", true),
+    pagegroups: getProperty(obj, "pagegroups", undefined),
   };
 }
 

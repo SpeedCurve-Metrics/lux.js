@@ -66,22 +66,4 @@ export default class Matching {
     // we don't escape * because it's our own special symbol!
     return string.replace(/[-/\\^$+?.()|[\]{}]/g, "\\$&");
   }
-
-  /**
-   * Prepares URL for matching: removes protocol and query string
-   * E.g. https://speedcurve.com/path/name/?ok becomes speedcurve.com/path/name/
-   * Used in UI
-   *
-   * @param url
-   */
-  static cleanUrl(url: string): string | null {
-    try {
-      const { hostname, pathname } = new URL(url);
-      return `${hostname}${pathname}`;
-    } catch (e) {
-      console.debug(`Invalid URL ${url}`);
-    }
-
-    return null;
-  }
 }

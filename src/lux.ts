@@ -13,6 +13,7 @@ import {
   PerfTimingKey,
 } from "./performance";
 import now from "./now";
+import Matching from "./matching";
 
 declare const __ENABLE_POLYFILLS: boolean;
 
@@ -1753,7 +1754,29 @@ LUX = (function () {
       gFlags = addFlag(gFlags, Flags.PageLabelFromLabelProp);
 
       return LUX.label;
-    } else if (typeof LUX.jspagelabel !== "undefined") {
+    } else if (typeof LUX.pagegroups !== "undefined") {
+      const pagegroups = LUX.pagegroups;
+      const url = `${document.location.hostname}${document.location.pathname}`;
+      let label = "";
+      for (const pagegroup in pagegroups) {
+        const rules = pagegroups[pagegroup];
+        if (Array.isArray(rules)) {
+          rules.every((rule: string) => {
+            if (Matching.isMatching(rule, url)) {
+              label = pagegroup;
+              return false; // stop when first match is found
+            }
+            return true;
+          });
+        }
+        // exits loop when first match is found
+        if (label.length) {
+          gFlags = addFlag(gFlags, Flags.PageLabelFromPagegroup);
+          return label;
+        }
+      }
+    }
+    if (typeof LUX.jspagelabel !== "undefined") {
       const evaluateJsPageLabel = Function(`"use strict"; return ${LUX.jspagelabel}`);
 
       try {

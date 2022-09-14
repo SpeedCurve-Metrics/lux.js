@@ -29,6 +29,10 @@ To publish a new version to [private GitHub Packages](https://github.com/orgs/Sp
 ```
 export NPM_AUTH_TOKEN="%token%"
 ```
-3. Run `npm publish` (use username `speedcurve-bot` and token from previous step if it requies login)
+3. Login to Github Packages with your Github user's credentials (or `speedcurve-bot`):
+```
+npm login --scope=@speedcurve-metrics --registry=https://npm.pkg.github.com
+```
+4. Run `npm publish` 
  
 Read more: [Working with the npm registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry)
