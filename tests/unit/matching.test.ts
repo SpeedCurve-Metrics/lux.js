@@ -24,6 +24,24 @@ describe("Test hostname root matching", () => {
   });
 });
 
+describe("Test pathname matching", () => {
+  test("Pathname no domain specified", () => {
+    expect(Matching.isMatching("/foo", "app.speedcurve.com/foo")).toBe(true);
+    expect(Matching.isMatching("/foo/bar", "app.speedcurve.com/foo/bar")).toBe(true);
+    expect(Matching.isMatching("/foo/bar/", "app.speedcurve.com/foo/bar/")).toBe(true);
+  });
+
+  test("Pathname with domain specified", () => {
+    expect(Matching.isMatching("app.speedcurve.com/foo", "app.speedcurve.com/foo")).toBe(true);
+    expect(Matching.isMatching("app.speedcurve.com/foo/bar", "app.speedcurve.com/foo/bar")).toBe(
+      true
+    );
+    expect(Matching.isMatching("app.speedcurve.com/foo/bar/", "app.speedcurve.com/foo/bar/")).toBe(
+      true
+    );
+  });
+});
+
 describe("Test pathname with wilcard (*) matching", () => {
   test("Pattern with single wildcard - /foo*", () => {
     expect(Matching.isMatching("/foo*", "speedcurve.com/foo")).toBe(true);
