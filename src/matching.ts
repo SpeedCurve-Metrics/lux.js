@@ -4,6 +4,7 @@ export default class Matching {
 
   static isMatching(pattern: string, url: string): boolean {
     const regexp = Matching.createRegexpFromPattern(pattern);
+    console.log(pattern, url, regexp, url.match(regexp) ? true : false);
     return url.match(regexp) ? true : false;
   }
 
@@ -17,10 +18,8 @@ export default class Matching {
       regexp = this.getRegexpForHostnameRoot();
     } else if (!pattern.includes(Matching.wildcard)) {
       regexp = this.getRegexpForExactString(pattern);
-    } else if (pattern.charAt(0) == "/") {
-      regexp = this.createRegexpFromPathname(pattern);
     } else {
-      regexp = this.createRegexpFromPathname(pattern, false);
+      regexp = this.createRegexpFromPathname(pattern);
     }
 
     return regexp;
@@ -31,7 +30,8 @@ export default class Matching {
    * Multile wildcards (*) are supported
    * @return RegExp
    */
-  static createRegexpFromPathname(pattern: string, anyDomain = true): RegExp {
+  static createRegexpFromPathname(pattern: string): RegExp {
+    const anyDomain:boolean = pattern.charAt(0) == "/";
     pattern = this.escapeStringForRegexp(pattern);
     const expression =
       "^" +
@@ -55,7 +55,8 @@ export default class Matching {
    * @return RegExp
    */
   static getRegexpForExactString(string: string): RegExp {
-    return new RegExp("^" + this.escapeStringForRegexp(string) + "/?$", "i");
+    const anyDomain:boolean = string.charAt(0) == "/";
+    return new RegExp("^" + (anyDomain ? Matching.domainExpression : "") + this.escapeStringForRegexp(string) + "/?$", "i");
   }
 
   /**
