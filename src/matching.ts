@@ -31,7 +31,7 @@ export default class Matching {
    * @return RegExp
    */
   static createRegexpFromPathname(pattern: string): RegExp {
-    const anyDomain:boolean = pattern.charAt(0) == "/";
+    const anyDomain: boolean = pattern.charAt(0) == "/";
     pattern = this.escapeStringForRegexp(pattern);
     const expression =
       "^" +
@@ -55,8 +55,14 @@ export default class Matching {
    * @return RegExp
    */
   static getRegexpForExactString(string: string): RegExp {
-    const anyDomain:boolean = string.charAt(0) == "/";
-    return new RegExp("^" + (anyDomain ? Matching.domainExpression : "") + this.escapeStringForRegexp(string) + "/?$", "i");
+    const anyDomain: boolean = string.charAt(0) == "/";
+    return new RegExp(
+      "^" +
+        (anyDomain ? Matching.domainExpression : "") +
+        this.escapeStringForRegexp(string) +
+        "/?$",
+      "i"
+    );
   }
 
   /**
