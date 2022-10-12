@@ -4,7 +4,6 @@ export default class Matching {
 
   static isMatching(pattern: string, url: string): boolean {
     const regexp = Matching.createRegexpFromPattern(pattern);
-    console.log(pattern, url, regexp, url.match(regexp) ? true : false);
     return url.match(regexp) ? true : false;
   }
 
