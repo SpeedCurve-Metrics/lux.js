@@ -1,5 +1,9 @@
-export function hasParentNode(el: HTMLElement): boolean {
-  if (el.parentNode && (el.parentNode as HTMLElement).tagName) {
+type ElementWithParentNode = Element & {
+  parentNode: Element;
+};
+
+export function hasParentNode(el: Element): el is ElementWithParentNode {
+  if (el.parentNode && (el.parentNode as Element).tagName) {
     return true;
   }
 

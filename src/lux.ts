@@ -1598,8 +1598,8 @@ LUX = (function () {
     if (typeof ghIx["k"] === "undefined") {
       ghIx["k"] = Math.round(_now());
 
-      if (e && e.target) {
-        const trackId = interactionAttributionForElement(e.target as HTMLElement);
+      if (e && e.target instanceof Element) {
+        const trackId = interactionAttributionForElement(e.target);
         if (trackId) {
           ghIx["ki"] = trackId;
         }
@@ -1613,15 +1613,14 @@ LUX = (function () {
     if (typeof ghIx["c"] === "undefined") {
       ghIx["c"] = Math.round(_now());
 
-      let target = null;
+      let target: Element | undefined;
       try {
         // Seeing "Permission denied" errors, so do a simple try-catch.
-        if (e && e.target) {
+        if (e && e.target instanceof Element) {
           target = e.target;
         }
       } catch (e) {
         logger.logEvent(LogEvent.EventTargetAccessError);
-        target = null;
       }
 
       if (target) {
@@ -1630,7 +1629,7 @@ LUX = (function () {
           ghIx["cx"] = e.clientX;
           ghIx["cy"] = e.clientY;
         }
-        const trackId = interactionAttributionForElement(e.target as HTMLElement);
+        const trackId = interactionAttributionForElement(target);
         if (trackId) {
           ghIx["ci"] = trackId;
         }
