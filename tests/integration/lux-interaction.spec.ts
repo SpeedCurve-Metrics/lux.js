@@ -98,4 +98,24 @@ describe("LUX interaction", () => {
 
     expect(fid).toBeGreaterThan(0);
   });
+
+  test("mousedown handler doesn't throw errors when the event target is not an Element", async () => {
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+    await navigateTo("/interaction.html");
+    await page.evaluate("window.dispatchEvent(new MouseEvent('mousedown'))");
+    const ixBeacon = luxRequests.getUrl(1);
+    const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
+
+    expect(parseInt(ixMetrics.c)).toBeGreaterThan(0);
+  });
+
+  test("keydown handler doesn't throw errors when the event target is not an Element", async () => {
+    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+    await navigateTo("/interaction.html");
+    await page.evaluate("window.dispatchEvent(new MouseEvent('keydown'))");
+    const ixBeacon = luxRequests.getUrl(1);
+    const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
+
+    expect(parseInt(ixMetrics.k)).toBeGreaterThan(0);
+  });
 });

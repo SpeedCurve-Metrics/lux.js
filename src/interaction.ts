@@ -14,11 +14,8 @@ type ButtonOrLinkElement = HTMLButtonElement | HTMLLinkElement;
 
 /**
  * Get the interaction attribution name for an element
- *
- * @param {HTMLElement} el
- * @returns string
  */
-export function interactionAttributionForElement(el: HTMLElement): string {
+export function interactionAttributionForElement(el: Element): string {
   // Our first preference is to use the data-sctrack attribute from anywhere in the tree
   const trackId = getClosestScTrackAttribute(el);
 
@@ -45,14 +42,14 @@ export function interactionAttributionForElement(el: HTMLElement): string {
   }
 
   if (hasParentNode(el)) {
-    return interactionAttributionForElement(el.parentNode as HTMLElement);
+    return interactionAttributionForElement(el.parentNode);
   }
 
   // No suitable attribute was found
   return "";
 }
 
-function getClosestScTrackAttribute(el: HTMLElement): string | null {
+function getClosestScTrackAttribute(el: Element): string | null {
   if (el.hasAttribute("data-sctrack")) {
     const trackId = el.getAttribute("data-sctrack")?.trim();
 
@@ -62,7 +59,7 @@ function getClosestScTrackAttribute(el: HTMLElement): string | null {
   }
 
   if (hasParentNode(el)) {
-    return getClosestScTrackAttribute(el.parentNode as HTMLElement);
+    return getClosestScTrackAttribute(el.parentNode);
   }
 
   return null;
