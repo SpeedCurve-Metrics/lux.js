@@ -1,6 +1,18 @@
 # lux.js changelog
 
-## 2022-06-??: v302
+## 2022-10-11: v304
+
+### Bug fixes
+
+- Prevent a TypeError from being thrown when an interaction event is triggered with a target that is not an `Element`.
+
+## 2022-10-11: v303
+
+### Bug fixes
+
+- Fixed a bug where page group URL matching didn't work on exact path matches
+
+## 2022-10-11: v302
 
 ### Improvements
 
