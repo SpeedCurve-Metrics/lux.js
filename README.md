@@ -14,10 +14,8 @@ This repository contains the source code for lux.js, SpeedCurve's real user moni
 2. Once approved, merge changes to the `main` branch
 3. Increment the `SCRIPT_VERSION` constant on the `main` branch
 4. Create a new release in GitHub, following the naming convention and documentation process of previous releases
-5. Run `npm run build` to generate the latest bundles.
-6. Copy `dist/lux.min.js` to [`rum-backend/js/lux.min.test.js`](https://github.com/SpeedCurve-Metrics/rum-backend/blob/main/js/lux.min.test.js)
-7. Deploy rum-backend and check that the RUM data coming in from our test/beta accounts looks valid
-8. Copy `dist/lux.min.js` to [`rum-backend/js/lux.min.js`](https://github.com/SpeedCurve-Metrics/rum-backend/blob/main/js/lux.min.js) and follow the documentation in the rum-backend repository to version the new script
+5. Run `npm run build` to generate the lux.js bundles.
+6. Follow the [rum-backend release process]() to deploy the updated lux.js bundles.
 
 ## Publishing in GitHub Packages
 
