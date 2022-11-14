@@ -1,7 +1,9 @@
 import PuppeteerEnvironment from "jest-environment-puppeteer";
 import { HTTPResponse, PuppeteerLifeCycleEvent } from "puppeteer";
 import RequestInterceptor from "./request-interceptor";
+import { LuxGlobal } from "../src/global";
 declare global {
+  const LUX: LuxGlobal;
   const requestInterceptor: RequestInterceptor;
   const navigateTo: (url: string, waitUntil?: PuppeteerLifeCycleEvent) => Promise<HTTPResponse>;
 }

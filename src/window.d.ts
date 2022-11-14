@@ -25,6 +25,7 @@ declare global {
    */
   // Device Memory 1: https://w3c.github.io/device-memory/#sec-device-memory-js-api
   interface Navigator {
+    connection: NetworkInformation;
     deviceMemory: number;
   }
 

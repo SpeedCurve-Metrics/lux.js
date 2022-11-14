@@ -1,6 +1,6 @@
 import typescript from "@rollup/plugin-typescript";
 import replace from "@rollup/plugin-replace";
-import { terser } from "rollup-plugin-terser";
+import terser from "@rollup/plugin-terser";
 
 const minifiedLux = (file, polyfills) => ({
   file,
