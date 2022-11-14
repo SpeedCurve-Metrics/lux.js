@@ -9,15 +9,17 @@ describe("LUX custom data", () => {
 
   test("only valid customer data is sent", async () => {
     await navigateTo("/default.html?injectScript=LUX.auto=false;");
-    await page.evaluate("LUX.addData('stringVar', 'hello')");
-    await page.evaluate("LUX.addData('emptyStringVar', '')");
-    await page.evaluate("LUX.addData('numberVar', 123)");
-    await page.evaluate("LUX.addData('numberZeroVar', 0)");
-    await page.evaluate("LUX.addData('booleanFalseVar', false)");
-    await page.evaluate("LUX.addData('booleanTrueVar', true)");
-    await page.evaluate("LUX.addData('objectVar', { key: 'val' })");
-    await page.evaluate("LUX.addData('arrayVar', [1, 2, 3])");
-    await page.evaluate("LUX.send()");
+    await page.evaluate(() => {
+      LUX.addData("stringVar", "hello");
+      LUX.addData("emptyStringVar", "");
+      LUX.addData("numberVar", 123);
+      LUX.addData("numberZeroVar", 0);
+      LUX.addData("booleanFalseVar", false);
+      LUX.addData("booleanTrueVar", true);
+      LUX.addData("objectVar", { key: "val" });
+      LUX.addData("arrayVar", [1, 2, 3]);
+      LUX.send();
+    });
 
     const beacon = luxRequests.getUrl(0);
     const customData = parseNestedPairs(beacon.searchParams.get("CD"));
@@ -30,6 +32,23 @@ describe("LUX custom data", () => {
     expect(customData["booleanTrueVar"]).toEqual("true");
     expect(customData["objectVar"]).toBeUndefined();
     expect(customData["arrayVar"]).toBeUndefined();
+  });
+
+  test("reserved characters are removed from keys and value", async () => {
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
+    await page.evaluate(() => {
+      LUX.addData("var1", "|special,characters|");
+      LUX.addData("var|2", "normal string");
+      LUX.addData("var|,3", "special, string");
+      LUX.send();
+    });
+
+    const beacon = luxRequests.getUrl(0);
+    const customData = parseNestedPairs(beacon.searchParams.get("CD"));
+
+    expect(customData["var1"]).toEqual("specialcharacters");
+    expect(customData["var2"]).toEqual("normal string");
+    expect(customData["var3"]).toEqual("special string");
   });
 
   test("custom data set before LUX.send is sent with the main beacon", async () => {
@@ -45,15 +64,16 @@ describe("LUX custom data", () => {
 
   test("custom data can be removed", async () => {
     await navigateTo("/default.html?injectScript=LUX.auto=false;");
-    await page.evaluate("LUX.addData('var1', 'hello')");
-    await page.evaluate("LUX.addData('var2', 'world')");
-    await page.evaluate("LUX.addData('var3', 'and')");
-    await page.evaluate("LUX.addData('var4', 'others')");
-
-    await page.evaluate("LUX.addData('var2', null)");
-    await page.evaluate("LUX.addData('var3', undefined)");
-    await page.evaluate("LUX.addData('var4')");
-    await page.evaluate("LUX.send()");
+    await page.evaluate(() => {
+      LUX.addData("var1", "hello");
+      LUX.addData("var2", "world");
+      LUX.addData("var3", "and");
+      LUX.addData("var4", "others");
+      LUX.addData("var2", null);
+      LUX.addData("var3", undefined);
+      LUX.addData("var4");
+      LUX.send();
+    });
 
     const beacon = luxRequests.getUrl(0);
     const customData = parseNestedPairs(beacon.searchParams.get("CD"));
@@ -86,12 +106,14 @@ describe("LUX custom data", () => {
 
   test("custom data is retained between SPA pages", async () => {
     await navigateTo("/default.html?injectScript=LUX.auto=false;");
-    await page.evaluate("LUX.addData('var1', 'hello')");
-    await page.evaluate("LUX.addData('var2', 'world')");
-    await page.evaluate("LUX.send()");
-    await page.evaluate("LUX.init()");
-    await page.evaluate("LUX.addData('var2', 'doggo')");
-    await page.evaluate("LUX.send()");
+    await page.evaluate(() => {
+      LUX.addData("var1", "hello");
+      LUX.addData("var2", "world");
+      LUX.send();
+      LUX.init();
+      LUX.addData("var2", "doggo");
+      LUX.send();
+    });
 
     const beacon = luxRequests.getUrl(1);
     const customData = parseNestedPairs(beacon.searchParams.get("CD"));
