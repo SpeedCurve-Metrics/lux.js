@@ -1,7 +1,7 @@
 import { getNavTiming, getPerformanceTimingMs, parseUserTiming } from "../helpers/lux";
 import { END_MARK } from "../../src/constants";
 
-describe.skip("LUX inline snippet", () => {
+describe("LUX inline snippet", () => {
   test("LUX.markLoadTime works before the script is loaded", async () => {
     const beaconRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
