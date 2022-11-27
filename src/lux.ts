@@ -14,6 +14,7 @@ import {
 } from "./performance";
 import now from "./now";
 import Matching from "./matching";
+import { fitUserTimingEntries } from "./beacon";
 
 declare const __ENABLE_POLYFILLS: boolean;
 
@@ -124,7 +125,6 @@ LUX = (function () {
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
   let gCustomerDataTimeout: number; // setTimeout timer for sending a Customer Data beacon after onload
   let gMaxMeasureTimeout: number; // setTimeout timer for sending the beacon after a maximum measurement time
-  const gMaxQuerystring = 8190; // split the beacon querystring if it gets longer than this
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -431,7 +431,7 @@ LUX = (function () {
   }
 
   // Return a string of User Timing Metrics formatted for beacon querystring.
-  function userTimingValues(): string {
+  function userTimingValues(): string[] {
     // The User Timing spec allows for there to be multiple marks with the same name,
     // and multiple measures with the same name. But we can only send back one value
     // for a name, so we always take the maximum value.
@@ -496,7 +496,7 @@ LUX = (function () {
       aUT.push(utParts.join("|"));
     }
 
-    return aUT.join(",");
+    return aUT;
   }
 
   // Return a string of Element Timing Metrics formatted for beacon querystring.
@@ -1345,7 +1345,6 @@ LUX = (function () {
       _markLoadTime();
     }
 
-    const sUT = userTimingValues(); // User Timing data
     const sET = elementTimingValues(); // Element Timing data
     const sCustomerData = customerDataValues(); // customer data
     let sIx = ""; // Interaction Metrics
@@ -1380,7 +1379,7 @@ LUX = (function () {
     const is = inlineTagSize("script");
     const ic = inlineTagSize("style");
 
-    let querystring =
+    const metricsQueryString =
       // only send Nav Timing and lux.js metrics on initial pageload (not for SPA page views)
       (gbNavSent ? "" : "&NT=" + getNavTiming()) +
       (gbFirstPV ? "&LJS=" + sLuxjs : "") +
@@ -1429,24 +1428,19 @@ LUX = (function () {
       "&PN=" +
       encodeURIComponent(document.location.pathname);
 
-    // User Timing marks & measures
-    let sUT_remainder = "";
-    if (sUT) {
-      const curLen = baseUrl.length + querystring.length;
-      if (curLen + sUT.length <= gMaxQuerystring) {
-        // Add all User Timing
-        querystring += "&UT=" + sUT;
-      } else {
-        // Only add a substring of User Timing
-        const avail = gMaxQuerystring - curLen; // how much room is left in the querystring
-        const iComma = sUT.lastIndexOf(",", avail); // as many UT tuples as possible
-        querystring += "&UT=" + sUT.substring(0, iComma);
-        sUT_remainder = sUT.substring(iComma + 1);
-      }
-    }
+    // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
+    const utValues = userTimingValues();
+    let [beaconUtValues, remainingUtValues] = fitUserTimingEntries(
+      utValues,
+      globalConfig,
+      baseUrl + metricsQueryString
+    );
 
     // Send the MAIN LUX beacon.
-    const mainBeaconUrl = baseUrl + querystring;
+    const mainBeaconUrl =
+      baseUrl +
+      metricsQueryString +
+      (beaconUtValues.length > 0 ? "&UT=" + beaconUtValues.join(",") : "");
     logger.logEvent(LogEvent.MainBeaconSent, [mainBeaconUrl]);
     _sendBeacon(mainBeaconUrl);
 
@@ -1456,33 +1450,14 @@ LUX = (function () {
     gbIxSent = sIx ? 1 : 0;
 
     // Send other beacons for JUST User Timing.
-    const avail = gMaxQuerystring - baseUrl.length;
-    while (sUT_remainder) {
-      let sUT_cur = "";
-      if (sUT_remainder.length <= avail) {
-        // We can fit ALL the remaining UT params.
-        sUT_cur = sUT_remainder;
-        sUT_remainder = "";
-      } else {
-        // We have to take a subset of the remaining UT params.
-        let iComma = sUT_remainder.lastIndexOf(",", avail); // as many UT tuples as possible
-        if (-1 === iComma) {
-          // Trouble: we have SO LITTLE available space we can not fit the first UT tuple.
-          // Try it anyway but find it by searching from the front.
-          iComma = sUT_remainder.indexOf(",");
-        }
-        if (-1 === iComma) {
-          // The is only one UT tuple left, but it is bigger than the available space.
-          // Take the whole tuple even tho it is too big.
-          sUT_cur = sUT_remainder;
-          sUT_remainder = "";
-        } else {
-          sUT_cur = sUT_remainder.substring(0, iComma);
-          sUT_remainder = sUT_remainder.substring(iComma + 1);
-        }
-      }
+    while (remainingUtValues.length) {
+      [beaconUtValues, remainingUtValues] = fitUserTimingEntries(
+        remainingUtValues,
+        globalConfig,
+        baseUrl
+      );
 
-      const utBeaconUrl = baseUrl + "&UT=" + sUT_cur;
+      const utBeaconUrl = baseUrl + "&UT=" + beaconUtValues.join(",");
       logger.logEvent(LogEvent.UserTimingBeaconSent, [utBeaconUrl]);
       _sendBeacon(utBeaconUrl);
     }

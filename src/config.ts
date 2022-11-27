@@ -6,6 +6,8 @@ export interface ConfigObject {
   errorBeaconUrl: string;
   jspagelabel?: string;
   label?: string;
+  maxBeaconUrlLength: number;
+  maxBeaconUTEntries: number;
   maxErrors: number;
   maxMeasureTime: number;
   measureUntil: "onload" | "pagehidden";
@@ -32,6 +34,8 @@ export function fromObject(obj: UserConfig): ConfigObject {
     errorBeaconUrl: getProperty(obj, "errorBeaconUrl", "https://lux.speedcurve.com/error/"),
     jspagelabel: getProperty(obj, "jspagelabel", undefined),
     label: getProperty(obj, "label", undefined),
+    maxBeaconUrlLength: getProperty(obj, "maxBeaconUrlLength", 8190),
+    maxBeaconUTEntries: getProperty(obj, "maxBeaconUTEntries", 20),
     maxErrors: getProperty(obj, "maxErrors", 5),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
     measureUntil: getProperty(obj, "measureUntil", "onload"),
