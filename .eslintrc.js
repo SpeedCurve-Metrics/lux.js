@@ -9,4 +9,7 @@ module.exports = {
   env: {
     browser: true,
   },
+  rules: {
+    "@typescript-eslint/no-non-null-assertion": "off",
+  },
 };
