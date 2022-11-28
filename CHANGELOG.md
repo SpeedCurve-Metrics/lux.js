@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2022-11-30: v305
+
+### Bug fixes
+
+- Split user timing entries across multiple beacons when necessary to prevent data loss.
+
 ## 2022-10-11: v304
 
 ### Bug fixes
