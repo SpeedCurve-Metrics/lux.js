@@ -71,11 +71,6 @@ describe("LUX interaction", () => {
 
     expect(ixBeacon.searchParams.get("HN")).toEqual("localhost");
     expect(ixBeacon.searchParams.get("PN")).toEqual("/interaction.html");
-
-    // Pathname should be the last query parameter
-    const lastQueryParam = [...ixBeacon.searchParams.entries()].pop();
-
-    expect(lastQueryParam).toEqual(["PN", "/interaction.html"]);
   });
 
   test("gather IX metrics in a SPA", async () => {

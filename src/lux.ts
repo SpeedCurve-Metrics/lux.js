@@ -1320,6 +1320,30 @@ LUX = (function () {
     }
   }
 
+  function _getBeaconUrl() {
+    const queryParams = [
+      "v=" + SCRIPT_VERSION,
+      "id=" + getCustomerId(),
+      "sid=" + gSyncId,
+      "uid=" + gUid,
+      "l=" + encodeURIComponent(_getPageLabel()),
+      "HN=" + encodeURIComponent(document.location.hostname),
+      "PN=" + encodeURIComponent(document.location.pathname),
+    ];
+
+    if (gFlags) {
+      queryParams.push("fl=" + gFlags);
+    }
+
+    const customerData = customerDataValues();
+
+    if (customerData) {
+      queryParams.push("CD=" + customerData);
+    }
+
+    return globalConfig.beaconUrl + "?" + queryParams.join("&");
+  }
+
   // Beacon back the LUX data.
   function _sendLux() {
     clearMaxMeasureTimeout();
@@ -1346,7 +1370,6 @@ LUX = (function () {
     }
 
     const sET = elementTimingValues(); // Element Timing data
-    const sCustomerData = customerDataValues(); // customer data
     let sIx = ""; // Interaction Metrics
     if (!gbIxSent) {
       // It is possible for the IX beacon to be sent BEFORE the "main" window.onload LUX beacon.
@@ -1362,19 +1385,7 @@ LUX = (function () {
 
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
     // So we create a base URL that has all the necessary information:
-    const baseUrl =
-      globalConfig.beaconUrl +
-      "?v=" +
-      SCRIPT_VERSION +
-      "&id=" +
-      customerid +
-      "&sid=" +
-      gSyncId +
-      "&uid=" +
-      gUid +
-      (sCustomerData ? "&CD=" + sCustomerData : "") +
-      "&l=" +
-      encodeURIComponent(_getPageLabel());
+    const baseUrl = _getBeaconUrl();
 
     const is = inlineTagSize("script");
     const ic = inlineTagSize("style");
@@ -1420,13 +1431,8 @@ LUX = (function () {
       (sIx ? "&IX=" + sIx : "") +
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
-      (gFlags ? "&fl=" + gFlags : "") +
       (sET ? "&ET=" + sET : "") + // element timing
-      "&HN=" +
-      encodeURIComponent(document.location.hostname) +
-      (DCLS !== false ? "&CLS=" + DCLS : "") +
-      "&PN=" +
-      encodeURIComponent(document.location.pathname);
+      (DCLS !== false ? "&CLS=" + DCLS : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();
@@ -1479,27 +1485,11 @@ LUX = (function () {
     const sIx = ixValues(); // Interaction Metrics
 
     if (sIx) {
-      const sCustomerData = customerDataValues(); // customer data
-      const querystring =
-        "?v=" +
-        SCRIPT_VERSION +
-        "&id=" +
-        customerid +
-        "&sid=" +
-        gSyncId +
-        "&uid=" +
-        gUid +
-        (sCustomerData ? "&CD=" + sCustomerData : "") +
-        "&l=" +
-        encodeURIComponent(_getPageLabel()) +
+      const beaconUrl =
+        _getBeaconUrl() +
         "&IX=" +
         sIx +
-        (gFirstInputDelay ? "&FID=" + gFirstInputDelay : "") +
-        "&HN=" +
-        encodeURIComponent(document.location.hostname) +
-        "&PN=" +
-        encodeURIComponent(document.location.pathname);
-      const beaconUrl = globalConfig.beaconUrl + querystring;
+        (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "");
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 
@@ -1523,24 +1513,7 @@ LUX = (function () {
     const sCustomerData = customerDataValues(); // customer data
 
     if (sCustomerData) {
-      const querystring =
-        "?v=" +
-        SCRIPT_VERSION +
-        "&id=" +
-        customerid +
-        "&sid=" +
-        gSyncId +
-        "&uid=" +
-        gUid +
-        "&CD=" +
-        sCustomerData +
-        "&l=" +
-        encodeURIComponent(_getPageLabel()) +
-        "&HN=" +
-        encodeURIComponent(document.location.hostname) +
-        "&PN=" +
-        encodeURIComponent(document.location.pathname);
-      const beaconUrl = globalConfig.beaconUrl + querystring;
+      const beaconUrl = _getBeaconUrl();
       logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
     }

@@ -23,11 +23,19 @@ describe("LUX beacon request", () => {
 
     expect(luxRequests.count()).toEqual(2);
 
-    const UT1 = parseUserTiming(luxRequests.getUrl(0).searchParams.get("UT"));
-    const UT2 = parseUserTiming(luxRequests.getUrl(1).searchParams.get("UT"));
+    const beacon1 = luxRequests.getUrl(0);
+    const beacon2 = luxRequests.getUrl(1);
+    const UT1 = parseUserTiming(beacon1.searchParams.get("UT"));
+    const UT2 = parseUserTiming(beacon2.searchParams.get("UT"));
 
+    // Test that the number of user timing entries in each beacon is what we expect
     expect(Object.keys(UT1).length).toEqual(20);
     expect(Object.keys(UT2).length).toEqual(10);
+
+    // Check that the supplementary beacon contains all of the demographic data
+    expect(beacon2.searchParams.get("l")).toEqual("LUX default test page");
+    expect(beacon2.searchParams.get("HN")).toEqual("localhost");
+    expect(beacon2.searchParams.get("PN")).toEqual("/default.html");
   });
 
   test("maximum user timing entries is configurable via LUX.maxBeaconUTEntries", async () => {

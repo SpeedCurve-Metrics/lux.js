@@ -40,10 +40,9 @@ describe.each(testPages)("%s", (_, testPage) => {
     expect(parseFloat(beacon.searchParams.get("CLS"))).toEqual(0);
   });
 
-  test("hostname and pathname are set, with pathname as the last query parameter", () => {
+  test("hostname and pathname are set", () => {
     expect(beacon.searchParams.get("HN")).toEqual("localhost");
     expect(beacon.searchParams.get("PN")).toEqual(testPage);
-    expect([...beacon.searchParams.entries()].pop()).toEqual(["PN", testPage]);
   });
 
   test("CPU stats are sent", () => {
