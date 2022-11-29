@@ -101,7 +101,7 @@ describe("LUX interaction", () => {
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
 
-    expect(parseInt(ixMetrics.c)).toBeGreaterThan(0);
+    expect(parseInt(ixMetrics.c)).toBeGreaterThanOrEqual(0);
   });
 
   test("keydown handler doesn't throw errors when the event target is not an Element", async () => {
@@ -111,6 +111,6 @@ describe("LUX interaction", () => {
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
 
-    expect(parseInt(ixMetrics.k)).toBeGreaterThan(0);
+    expect(parseInt(ixMetrics.k)).toBeGreaterThanOrEqual(0);
   });
 });
