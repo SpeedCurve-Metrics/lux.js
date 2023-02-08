@@ -87,7 +87,7 @@ describe("LUX custom data", () => {
   test("custom data set after LUX.send is sent in a separate beacon", async () => {
     await navigateTo("/default.html");
     await page.evaluate("LUX.addData('var1', 'hello')");
-    await page.waitForNetworkIdle();
+    await waitForNetworkIdle();
 
     const mainBeacon = luxRequests.getUrl(0);
     const cdBeacon = luxRequests.getUrl(1);
