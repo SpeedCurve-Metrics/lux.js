@@ -502,12 +502,15 @@ LUX = (function () {
   // Return a string of Element Timing Metrics formatted for beacon querystring.
   function elementTimingValues(): string {
     const aET = [];
+    const startMark = _getMark(START_MARK);
+    const tZero = startMark ? startMark.startTime : 0;
+
     if (gaPerfEntries.length) {
       for (let i = 0; i < gaPerfEntries.length; i++) {
         const pe = gaPerfEntries[i] as PerformanceElementTiming;
         if ("element" === pe.entryType && pe.identifier && pe.startTime) {
           logger.logEvent(LogEvent.PerformanceEntryProcessed, [pe]);
-          aET.push(pe.identifier + "|" + Math.round(pe.startTime));
+          aET.push(pe.identifier + "|" + Math.round(pe.startTime - tZero));
         }
       }
     }
