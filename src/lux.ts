@@ -331,7 +331,9 @@ LUX = (function () {
       let endTime = typeof endMarkName === "number" ? endMarkName : _now();
       const throwError = (missingMark: string) => {
         throw new DOMException(
-          `Failed to execute 'measure' on 'Performance': The mark '${missingMark}' does not exist`
+          "Failed to execute 'measure' on 'Performance': The mark '" +
+            missingMark +
+            "' does not exist"
         );
       };
 
@@ -1656,10 +1658,10 @@ LUX = (function () {
   function createSyncId(inSampleBucket = false): string {
     if (inSampleBucket) {
       // "00" matches all sample rates
-      return `${Number(new Date())}00000`;
+      return Number(new Date()) + "00000";
     }
 
-    return `${Number(new Date())}${_padLeft(String(Math.round(100000 * Math.random())), "00000")}`;
+    return Number(new Date()) + _padLeft(String(Math.round(100000 * Math.random())), "00000");
   }
 
   // Unique ID (also known as Session ID)
@@ -1706,7 +1708,7 @@ LUX = (function () {
       return LUX.label;
     } else if (typeof LUX.pagegroups !== "undefined") {
       const pagegroups = LUX.pagegroups;
-      const url = `${document.location.hostname}${document.location.pathname}`;
+      const url = document.location.hostname + document.location.pathname;
       let label = "";
       for (const pagegroup in pagegroups) {
         const rules = pagegroups[pagegroup];
@@ -1727,7 +1729,7 @@ LUX = (function () {
       }
     }
     if (typeof LUX.jspagelabel !== "undefined") {
-      const evaluateJsPageLabel = Function(`"use strict"; return ${LUX.jspagelabel}`);
+      const evaluateJsPageLabel = Function('"use strict"; return ' + LUX.jspagelabel);
 
       try {
         const label = evaluateJsPageLabel();

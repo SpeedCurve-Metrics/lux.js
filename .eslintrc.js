@@ -12,4 +12,12 @@ module.exports = {
   rules: {
     "@typescript-eslint/no-non-null-assertion": "off",
   },
+  overrides: [
+    {
+      files: ["src/*"],
+      rules: {
+        "no-restricted-syntax": ["error", "TemplateLiteral"],
+      },
+    },
+  ],
 };
