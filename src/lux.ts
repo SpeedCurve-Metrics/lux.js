@@ -18,8 +18,6 @@ import now from "./now";
 import Matching from "./matching";
 import { fitUserTimingEntries } from "./beacon";
 
-declare const __ENABLE_POLYFILLS: boolean;
-
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
 
@@ -1171,14 +1169,8 @@ LUX = (function () {
   }
 
   // Return the main HTML document transfer size (in bytes).
-  function docSize() {
-    const aEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
-
-    if (aEntries.length && aEntries[0]["encodedBodySize"]) {
-      return aEntries[0]["encodedBodySize"];
-    }
-
-    return 0; // ERROR - NOT FOUND
+  function docSize(): number {
+    return getNavigationEntry().encodedBodySize || 0;
   }
 
   // Return the connection type based on Network Information API.

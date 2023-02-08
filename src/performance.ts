@@ -30,28 +30,36 @@ export function navigationType() {
   return "";
 }
 
-export function getNavigationEntry(): PerformanceNavigationTiming {
+type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> & {
+  [key: string]: number | string;
+  activationStart: number;
+  startTime: number;
+  type: PerformanceNavigationTiming["type"];
+};
+
+export function getNavigationEntry(): PartialPerformanceNavigationTiming {
   const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
 
   if (navEntries.length) {
-    return navEntries[0];
+    return navEntries[0] as PartialPerformanceNavigationTiming;
   }
 
   const navType = navigationType();
-  const entry: Record<string, number | string> = {
-    entryType: "navigation",
+  const entry: PartialPerformanceNavigationTiming = {
     activationStart: 0,
     startTime: 0,
     type: navType == 2 ? "back_forward" : navType === 1 ? "reload" : "navigate",
   };
 
-  for (const key in timing) {
-    if (typeof timing[key as PerfTimingKey] === "number" && key !== "navigationStart") {
-      entry[key] = Math.max(0, timing[key as PerfTimingKey] - timing.navigationStart);
+  if (__ENABLE_POLYFILLS) {
+    for (const key in timing) {
+      if (typeof timing[key as PerfTimingKey] === "number" && key !== "navigationStart") {
+        entry[key] = Math.max(0, timing[key as PerfTimingKey] - timing.navigationStart);
+      }
     }
   }
 
-  return entry as unknown as PerformanceNavigationTiming;
+  return entry;
 }
 
 /**

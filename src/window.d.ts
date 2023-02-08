@@ -1,6 +1,8 @@
 import { LuxGlobal } from "./global";
 
 declare global {
+  declare const __ENABLE_POLYFILLS: boolean;
+
   // LUX globals
   interface Window {
     LUX?: LuxGlobal;
