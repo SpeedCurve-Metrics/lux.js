@@ -4,7 +4,7 @@ import { hasFlag, getElapsedMs, getNavTiming } from "../helpers/lux";
 describe("LUX minimum and maximum measure times", () => {
   test("LUX.minMeasureTime is the minimum time before the beacon is sent", async () => {
     await navigateTo("/default.html?injectScript=LUX.minMeasureTime=300;");
-    await page.waitForNetworkIdle();
+    await waitForNetworkIdle();
 
     const beaconTiming: PerformanceNavigationTiming = await page.evaluate(() =>
       performance
@@ -23,7 +23,7 @@ describe("LUX minimum and maximum measure times", () => {
     await navigateTo(
       "/default.html?injectScript=LUX.minMeasureTime=300;setTimeout(LUX.send, 100);"
     );
-    await page.waitForNetworkIdle();
+    await waitForNetworkIdle();
 
     const beacon = luxRequests.getUrl(0);
     const loadEventStart = getNavTiming(beacon, "ls");
@@ -43,7 +43,7 @@ describe("LUX minimum and maximum measure times", () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
 
     await navigateTo("/default.html?injectScript=LUX.auto=false;LUX.maxMeasureTime=200;");
-    await page.waitForNetworkIdle({ idleTime: 220 });
+    await waitForNetworkIdle(220);
 
     const secondBeaconStartTime = await getElapsedMs(page);
     await page.evaluate("LUX.init()");
@@ -52,7 +52,7 @@ describe("LUX minimum and maximum measure times", () => {
 
     const thirdBeaconStartTime = await getElapsedMs(page);
     await page.evaluate("LUX.init()");
-    await page.waitForNetworkIdle({ idleTime: 220 });
+    await waitForNetworkIdle(220);
 
     const beaconTiming: PerformanceNavigationTiming[] = await page.evaluate(() =>
       performance
