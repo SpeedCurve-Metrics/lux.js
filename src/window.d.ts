@@ -19,6 +19,10 @@ declare global {
     msFirstPaint: number;
   }
 
+  interface PerformanceNavigationTiming {
+    activationStart: number;
+  }
+
   /**
    * The following types are from various web specifications. As of December 2021 these types are
    * missing from lib.dom.d.ts, so I have made a best effort to define them based on the specs.

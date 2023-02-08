@@ -11,6 +11,8 @@ import {
   timing,
   getEntriesByType,
   PerfTimingKey,
+  navigationType,
+  getNavigationEntry,
 } from "./performance";
 import now from "./now";
 import Matching from "./matching";
@@ -1041,7 +1043,7 @@ LUX = (function () {
         const pe = gaPerfEntries[i];
         if ("largest-contentful-paint" === pe.entryType) {
           logger.logEvent(LogEvent.PerformanceEntryProcessed, [pe]);
-          return Math.round(pe.startTime);
+          return Math.max(0, Math.round(pe.startTime - getNavigationEntry().activationStart));
         }
       }
     }
@@ -1177,16 +1179,6 @@ LUX = (function () {
     }
 
     return 0; // ERROR - NOT FOUND
-  }
-
-  // Return the navigation type. 0 = normal, 1 = reload, etc.
-  // Return empty string if not available.
-  function navigationType() {
-    if (performance.navigation && typeof performance.navigation.type !== "undefined") {
-      return performance.navigation.type;
-    }
-
-    return "";
   }
 
   // Return the connection type based on Network Information API.
@@ -1426,7 +1418,7 @@ LUX = (function () {
       "er" +
       nErrors +
       "nt" +
-      navigationType() + // reload
+      navigationType() +
       (navigator.deviceMemory ? "dm" + Math.round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
