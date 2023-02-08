@@ -19,7 +19,7 @@ class CustomEnvironment extends PuppeteerEnvironment {
     this.global.reportErrors = true;
     this.global.requestInterceptor = new RequestInterceptor(this.global.page);
 
-    this.global.waitForNetworkIdle = (idleTime = 100) => {
+    this.global.waitForNetworkIdle = (idleTime = 120) => {
       return this.global.page.waitForNetworkIdle({ idleTime });
     };
 
