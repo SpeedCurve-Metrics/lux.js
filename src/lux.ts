@@ -640,7 +640,7 @@ LUX = (function () {
     const count = aValues.length;
     const median = arrayMedian(aValues);
 
-    return { count: count, median: median, max: max, fci: fci };
+    return { count, median, max, fci };
   }
 
   function calculateDCLS() {
