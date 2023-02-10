@@ -1084,15 +1084,27 @@ LUX = (function () {
       return;
     }
 
-    let maxDuration = 0;
+    const eventEntries = [];
 
     for (let i = 0; i < gaPerfEntries.length; i++) {
       const entry = gaPerfEntries[i];
 
       if (entry.entryType === "event" && (entry as PerformanceEventTiming).interactionId) {
-        if (entry.duration > maxDuration) {
-          maxDuration = entry.duration;
-        }
+        eventEntries.push(entry);
+      }
+    }
+
+    if (eventEntries.length === 0) {
+      return;
+    }
+
+    let maxDuration = 0;
+
+    for (let i = 0; i < eventEntries.length; i++) {
+      const entry = eventEntries[i];
+
+      if (entry.duration > maxDuration) {
+        maxDuration = entry.duration;
       }
     }
 
