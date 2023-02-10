@@ -89,19 +89,19 @@ LUX = (function () {
       });
     });
     try {
-      if (typeof PerformanceLongTaskTiming === "function") {
+      if ("PerformanceLongTaskTiming" in self) {
         perfObserver.observe({ type: "longtask", buffered: true });
       }
-      if (typeof LargestContentfulPaint === "function") {
+      if ("LargestContentfulPaint" in self) {
         perfObserver.observe({ type: "largest-contentful-paint", buffered: true });
       }
-      if (typeof PerformanceElementTiming === "function") {
+      if ("PerformanceElementTiming" in self) {
         perfObserver.observe({ type: "element", buffered: true });
       }
-      if (typeof PerformancePaintTiming === "function") {
+      if ("PerformancePaintTiming" in self) {
         perfObserver.observe({ type: "paint", buffered: true });
       }
-      if (typeof LayoutShift === "function") {
+      if ("LayoutShift" in self) {
         perfObserver.observe({ type: "layout-shift", buffered: true });
       }
     } catch (e) {
@@ -522,7 +522,7 @@ LUX = (function () {
 
   // Return a string of CPU times formatted for beacon querystring.
   function cpuTimes() {
-    if (typeof PerformanceLongTaskTiming !== "function") {
+    if (!("PerformanceLongTaskTiming" in self)) {
       // Do not return any CPU metrics if Long Tasks API is not supported.
       return "";
     }
@@ -644,7 +644,7 @@ LUX = (function () {
   }
 
   function calculateDCLS() {
-    if (typeof LayoutShift !== "function") {
+    if (!("LayoutShift" in self)) {
       return false;
     }
 
