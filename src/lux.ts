@@ -119,6 +119,7 @@ LUX = (function () {
         perfObserver.observe({
           type: "event",
           buffered: true,
+          durationThreshold: 40,
         });
       }
     } catch (e) {
