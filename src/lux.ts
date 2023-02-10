@@ -643,9 +643,9 @@ LUX = (function () {
     return { count, median, max, fci };
   }
 
-  function calculateDCLS() {
+  function calculateDCLS(): string | undefined {
     if (!("LayoutShift" in self)) {
-      return false;
+      return;
     }
 
     let DCLS = 0;
@@ -1437,7 +1437,7 @@ LUX = (function () {
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
-      (DCLS !== false ? "&CLS=" + DCLS : "");
+      (typeof DCLS !== "undefined" ? "&CLS=" + DCLS : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();
