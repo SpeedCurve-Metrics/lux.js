@@ -29,6 +29,16 @@ declare global {
    * The following types are from various web specifications. As of December 2021 these types are
    * missing from lib.dom.d.ts, so I have made a best effort to define them based on the specs.
    */
+  // Event Timing API: https://www.w3.org/TR/2022/WD-event-timing-20220524/#sec-modifications-perf-timeline
+  interface PerformanceObserverInit {
+    durationThreshold?: DOMHighResTimeStamp;
+  }
+
+  // Event Timing API: https://www.w3.org/TR/2022/WD-event-timing-20220524/#sec-performance-event-timing
+  interface PerformanceEventTiming {
+    interactionId?: number;
+  }
+
   // Device Memory 1: https://w3c.github.io/device-memory/#sec-device-memory-js-api
   interface Navigator {
     connection: NetworkInformation;

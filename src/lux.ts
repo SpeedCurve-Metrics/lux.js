@@ -115,6 +115,11 @@ LUX = (function () {
       }
       if ("PerformanceEventTiming" in self) {
         perfObserver.observe({ type: "first-input", buffered: true });
+
+        perfObserver.observe({
+          type: "event",
+          buffered: true,
+        });
       }
     } catch (e) {
       logger.logEvent(LogEvent.PerformanceObserverError, [e]);
@@ -656,7 +661,7 @@ LUX = (function () {
     return { count, median, max, fci };
   }
 
-  function calculateDCLS(): string | undefined {
+  function getDCLS(): string | undefined {
     if (!("LayoutShift" in self)) {
       return undefined;
     }
@@ -1073,6 +1078,26 @@ LUX = (function () {
     return undefined;
   }
 
+  function getINP() {
+    if (!("PerformanceEventTiming" in self)) {
+      return;
+    }
+
+    let maxDuration = 0;
+
+    for (let i = 0; i < gaPerfEntries.length; i++) {
+      const entry = gaPerfEntries[i];
+
+      if (entry.entryType === "event" && (entry as PerformanceEventTiming).interactionId) {
+        if (entry.duration > maxDuration) {
+          maxDuration = entry.duration;
+        }
+      }
+    }
+
+    return maxDuration;
+  }
+
   function getCustomerId() {
     if (typeof LUX.customerid === "undefined") {
       // Extract the id of the lux.js script element.
@@ -1355,7 +1380,8 @@ LUX = (function () {
       sIx = ixValues();
     }
     const sCPU = cpuTimes();
-    const DCLS = calculateDCLS();
+    const DCLS = getDCLS();
+    const INP = getINP();
     const sLuxjs = selfLoading();
     if (document.visibilityState && "visible" !== document.visibilityState) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
@@ -1410,7 +1436,8 @@ LUX = (function () {
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
-      (typeof DCLS !== "undefined" ? "&CLS=" + DCLS : "");
+      (typeof DCLS !== "undefined" ? "&CLS=" + DCLS : "") +
+      (typeof INP !== "undefined" ? "&INP=" + INP : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();
@@ -1461,13 +1488,15 @@ LUX = (function () {
     }
 
     const sIx = ixValues(); // Interaction Metrics
+    const INP = getINP();
 
     if (sIx) {
       const beaconUrl =
         _getBeaconUrl(CustomData.getUpdatedCustomData()) +
         "&IX=" +
         sIx +
-        (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "");
+        (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
+        (typeof INP !== "undefined" ? "&INP=" + INP : "");
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 

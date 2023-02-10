@@ -52,7 +52,7 @@ describe("LUX interaction", () => {
     expect(ixBeacon.searchParams.get("PN")).toEqual("/interaction.html");
   });
 
-  test("FID is gathered for clicks", async () => {
+  test("FID and INP are gathered for clicks", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     await navigateTo("/interaction.html?blockFor=20");
     await page.click("#button-with-js");
@@ -60,9 +60,10 @@ describe("LUX interaction", () => {
     const ixBeacon = luxRequests.getUrl(1);
 
     expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
+    expect(parseInt(ixBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
   });
 
-  test("FID is gathered for keypress", async () => {
+  test("FID and INP are gathered for keypress", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     await navigateTo("/interaction.html?blockFor=20");
     const button = await page.$("#button-with-js");
@@ -71,6 +72,7 @@ describe("LUX interaction", () => {
     const ixBeacon = luxRequests.getUrl(1);
 
     expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
+    expect(parseInt(ixBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
   });
 
   test("gather IX metrics in a SPA", async () => {
@@ -96,6 +98,7 @@ describe("LUX interaction", () => {
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThan(100);
     expect(parseInt(secondPageBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
+    expect(parseInt(secondPageBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
     expect(thirdPageBeacon.searchParams.get("FID")).toBeNull();
   });
 
