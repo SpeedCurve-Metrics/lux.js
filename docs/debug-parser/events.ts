@@ -67,7 +67,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return "LUX.forceSample()";
 
     case LogEvent.DataCollectionStart:
-      return "Beginning data collection. New events after this point may not be recorded for this page.";
+      return "Preparing to send main beacon. Any metrics received after this point may be ignored.";
 
     case LogEvent.UnloadHandlerTriggered:
       return "Unload handler was triggered.";
