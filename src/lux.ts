@@ -155,7 +155,7 @@ LUX = (function () {
   // FIRST INPUT DELAY (FID)
   // The basic idea behind FID is to attach various input event listeners and measure the time
   // between when the event happens and when the handler executes. That is FID.
-  let gFirstInputDelay: number; // this is FID
+  let gFirstInputDelay: number | undefined;
   const gaEventTypes = ["click", "mousedown", "keydown", "touchstart", "pointerdown"]; // NOTE: does NOT include scroll!
   const ghListenerOptions = { passive: true, capture: true };
 
@@ -844,6 +844,7 @@ LUX = (function () {
     gUid = refreshUniqueId(gSyncId);
     gaPerfEntries.splice(0); // clear out the array of performance entries (do NOT redefine gaPerfEntries!)
     nErrors = 0;
+    gFirstInputDelay = undefined;
 
     // Clear flags then set the flag that init was called (ie, this is a SPA).
     gFlags = 0;

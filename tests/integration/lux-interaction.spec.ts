@@ -83,13 +83,20 @@ describe("LUX interaction", () => {
     await page.waitForTimeout(20);
     await page.click("#button-with-id");
     await page.evaluate("LUX.send()");
+    await page.waitForTimeout(20);
 
-    const ixBeacon = luxRequests.getUrl(1);
-    const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
+    await page.evaluate("LUX.init()");
+    await page.waitForTimeout(20);
+    await page.evaluate("LUX.send()");
+
+    const secondPageBeacon = luxRequests.getUrl(1);
+    const thirdPageBeacon = luxRequests.getUrl(2);
+    const ixMetrics = parseNestedPairs(secondPageBeacon.searchParams.get("IX"));
 
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThan(100);
-    expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
+    expect(parseInt(secondPageBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
+    expect(thirdPageBeacon.searchParams.get("FID")).toBeNull();
   });
 
   test("mousedown handler doesn't throw errors when the event target is not an Element", async () => {
