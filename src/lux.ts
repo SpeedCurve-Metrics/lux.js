@@ -86,6 +86,13 @@ LUX = (function () {
         if (entry.entryType !== "longtask" || gaPerfEntries.indexOf(entry) === -1) {
           gaPerfEntries.push(entry);
         }
+
+        if (entry.entryType === "first-input") {
+          gFirstInputDelay = Math.max(
+            gFirstInputDelay,
+            (entry as PerformanceEventTiming).processingStart - entry.startTime
+          );
+        }
       });
     });
     try {
@@ -103,6 +110,9 @@ LUX = (function () {
       }
       if ("LayoutShift" in self) {
         perfObserver.observe({ type: "layout-shift", buffered: true });
+      }
+      if ("PerformanceEventTiming" in self) {
+        perfObserver.observe({ type: "first-input", buffered: true });
       }
     } catch (e) {
       logger.logEvent(LogEvent.PerformanceObserverError, [e]);
