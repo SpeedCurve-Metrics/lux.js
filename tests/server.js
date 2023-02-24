@@ -46,7 +46,16 @@ const server = createServer(async (req, res) => {
       let contents = await readFile(filePath);
 
       if (contentType === "text/html") {
-        let injectScript = "";
+        let injectScript = `
+          window.createLongTask = (duration = 50) => {
+              const startTime = performance.now();
+              const random = Math.random() * 10;
+
+              while (performance.now() < startTime + duration + random) {
+                  // Block the main thread for the specified time
+              }
+          };
+        `;
 
         if (!parsedUrl.query.noInlineSnippet) {
           injectScript += inlineSnippet;

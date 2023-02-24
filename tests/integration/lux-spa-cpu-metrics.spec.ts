@@ -32,7 +32,7 @@ describe("LUX SPA CPU metrics", () => {
 
     // Initiate a third page view with long tasks
     await page.evaluate("LUX.init()");
-    await page.click("#calculate-primes");
+    await page.click("#create-long-task");
     await page.evaluate("LUX.send()");
 
     beacon = luxRequests.getUrl(2);

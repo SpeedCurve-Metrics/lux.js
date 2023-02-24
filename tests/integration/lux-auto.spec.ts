@@ -161,4 +161,9 @@ describe.each(testPages)("%s", (_, testPage) => {
     expect(getLuxJsStat(beacon, "l")).toBeGreaterThan(0);
     expect(getLuxJsStat(beacon, "s")).toBeGreaterThan(0);
   });
+
+  test("interaction metrics are not sent with no interaction", () => {
+    expect(beacon.searchParams.get("FID")).toBeNull();
+    expect(beacon.searchParams.get("IX")).toBeNull();
+  });
 });

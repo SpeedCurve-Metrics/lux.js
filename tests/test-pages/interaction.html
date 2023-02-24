@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>LUX interaction test page</title>
     <script>/*INJECT_SCRIPT*/</script>
-    <script src="/calculate-primes.js"></script>
     <script src="/js/lux.js?id=10001" async crossorigin="anonymous"></script>
     <style>
         /* Make sure all interactive elements have dimensions and are visible so that Puppeteer
@@ -51,8 +50,20 @@
     </footer>
 
     <script>
-        document.getElementById("button-with-js").addEventListener("pointerdown", () => {
-            calculatePrimes(0, 100_000);
+        const events = ["mousedown", "keydown"];
+
+        events.forEach((event) => {
+            document.getElementById("button-with-js").addEventListener(event, () => {
+                const qs = new URLSearchParams(location.search);
+                const blockFor = Number(qs.get("blockFor")) || 100;
+                createLongTask(blockFor);
+
+                // Paint something to the screen
+                const el = document.createElement("img");
+                el.src = "red.png";
+
+                document.body.appendChild(el);
+            }, { capture: true });
         });
     </script>
 </body>
