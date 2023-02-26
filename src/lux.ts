@@ -88,10 +88,11 @@ LUX = (function () {
         }
 
         if (entry.entryType === "first-input") {
-          gFirstInputDelay = Math.max(
-            gFirstInputDelay,
-            (entry as PerformanceEventTiming).processingStart - entry.startTime
-          );
+          const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+
+          if (!gFirstInputDelay || gFirstInputDelay < fid) {
+            gFirstInputDelay = fid;
+          }
         }
       });
     });
