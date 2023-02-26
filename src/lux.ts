@@ -30,7 +30,7 @@ LUX = (function () {
 
   // Log JS errors.
   let nErrors = 0;
-  function errorHandler(e: ErrorEvent) {
+  function errorHandler(e: ErrorEvent): void {
     if (!globalConfig.trackErrors) {
       return;
     }
@@ -196,7 +196,7 @@ LUX = (function () {
 
   // Record FID as the delta between when the event happened and when the
   // listener was able to execute.
-  function onInput(evt: Event) {
+  function onInput(evt: Event): void {
     let bCancelable = false;
     try {
       // Seeing "Permission denied" errors, so do a simple try-catch.
@@ -261,7 +261,9 @@ LUX = (function () {
 
   // This is a wrapper around performance.mark that falls back to a polyfill when the User Timing
   // API isn't supported.
-  function _mark(...args: Parameters<LuxGlobal["mark"]>): ReturnType<LuxGlobal["mark"]> | void {
+  function _mark(
+    ...args: Parameters<LuxGlobal["mark"]>
+  ): ReturnType<LuxGlobal["mark"]> | undefined {
     logger.logEvent(LogEvent.MarkCalled, args);
 
     if (performance.mark) {
@@ -618,7 +620,7 @@ LUX = (function () {
   function cpuStats(sDetails: string) {
     // tuples of starttime|duration, eg: ,456|250,789|250,1012|250
     let max = 0;
-    let fci = getFcp(); // FCI is beginning of 5 second window of no Long Tasks _after_ first contentful paint
+    let fci: number = getFcp() || 0; // FCI is beginning of 5 second window of no Long Tasks _after_ first contentful paint
     // If FCP is 0 then that means FCP is not supported.
     // If FCP is not supported then we can NOT calculate a valid FCI.
     // Thus, leave FCI = 0 and exclude it from the beacon above.
@@ -656,7 +658,7 @@ LUX = (function () {
 
   function calculateDCLS(): string | undefined {
     if (!("LayoutShift" in self)) {
-      return;
+      return undefined;
     }
 
     let DCLS = 0;
@@ -817,7 +819,7 @@ LUX = (function () {
   // Use this function in Single Page Apps to reset things.
   // This function should ONLY be called within a SPA!
   // Otherwise, you might clear marks & measures that were set by a shim.
-  function _init() {
+  function _init(): void {
     // Some customers (incorrectly) call LUX.init on the very first page load of a SPA. This would
     // cause some first-page-only data (like paint metrics) to be lost. To prevent this, we silently
     // bail from this function when we detect an unnecessary LUX.init call.
@@ -1014,9 +1016,9 @@ LUX = (function () {
         (t.domComplete ? "oc" + (t.domComplete - ns) : "") +
         (t.loadEventStart ? "ls" + (t.loadEventStart - ns) : "") +
         (t.loadEventEnd ? "le" + (t.loadEventEnd - ns) : "") +
-        (startRender ? "sr" + startRender : "") +
-        (fcp ? "fc" + fcp : "") +
-        (lcp ? "lc" + lcp : "") +
+        (typeof startRender !== "undefined" ? "sr" + startRender : "") +
+        (typeof fcp !== "undefined" ? "fc" + fcp : "") +
+        (typeof lcp !== "undefined" ? "lc" + lcp : "") +
         "";
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
@@ -1035,8 +1037,8 @@ LUX = (function () {
     return s;
   }
 
-  // Return First Contentful Paint or zero if not supported.
-  function getFcp() {
+  // Return First Contentful Paint or undefined if not supported.
+  function getFcp(): number | undefined {
     const paintEntries = getEntriesByType("paint");
 
     for (let i = 0; i < paintEntries.length; i++) {
@@ -1047,11 +1049,11 @@ LUX = (function () {
       }
     }
 
-    return 0;
+    return undefined;
   }
 
-  // Return Largest Contentful Paint or zero if not supported.
-  function getLcp() {
+  // Return Largest Contentful Paint or undefined if not supported.
+  function getLcp(): number | undefined {
     if (gaPerfEntries.length) {
       // Find the *LAST* LCP per https://web.dev/largest-contentful-paint
       for (let i = gaPerfEntries.length - 1; i >= 0; i--) {
@@ -1063,13 +1065,13 @@ LUX = (function () {
       }
     }
 
-    return 0;
+    return undefined;
   }
 
   // Return best guess at Start Render time (in ms).
   // Mostly works on just Chrome and IE.
-  // Return null if not supported.
-  function getStartRender() {
+  // Return undefined if not supported.
+  function getStartRender(): number | undefined {
     if (performance.timing) {
       const paintEntries = getEntriesByType("paint");
 
@@ -1090,28 +1092,24 @@ LUX = (function () {
 
     logger.logEvent(LogEvent.PaintTimingNotSupported);
 
-    return null;
+    return undefined;
   }
 
   function getCustomerId() {
-    if (typeof LUX.customerid !== "undefined") {
-      // Return the id explicitly set in the JavaScript variable.
-      return LUX.customerid;
+    if (typeof LUX.customerid === "undefined") {
+      // Extract the id of the lux.js script element.
+      const luxScript = getScriptElement("/js/lux.js");
+      if (luxScript) {
+        LUX.customerid = getQuerystringParam(luxScript.src, "id");
+      }
     }
 
-    // Extract the id of the lux.js script element.
-    const luxScript = getScriptElement("/js/lux.js");
-    if (luxScript) {
-      LUX.customerid = getQuerystringParam(luxScript.src, "id");
-      return LUX.customerid;
-    }
-
-    return "";
+    return LUX.customerid || "";
   }
 
   // Return the SCRIPT DOM element whose SRC contains the URL snippet.
   // This is used to find the LUX script element.
-  function getScriptElement(urlsnippet: string) {
+  function getScriptElement(urlsnippet: string): HTMLScriptElement | undefined {
     const aScripts = document.getElementsByTagName("script");
     for (let i = 0, len = aScripts.length; i < len; i++) {
       const script = aScripts[i];
@@ -1120,10 +1118,10 @@ LUX = (function () {
       }
     }
 
-    return null;
+    return undefined;
   }
 
-  function getQuerystringParam(url: string, name: string) {
+  function getQuerystringParam(url: string, name: string): string | undefined {
     const qs = url.split("?")[1];
     const aTuples = qs.split("&");
     for (let i = 0, len = aTuples.length; i < len; i++) {
@@ -1362,7 +1360,7 @@ LUX = (function () {
   }
 
   // Beacon back the LUX data.
-  function _sendLux() {
+  function _sendLux(): void {
     clearMaxMeasureTimeout();
 
     const customerid = getCustomerId();
@@ -1487,7 +1485,7 @@ LUX = (function () {
   }
 
   // Beacon back the IX data separately (need to sync with LUX beacon on the backend).
-  function _sendIx() {
+  function _sendIx(): void {
     const customerid = getCustomerId();
     if (
       !customerid ||
@@ -1516,7 +1514,7 @@ LUX = (function () {
 
   // Beacon back customer data that is recorded _after_ the main beacon was sent
   // (i.e., customer data after window.onload).
-  function _sendCustomerData() {
+  function _sendCustomerData(): void {
     const customerid = getCustomerId();
     if (
       !customerid ||
