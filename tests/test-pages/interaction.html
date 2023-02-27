@@ -13,6 +13,12 @@
             min-height: 2px;
             min-width: 2px;
         }
+
+        #hidden-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 3s;
+        }
     </style>
 </head>
 <body>
@@ -41,6 +47,8 @@
         <span id="span-with-id">Span with ID</span>
     </div>
 
+    <p id="hidden-content">Collect field data that shows you how your real users experience the speed of your site. As well as tracking industry standard metrics, SpeedCurve RUM tracks additional metrics like the number of critical blocking resources, images above the fold, and custom metrics. Get a better sense of how your design and development affects the speed of your site – and how that correlates to your business performance.</p>
+
     <form>
         <input type="submit" value="Input Type Submit">
     </form>
@@ -54,16 +62,20 @@
 
         events.forEach((event) => {
             document.getElementById("button-with-js").addEventListener(event, () => {
+
                 const qs = new URLSearchParams(location.search);
                 const blockFor = Number(qs.get("blockFor")) || 100;
                 createLongTask(blockFor);
 
-                // Paint something to the screen
+                // Trigger a CSS transition
+                document.getElementById("hidden-content").style.maxHeight = "200px";
+
+                // Paint something new to the screen
                 const el = document.createElement("img");
                 el.src = "red.png";
 
                 document.body.appendChild(el);
-            }, { capture: true });
+            }, true);
         });
     </script>
 </body>
