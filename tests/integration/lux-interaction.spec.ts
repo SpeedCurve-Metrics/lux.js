@@ -54,7 +54,7 @@ describe("LUX interaction", () => {
 
   test("FID and INP are gathered for clicks", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-    await navigateTo("/interaction.html?blockFor=20");
+    await navigateTo("/interaction.html?blockFor=50");
     await page.click("#button-with-js");
 
     const ixBeacon = luxRequests.getUrl(1);
@@ -65,7 +65,7 @@ describe("LUX interaction", () => {
 
   test("FID and INP are gathered for keypress", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-    await navigateTo("/interaction.html?blockFor=20");
+    await navigateTo("/interaction.html?blockFor=50");
     const button = await page.$("#button-with-js");
     await button.press("Enter");
 
