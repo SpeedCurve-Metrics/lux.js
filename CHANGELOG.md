@@ -7,6 +7,7 @@
 - Calling `LUX.init()` will now reset FID. Previously FID was only recorded for the first SPA page view.
 - Element timing values in SPA pages are now relative to the most recent `LUX.init` call rather than relative to navigationStart.
 - Fixed a bug where pages with many user timing entries did not have their path or domain recorded.
+- Largest Contentful Paint is now measured as the time since activationStart, not navigationStart. This means LCP will be correctly recorded as zero for prerendered pages.
 
 ## 2022-11-30: v305
 
