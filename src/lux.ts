@@ -781,7 +781,7 @@ LUX = (function () {
       if (gCustomerDataTimeout) {
         // Cancel the timer for any previous beacons so that if they have not
         // yet been sent we can combine all the data in a new beacon.
-        clearTimeout(gCustomerDataTimeout);
+        window.clearTimeout(gCustomerDataTimeout);
       }
 
       gCustomerDataTimeout = window.setTimeout(_sendCustomerData, 100);
@@ -1079,9 +1079,9 @@ LUX = (function () {
     return undefined;
   }
 
-  function getINP() {
+  function getINP(): number | undefined {
     if (!("PerformanceEventTiming" in self)) {
-      return;
+      return undefined;
     }
 
     const eventEntries = [];
@@ -1089,13 +1089,16 @@ LUX = (function () {
     for (let i = 0; i < gaPerfEntries.length; i++) {
       const entry = gaPerfEntries[i];
 
-      if (entry.entryType === "event" && (entry as PerformanceEventTiming).interactionId) {
+      if (
+        (entry.entryType === "event" || entry.entryType === "first-input") &&
+        (entry as PerformanceEventTiming).interactionId
+      ) {
         eventEntries.push(entry);
       }
     }
 
     if (eventEntries.length === 0) {
-      return;
+      return undefined;
     }
 
     let maxDuration = 0;
@@ -1331,7 +1334,7 @@ LUX = (function () {
 
   function clearMaxMeasureTimeout() {
     if (gMaxMeasureTimeout) {
-      clearTimeout(gMaxMeasureTimeout);
+      window.clearTimeout(gMaxMeasureTimeout);
     }
   }
 
@@ -1487,6 +1490,13 @@ LUX = (function () {
     }
   }
 
+  let ixTimerId: number;
+
+  function _sendIxAfterDelay(): void {
+    window.clearTimeout(ixTimerId);
+    ixTimerId = window.setTimeout(_sendIx, 100);
+  }
+
   // Beacon back the IX data separately (need to sync with LUX beacon on the backend).
   function _sendIx(): void {
     const customerid = getCustomerId();
@@ -1553,11 +1563,10 @@ LUX = (function () {
   // only beacon back the first interaction that happens.
 
   function _scrollHandler() {
-    // Leave handlers IN PLACE so we can track which ID is clicked/keyed.
-    // _removeIxHandlers();
+    // Note for scroll input we don't remove the handlers or send the IX beacon because we want to
+    // capture click and key events as well, since these are typically more important than scrolls.
     if (typeof ghIx["s"] === "undefined") {
       ghIx["s"] = Math.round(_now());
-      // _sendIx(); // wait for key or click to send the IX beacon
     }
   }
 
@@ -1572,7 +1581,7 @@ LUX = (function () {
           ghIx["ki"] = trackId;
         }
       }
-      _sendIx();
+      _sendIxAfterDelay();
     }
   }
 
@@ -1602,7 +1611,7 @@ LUX = (function () {
           ghIx["ci"] = trackId;
         }
       }
-      _sendIx();
+      _sendIxAfterDelay();
     }
   }
 

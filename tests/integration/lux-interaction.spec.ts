@@ -54,8 +54,9 @@ describe("LUX interaction", () => {
 
   test("FID and INP are gathered for clicks", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-    await navigateTo("/interaction.html?blockFor=50");
+    await navigateTo("/interaction.html?blockFor=100");
     await page.click("#button-with-js");
+    await waitForNetworkIdle();
 
     const ixBeacon = luxRequests.getUrl(1);
 
