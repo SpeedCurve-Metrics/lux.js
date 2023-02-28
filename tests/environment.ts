@@ -12,13 +12,8 @@ class CustomEnvironment extends PuppeteerEnvironment {
   async setup() {
     await super.setup();
 
-    const browserVersion = await this.global.browser.version();
-
-    console.log(`Running tests in ${browserVersion}`);
-
     this.global.reportErrors = true;
     this.global.requestInterceptor = new RequestInterceptor(this.global.page);
-
     this.global.waitForNetworkIdle = (idleTime = 120) => {
       return this.global.page.waitForNetworkIdle({ idleTime });
     };
