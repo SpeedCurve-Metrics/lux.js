@@ -1,6 +1,8 @@
 import { LuxGlobal } from "./global";
 
 declare global {
+  declare const __ENABLE_POLYFILLS: boolean;
+
   // LUX globals
   interface Window {
     LUX?: LuxGlobal;
@@ -17,6 +19,10 @@ declare global {
   // Internet Explorer 9 compatibility
   interface PerformanceTiming {
     msFirstPaint: number;
+  }
+
+  interface PerformanceNavigationTiming {
+    activationStart: number;
   }
 
   /**

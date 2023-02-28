@@ -11,12 +11,12 @@ import {
   timing,
   getEntriesByType,
   PerfTimingKey,
+  navigationType,
+  getNavigationEntry,
 } from "./performance";
 import now from "./now";
 import Matching from "./matching";
 import { fitUserTimingEntries } from "./beacon";
-
-declare const __ENABLE_POLYFILLS: boolean;
 
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
@@ -1060,7 +1060,7 @@ LUX = (function () {
         const pe = gaPerfEntries[i];
         if ("largest-contentful-paint" === pe.entryType) {
           logger.logEvent(LogEvent.PerformanceEntryProcessed, [pe]);
-          return Math.round(pe.startTime);
+          return Math.max(0, Math.round(pe.startTime - getNavigationEntry().activationStart));
         }
       }
     }
@@ -1184,24 +1184,8 @@ LUX = (function () {
   }
 
   // Return the main HTML document transfer size (in bytes).
-  function docSize() {
-    const aEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
-
-    if (aEntries.length && aEntries[0]["encodedBodySize"]) {
-      return aEntries[0]["encodedBodySize"];
-    }
-
-    return 0; // ERROR - NOT FOUND
-  }
-
-  // Return the navigation type. 0 = normal, 1 = reload, etc.
-  // Return empty string if not available.
-  function navigationType() {
-    if (performance.navigation && typeof performance.navigation.type !== "undefined") {
-      return performance.navigation.type;
-    }
-
-    return "";
+  function docSize(): number {
+    return getNavigationEntry().encodedBodySize || 0;
   }
 
   // Return the connection type based on Network Information API.
@@ -1441,7 +1425,7 @@ LUX = (function () {
       "er" +
       nErrors +
       "nt" +
-      navigationType() + // reload
+      navigationType() +
       (navigator.deviceMemory ? "dm" + Math.round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +

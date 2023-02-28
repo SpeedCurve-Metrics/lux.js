@@ -22,6 +22,46 @@ export function msSinceNavigationStart(): number {
   return now() - timing.navigationStart;
 }
 
+export function navigationType() {
+  if (performance.navigation && typeof performance.navigation.type !== "undefined") {
+    return performance.navigation.type;
+  }
+
+  return "";
+}
+
+type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> & {
+  [key: string]: number | string;
+  activationStart: number;
+  startTime: number;
+  type: PerformanceNavigationTiming["type"];
+};
+
+export function getNavigationEntry(): PartialPerformanceNavigationTiming {
+  const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
+
+  if (navEntries.length) {
+    return navEntries[0] as PartialPerformanceNavigationTiming;
+  }
+
+  const navType = navigationType();
+  const entry: PartialPerformanceNavigationTiming = {
+    activationStart: 0,
+    startTime: 0,
+    type: navType == 2 ? "back_forward" : navType === 1 ? "reload" : "navigate",
+  };
+
+  if (__ENABLE_POLYFILLS) {
+    for (const key in timing) {
+      if (typeof timing[key as PerfTimingKey] === "number" && key !== "navigationStart") {
+        entry[key] = Math.max(0, timing[key as PerfTimingKey] - timing.navigationStart);
+      }
+    }
+  }
+
+  return entry;
+}
+
 /**
  * Simple wrapper around performance.getEntriesByType to provide fallbacks for
  * legacy browsers, and work around edge cases where undefined is returned instead
