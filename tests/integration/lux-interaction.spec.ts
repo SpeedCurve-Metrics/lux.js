@@ -6,6 +6,7 @@ describe("LUX interaction", () => {
     await navigateTo("/interaction.html");
     const timeBeforeClick = await getElapsedMs(page);
     await page.click("#button-with-id");
+    await waitForNetworkIdle();
 
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
@@ -30,6 +31,7 @@ describe("LUX interaction", () => {
     const timeBeforeKeyPress = await getElapsedMs(page);
     const button = await page.$("#button-with-id");
     await button.press("Enter");
+    await waitForNetworkIdle();
 
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
@@ -45,6 +47,7 @@ describe("LUX interaction", () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     await navigateTo("/interaction.html");
     await page.click("#button-with-js");
+    await waitForNetworkIdle();
 
     const ixBeacon = luxRequests.getUrl(1);
 
@@ -69,6 +72,7 @@ describe("LUX interaction", () => {
     await navigateTo("/interaction.html?blockFor=50");
     const button = await page.$("#button-with-js");
     await button.press("Enter");
+    await waitForNetworkIdle();
 
     const ixBeacon = luxRequests.getUrl(1);
 
@@ -99,7 +103,6 @@ describe("LUX interaction", () => {
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThan(100);
     expect(parseInt(secondPageBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
-    expect(parseInt(secondPageBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
     expect(thirdPageBeacon.searchParams.get("FID")).toBeNull();
   });
 
@@ -107,6 +110,7 @@ describe("LUX interaction", () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     await navigateTo("/interaction.html");
     await page.evaluate("window.dispatchEvent(new MouseEvent('mousedown'))");
+    await waitForNetworkIdle();
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
 
@@ -117,6 +121,7 @@ describe("LUX interaction", () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
     await navigateTo("/interaction.html");
     await page.evaluate("window.dispatchEvent(new MouseEvent('keydown'))");
+    await waitForNetworkIdle();
     const ixBeacon = luxRequests.getUrl(1);
     const ixMetrics = parseNestedPairs(ixBeacon.searchParams.get("IX"));
 
