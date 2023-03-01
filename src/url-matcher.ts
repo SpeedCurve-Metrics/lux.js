@@ -11,5 +11,10 @@ export function patternMatchesUrl(pattern: string, hostname: string, pathname: s
 }
 
 function createRegExpFromPattern(pattern: string): RegExp {
-  return new RegExp("^" + pattern.replaceAll("*", ".*") + "$", "i");
+  return new RegExp("^" + escapeStringForRegExp(pattern).replaceAll("*", ".*") + "$", "i");
+}
+
+function escapeStringForRegExp(str: string): string {
+  // Note: we don't escape * because it's our own special symbol!
+  return str.replace(/[-/\\^$+?.()|[\]{}]/g, "\\$&");
 }
