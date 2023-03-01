@@ -1699,7 +1699,7 @@ LUX = (function () {
           });
         }
         // exits loop when first match is found
-        if (label.length) {
+        if (label) {
           gFlags = addFlag(gFlags, Flags.PageLabelFromPagegroup);
           return label;
         }
