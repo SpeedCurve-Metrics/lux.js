@@ -1,7 +1,7 @@
 export function patternMatchesUrl(pattern: string, hostname: string, pathname: string): boolean {
   const regex = createRegExpFromPattern(pattern);
 
-  if (pattern.slice(0, 1) === "/") {
+  if (pattern.charAt(0) === "/") {
     // Rule is a pathname only
     return regex.test(pathname);
   }
