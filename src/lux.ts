@@ -18,6 +18,7 @@ import {
 import now from "./now";
 import Matching from "./matching";
 import { fitUserTimingEntries } from "./beacon";
+import * as INP from "./metric/INP";
 
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
@@ -81,18 +82,26 @@ LUX = (function () {
   if (typeof PerformanceObserver === "function") {
     const perfObserver = new PerformanceObserver((list) => {
       list.getEntries().forEach((entry) => {
-        logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
+        if (entry.entryType === "event") {
+          // To save memory, we don't log "event" entries or store them in the gaPerfEntries array
+          INP.addEvent(entry as PerformanceEventTiming);
+        } else {
+          logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
 
-        // Only record long tasks that weren't already recorded by the PerformanceObserver in the snippet
-        if (entry.entryType !== "longtask" || gaPerfEntries.indexOf(entry) === -1) {
-          gaPerfEntries.push(entry);
-        }
+          // Only record long tasks that weren't already recorded by the PerformanceObserver in the snippet
+          if (entry.entryType !== "longtask" || gaPerfEntries.indexOf(entry) === -1) {
+            gaPerfEntries.push(entry);
+          }
 
-        if (entry.entryType === "first-input") {
-          const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+          if (entry.entryType === "first-input") {
+            const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
 
-          if (!gFirstInputDelay || gFirstInputDelay < fid) {
-            gFirstInputDelay = fid;
+            if (!gFirstInputDelay || gFirstInputDelay < fid) {
+              gFirstInputDelay = fid;
+            }
+
+            // Allow first-input events to be considered for INP
+            INP.addEvent(entry as PerformanceEventTiming);
           }
         }
       });
@@ -119,7 +128,10 @@ LUX = (function () {
         perfObserver.observe({
           type: "event",
           buffered: true,
-          durationThreshold: 40,
+          // TODO: Enable this once performance.interactionCount is widely supported. Right now we
+          // have to count every event to get the total interaction count so that we can estimate
+          // a high percentile value for INP.
+          // durationThreshold: 40,
         });
       }
     } catch (e) {
@@ -1084,34 +1096,7 @@ LUX = (function () {
       return undefined;
     }
 
-    const eventEntries = [];
-
-    for (let i = 0; i < gaPerfEntries.length; i++) {
-      const entry = gaPerfEntries[i];
-
-      if (
-        (entry.entryType === "event" || entry.entryType === "first-input") &&
-        (entry as PerformanceEventTiming).interactionId
-      ) {
-        eventEntries.push(entry);
-      }
-    }
-
-    if (eventEntries.length === 0) {
-      return undefined;
-    }
-
-    let maxDuration = 0;
-
-    for (let i = 0; i < eventEntries.length; i++) {
-      const entry = eventEntries[i];
-
-      if (entry.duration > maxDuration) {
-        maxDuration = entry.duration;
-      }
-    }
-
-    return maxDuration;
+    return INP.getHighPercentileINP();
   }
 
   function getCustomerId() {
