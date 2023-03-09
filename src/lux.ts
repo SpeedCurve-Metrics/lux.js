@@ -1,5 +1,6 @@
 import scriptStartTime from "./start-marker";
 import * as Config from "./config";
+import * as CustomData from "./custom-data";
 import Logger, { LogEvent } from "./logger";
 import { END_MARK, START_MARK } from "./constants";
 import Flags, { addFlag } from "./flags";
@@ -126,7 +127,6 @@ LUX = (function () {
   const gaMarks: PerformanceEntryList = [];
   const gaMeasures: PerformanceEntryList = [];
   let ghIx: InteractionInfo = {}; // hash for Interaction Metrics (scroll, click, keyboard)
-  const ghData: Record<string, unknown> = {}; // hash for data that is specific to the customer (eg, userid, conversion info)
   let gbLuxSent = 0; // have we sent the LUX data? (avoid sending twice in unload)
   let gbNavSent = 0; // have we sent the Nav Timing beacon yet? (avoid sending twice for SPA)
   let gbIxSent = 0; // have we sent the IX data? (avoid sending twice for SPA)
@@ -759,20 +759,11 @@ LUX = (function () {
     return aIx.join(",");
   }
 
-  // _addData()
-  function _addData(name: string, value: unknown) {
+  function _addData(name: unknown, value: unknown) {
     logger.logEvent(LogEvent.AddDataCalled, [name, value]);
 
-    const typeV = typeof value;
-
     if (typeof name === "string") {
-      if (typeV === "string" || typeV === "number" || typeV === "boolean") {
-        ghData[name] = value;
-      }
-
-      if (typeV === "undefined" || value === null) {
-        delete ghData[name];
-      }
+      CustomData.addCustomDataValue(name, value);
     }
 
     if (gbLuxSent) {
@@ -786,6 +777,7 @@ LUX = (function () {
         // yet been sent we can combine all the data in a new beacon.
         clearTimeout(gCustomerDataTimeout);
       }
+
       gCustomerDataTimeout = window.setTimeout(_sendCustomerData, 100);
     }
   }
@@ -799,20 +791,6 @@ LUX = (function () {
 
     const nThis = ("" + gUid).substr(-2); // number for THIS page - from 00 to 99
     return parseInt(nThis) < globalConfig.samplerate;
-  }
-
-  // Return a string of Customer Data formatted for beacon querystring.
-  function customerDataValues() {
-    const aData = [];
-    for (let key in ghData) {
-      let value = "" + ghData[key]; // convert to string (eg for ints and booleans)
-      // strip delimiters (instead of escaping)
-      key = key.replace(/,/g, "").replace(/\|/g, "");
-      value = value.replace(/,/g, "").replace(/\|/g, "");
-      aData.push(key + "|" + value);
-    }
-
-    return encodeURIComponent(aData.join(","));
   }
 
   // _init()
@@ -1319,7 +1297,7 @@ LUX = (function () {
     }
   }
 
-  function _getBeaconUrl() {
+  function _getBeaconUrl(customData: CustomData.CustomDataDict) {
     const queryParams = [
       "v=" + SCRIPT_VERSION,
       "id=" + getCustomerId(),
@@ -1334,10 +1312,11 @@ LUX = (function () {
       queryParams.push("fl=" + gFlags);
     }
 
-    const customerData = customerDataValues();
+    const customerData = CustomData.valuesToString(customData);
 
     if (customerData) {
       queryParams.push("CD=" + customerData);
+      CustomData.clearUpdateCustomData();
     }
 
     return globalConfig.beaconUrl + "?" + queryParams.join("&");
@@ -1384,7 +1363,7 @@ LUX = (function () {
 
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
     // So we create a base URL that has all the necessary information:
-    const baseUrl = _getBeaconUrl();
+    const baseUrl = _getBeaconUrl(CustomData.getAllCustomData());
 
     const is = inlineTagSize("script");
     const ic = inlineTagSize("style");
@@ -1485,7 +1464,7 @@ LUX = (function () {
 
     if (sIx) {
       const beaconUrl =
-        _getBeaconUrl() +
+        _getBeaconUrl(CustomData.getUpdatedCustomData()) +
         "&IX=" +
         sIx +
         (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "");
@@ -1509,10 +1488,10 @@ LUX = (function () {
       return;
     }
 
-    const sCustomerData = customerDataValues(); // customer data
+    const sCustomerData = CustomData.valuesToString(CustomData.getUpdatedCustomData());
 
     if (sCustomerData) {
-      const beaconUrl = _getBeaconUrl();
+      const beaconUrl = _getBeaconUrl(CustomData.getUpdatedCustomData());
       logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
     }
