@@ -78,7 +78,7 @@ export function parseUserTiming(userTimingString: string): Record<string, UserTi
 /**
  * Gets a performance.timing value as milliseconds since navigation start
  */
-export async function getPerformanceTimingMs(page, metric) {
+export async function getPerformanceTimingMs(page, metric): Promise<number> {
   const navigationStart = await page.evaluate("performance.timing.navigationStart");
   const timingValue = await page.evaluate(`performance.timing.${metric}`);
 
@@ -88,6 +88,6 @@ export async function getPerformanceTimingMs(page, metric) {
 /**
  * Gets the current time as milliseconds since navigation start
  */
-export async function getElapsedMs(page) {
-  return await page.evaluate("Math.round(performance.now())");
+export async function getElapsedMs(page): Promise<number> {
+  return await page.evaluate(() => Math.floor(performance.now()));
 }
