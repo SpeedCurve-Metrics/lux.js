@@ -99,6 +99,76 @@ describe("LUX custom data", () => {
     expect(cdBeacon.searchParams.get("PN")).toEqual("/default.html");
   });
 
+  test("supplementary custom data beacons only contain data that has changed", async () => {
+    await navigateTo("/default.html?injectScript=LUX.auto=false;");
+
+    // Main beacon 1
+    await page.evaluate(() => {
+      LUX.addData("var1", "hello");
+      LUX.addData("var2", "world");
+      LUX.send();
+    });
+
+    await waitForNetworkIdle();
+
+    // Custom data baecon 1
+    await page.evaluate(() => {
+      LUX.addData("var2", "doggo");
+    });
+
+    await waitForNetworkIdle();
+
+    // Main beacon 2
+    await page.evaluate(() => {
+      LUX.init();
+      LUX.addData("var2", "everyone");
+      LUX.send();
+    });
+
+    await waitForNetworkIdle();
+
+    // Custom data beacon 2
+    await page.evaluate(() => {
+      LUX.addData("var3", "foo");
+    });
+
+    await waitForNetworkIdle();
+
+    // Custom data beacon 3
+    await page.evaluate(() => {
+      LUX.addData("var3", "foo");
+      LUX.addData("var1", "greetings");
+    });
+
+    await waitForNetworkIdle();
+
+    const mainBeacon1Data = parseNestedPairs(luxRequests.getUrl(0).searchParams.get("CD"));
+    const cdBeacon1Data = parseNestedPairs(luxRequests.getUrl(1).searchParams.get("CD"));
+    const mainBeacon2Data = parseNestedPairs(luxRequests.getUrl(2).searchParams.get("CD"));
+    const cdBeacon2Data = parseNestedPairs(luxRequests.getUrl(3).searchParams.get("CD"));
+    const cdBeacon3Data = parseNestedPairs(luxRequests.getUrl(4).searchParams.get("CD"));
+
+    expect(mainBeacon1Data["var1"]).toEqual("hello");
+    expect(mainBeacon1Data["var2"]).toEqual("world");
+    expect(mainBeacon1Data["var3"]).toBeUndefined();
+
+    expect(cdBeacon1Data["var1"]).toBeUndefined();
+    expect(cdBeacon1Data["var2"]).toEqual("doggo");
+    expect(cdBeacon1Data["var3"]).toBeUndefined();
+
+    expect(mainBeacon2Data["var1"]).toEqual("hello");
+    expect(mainBeacon2Data["var2"]).toEqual("everyone");
+    expect(mainBeacon2Data["var3"]).toBeUndefined();
+
+    expect(cdBeacon2Data["var1"]).toBeUndefined();
+    expect(cdBeacon2Data["var2"]).toBeUndefined();
+    expect(cdBeacon2Data["var3"]).toEqual("foo");
+
+    expect(cdBeacon3Data["var1"]).toEqual("greetings");
+    expect(cdBeacon3Data["var2"]).toBeUndefined();
+    expect(cdBeacon3Data["var3"]).toBeUndefined();
+  });
+
   test("custom data is retained between SPA pages", async () => {
     await navigateTo("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => {
