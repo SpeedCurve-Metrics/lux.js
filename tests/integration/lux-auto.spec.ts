@@ -164,6 +164,7 @@ describe.each(testPages)("%s", (_, testPage) => {
 
   test("interaction metrics are not sent with no interaction", () => {
     expect(beacon.searchParams.get("FID")).toBeNull();
+    expect(beacon.searchParams.get("INP")).toBeNull();
     expect(beacon.searchParams.get("IX")).toBeNull();
   });
 });

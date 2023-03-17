@@ -16,8 +16,10 @@ import {
   getNavigationEntry,
 } from "./performance";
 import now from "./now";
+import * as PO from "./performance-observer";
 import Matching from "./matching";
 import { fitUserTimingEntries } from "./beacon";
+import * as INP from "./metric/INP";
 
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
@@ -71,54 +73,49 @@ LUX = (function () {
   }
   window.addEventListener("error", errorHandler);
 
-  // Initialize performance observer
-  // Note: This code was later added to the LUX snippet. In the snippet we ONLY collect
-  //       Long Task entries because that is the only entry type that can not be buffered.
-  //       We _copy_ any Long Tasks collected by the snippet and ignore it after that.
-  const gaSnippetLongTasks = typeof window.LUX_al === "object" ? window.LUX_al : [];
-  const gaPerfEntries = gaSnippetLongTasks.slice(); // array of Long Tasks (prefer the array from the snippet)
+  // Most PerformanceEntry types we log an event for and add it to the global entry store.
+  const processEntry = (entry: PerformanceEntry) => {
+    PO.addEntry(entry);
+    logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
+  };
 
-  if (typeof PerformanceObserver === "function") {
-    const perfObserver = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
-        logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
+  // Before long tasks were buffered, we added a PerformanceObserver to the lux.js snippet to capture
+  // any long tasks that occurred before the full script was loaded. To deal with this, we process
+  // all of the snippet long tasks, and we check for double-ups in the new PerformanceObserver.
+  const snippetLongTasks = typeof window.LUX_al === "object" ? window.LUX_al : [];
+  snippetLongTasks.forEach(processEntry);
 
-        // Only record long tasks that weren't already recorded by the PerformanceObserver in the snippet
-        if (entry.entryType !== "longtask" || gaPerfEntries.indexOf(entry) === -1) {
-          gaPerfEntries.push(entry);
-        }
-
-        if (entry.entryType === "first-input") {
-          const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
-
-          if (!gFirstInputDelay || gFirstInputDelay < fid) {
-            gFirstInputDelay = fid;
-          }
-        }
-      });
+  try {
+    PO.observe("longtask", (entry) => {
+      if (PO.ALL_ENTRIES.indexOf(entry) === -1) {
+        processEntry(entry);
+      }
     });
-    try {
-      if ("PerformanceLongTaskTiming" in self) {
-        perfObserver.observe({ type: "longtask", buffered: true });
+
+    PO.observe("largest-contentful-paint", processEntry);
+    PO.observe("element", processEntry);
+    PO.observe("paint", processEntry);
+    PO.observe("layout-shift", processEntry);
+
+    PO.observe("first-input", (entry) => {
+      const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+
+      if (!gFirstInputDelay || gFirstInputDelay < fid) {
+        gFirstInputDelay = fid;
       }
-      if ("LargestContentfulPaint" in self) {
-        perfObserver.observe({ type: "largest-contentful-paint", buffered: true });
-      }
-      if ("PerformanceElementTiming" in self) {
-        perfObserver.observe({ type: "element", buffered: true });
-      }
-      if ("PerformancePaintTiming" in self) {
-        perfObserver.observe({ type: "paint", buffered: true });
-      }
-      if ("LayoutShift" in self) {
-        perfObserver.observe({ type: "layout-shift", buffered: true });
-      }
-      if ("PerformanceEventTiming" in self) {
-        perfObserver.observe({ type: "first-input", buffered: true });
-      }
-    } catch (e) {
-      logger.logEvent(LogEvent.PerformanceObserverError, [e]);
-    }
+
+      // Allow first-input events to be considered for INP
+      INP.addEvent(entry);
+    });
+
+    PO.observe("event", INP.addEvent, {
+      // TODO: Enable this once performance.interactionCount is widely supported. Right now we
+      // have to count every event to get the total interaction count so that we can estimate
+      // a high percentile value for INP.
+      // durationThreshold: 40,
+    });
+  } catch (e) {
+    logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
 
   // Bitmask of flags for this session & page
@@ -516,19 +513,16 @@ LUX = (function () {
 
   // Return a string of Element Timing Metrics formatted for beacon querystring.
   function elementTimingValues(): string {
-    const aET = [];
+    const aET: string[] = [];
     const startMark = _getMark(START_MARK);
     const tZero = startMark ? startMark.startTime : 0;
 
-    if (gaPerfEntries.length) {
-      for (let i = 0; i < gaPerfEntries.length; i++) {
-        const pe = gaPerfEntries[i] as PerformanceElementTiming;
-        if ("element" === pe.entryType && pe.identifier && pe.startTime) {
-          logger.logEvent(LogEvent.PerformanceEntryProcessed, [pe]);
-          aET.push(pe.identifier + "|" + Math.round(pe.startTime - tZero));
-        }
+    PO.getEntries("element").forEach((entry) => {
+      if (entry.identifier && entry.startTime) {
+        logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
+        aET.push(entry.identifier + "|" + Math.round(entry.startTime - tZero));
       }
-    }
+    });
 
     return aET.join(",");
   }
@@ -543,9 +537,10 @@ LUX = (function () {
     let sCPU = "";
     const hCPU: Record<string, number> = {};
     const hCPUDetails: Record<string, string> = {}; // TODO - Could remove this later after large totals go away.
+    const longTaskEntries = PO.getEntries("longtask");
 
     // Add up totals for each "type" of long task
-    if (gaPerfEntries.length) {
+    if (longTaskEntries.length) {
       // Long Task start times are relative to NavigationStart which is "0".
       // But if it is a SPA then the relative start time is gStartMark.
       const startMark = _getMark(START_MARK);
@@ -564,25 +559,21 @@ LUX = (function () {
         }
       }
 
-      for (let i = 0; i < gaPerfEntries.length; i++) {
-        const p = gaPerfEntries[i] as PerformanceLongTaskTiming;
-        if ("longtask" !== p.entryType) {
-          continue;
-        }
-        let dur = Math.round(p.duration);
-        if (p.startTime < tZero) {
+      longTaskEntries.forEach((entry) => {
+        let dur = Math.round(entry.duration);
+        if (entry.startTime < tZero) {
           // In a SPA it is possible that we were in the middle of a Long Task when
           // LUX.init() was called. If so, only include the duration after tZero.
-          dur -= tZero - p.startTime;
-        } else if (p.startTime >= tEnd) {
+          dur -= tZero - entry.startTime;
+        } else if (entry.startTime >= tEnd) {
           // In a SPA it is possible that a Long Task started after loadEventEnd but before our
           // callback from setTimeout(200) happened. Do not include anything that started after tEnd.
-          continue;
+          return;
         }
 
-        logger.logEvent(LogEvent.PerformanceEntryProcessed, [p]);
+        logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
 
-        const type = p.attribution[0].name; // TODO - is there ever more than 1 attribution???
+        const type = entry.attribution[0].name; // TODO - is there ever more than 1 attribution???
         if (!hCPU[type]) {
           // initialize this category
           hCPU[type] = 0;
@@ -590,8 +581,8 @@ LUX = (function () {
         }
         hCPU[type] += dur;
         // Send back the raw startTime and duration, as well as the adjusted duration.
-        hCPUDetails[type] += "," + Math.round(p.startTime) + "|" + dur;
-      }
+        hCPUDetails[type] += "," + Math.round(entry.startTime) + "|" + dur;
+      });
     }
 
     // TODO - Add more types if/when they become available.
@@ -656,21 +647,20 @@ LUX = (function () {
     return { count, median, max, fci };
   }
 
-  function calculateDCLS(): string | undefined {
+  function getDCLS(): string | undefined {
     if (!("LayoutShift" in self)) {
       return undefined;
     }
 
     let DCLS = 0;
 
-    for (let i = 0; i < gaPerfEntries.length; i++) {
-      const p = gaPerfEntries[i] as LayoutShift;
-      if ("layout-shift" !== p.entryType || p.hadRecentInput) {
-        continue;
+    PO.getEntries("layout-shift").forEach((entry) => {
+      if (entry.hadRecentInput) {
+        return;
       }
-      logger.logEvent(LogEvent.PerformanceEntryProcessed, [p]);
-      DCLS += p.value;
-    }
+      logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
+      DCLS += entry.value;
+    });
 
     // The DCL column in Redshift is REAL (FLOAT4) which stores a maximum
     // of 6 significant digits.
@@ -775,7 +765,7 @@ LUX = (function () {
       if (gCustomerDataTimeout) {
         // Cancel the timer for any previous beacons so that if they have not
         // yet been sent we can combine all the data in a new beacon.
-        clearTimeout(gCustomerDataTimeout);
+        window.clearTimeout(gCustomerDataTimeout);
       }
 
       gCustomerDataTimeout = window.setTimeout(_sendCustomerData, 100);
@@ -823,7 +813,7 @@ LUX = (function () {
     gbFirstPV = 0;
     gSyncId = createSyncId();
     gUid = refreshUniqueId(gSyncId);
-    gaPerfEntries.splice(0); // clear out the array of performance entries (do NOT redefine gaPerfEntries!)
+    PO.clearEntries();
     nErrors = 0;
     gFirstInputDelay = undefined;
 
@@ -1032,15 +1022,12 @@ LUX = (function () {
 
   // Return Largest Contentful Paint or undefined if not supported.
   function getLcp(): number | undefined {
-    if (gaPerfEntries.length) {
-      // Find the *LAST* LCP per https://web.dev/largest-contentful-paint
-      for (let i = gaPerfEntries.length - 1; i >= 0; i--) {
-        const pe = gaPerfEntries[i];
-        if ("largest-contentful-paint" === pe.entryType) {
-          logger.logEvent(LogEvent.PerformanceEntryProcessed, [pe]);
-          return Math.max(0, Math.round(pe.startTime - getNavigationEntry().activationStart));
-        }
-      }
+    const lcpEntries = PO.getEntries("largest-contentful-paint");
+
+    if (lcpEntries.length) {
+      const lastEntry = lcpEntries[lcpEntries.length - 1];
+      logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
+      return Math.max(0, Math.round(lastEntry.startTime - getNavigationEntry().activationStart));
     }
 
     return undefined;
@@ -1071,6 +1058,14 @@ LUX = (function () {
     logger.logEvent(LogEvent.PaintTimingNotSupported);
 
     return undefined;
+  }
+
+  function getINP(): number | undefined {
+    if (!("PerformanceEventTiming" in self)) {
+      return undefined;
+    }
+
+    return INP.getHighPercentileINP();
   }
 
   function getCustomerId() {
@@ -1293,7 +1288,7 @@ LUX = (function () {
 
   function clearMaxMeasureTimeout() {
     if (gMaxMeasureTimeout) {
-      clearTimeout(gMaxMeasureTimeout);
+      window.clearTimeout(gMaxMeasureTimeout);
     }
   }
 
@@ -1355,7 +1350,8 @@ LUX = (function () {
       sIx = ixValues();
     }
     const sCPU = cpuTimes();
-    const DCLS = calculateDCLS();
+    const DCLS = getDCLS();
+    const INP = getINP();
     const sLuxjs = selfLoading();
     if (document.visibilityState && "visible" !== document.visibilityState) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
@@ -1410,7 +1406,8 @@ LUX = (function () {
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
-      (typeof DCLS !== "undefined" ? "&CLS=" + DCLS : "");
+      (typeof DCLS !== "undefined" ? "&CLS=" + DCLS : "") +
+      (typeof INP !== "undefined" ? "&INP=" + INP : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();
@@ -1447,6 +1444,13 @@ LUX = (function () {
     }
   }
 
+  let ixTimerId: number;
+
+  function _sendIxAfterDelay(): void {
+    window.clearTimeout(ixTimerId);
+    ixTimerId = window.setTimeout(_sendIx, 100);
+  }
+
   // Beacon back the IX data separately (need to sync with LUX beacon on the backend).
   function _sendIx(): void {
     const customerid = getCustomerId();
@@ -1461,13 +1465,15 @@ LUX = (function () {
     }
 
     const sIx = ixValues(); // Interaction Metrics
+    const INP = getINP();
 
     if (sIx) {
       const beaconUrl =
         _getBeaconUrl(CustomData.getUpdatedCustomData()) +
         "&IX=" +
         sIx +
-        (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "");
+        (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
+        (typeof INP !== "undefined" ? "&INP=" + INP : "");
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 
@@ -1511,11 +1517,10 @@ LUX = (function () {
   // only beacon back the first interaction that happens.
 
   function _scrollHandler() {
-    // Leave handlers IN PLACE so we can track which ID is clicked/keyed.
-    // _removeIxHandlers();
+    // Note for scroll input we don't remove the handlers or send the IX beacon because we want to
+    // capture click and key events as well, since these are typically more important than scrolls.
     if (typeof ghIx["s"] === "undefined") {
       ghIx["s"] = Math.round(_now());
-      // _sendIx(); // wait for key or click to send the IX beacon
     }
   }
 
@@ -1530,7 +1535,7 @@ LUX = (function () {
           ghIx["ki"] = trackId;
         }
       }
-      _sendIx();
+      _sendIxAfterDelay();
     }
   }
 
@@ -1560,7 +1565,7 @@ LUX = (function () {
           ghIx["ci"] = trackId;
         }
       }
-      _sendIx();
+      _sendIxAfterDelay();
     }
   }
 
