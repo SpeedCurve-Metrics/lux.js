@@ -2,6 +2,14 @@
 
 ## 2023-??-??: v306
 
+### New features
+
+- The experimental [Interaction to Next Paint (INP) metric](https://web.dev/inp/) is now collected.
+
+### Improvements
+
+- Custom data is now only sent when it has been updated. This reduces beacon size and prevents unnecessary beacons from being sent.
+
 ### Bug fixes
 
 - Calling `LUX.init()` will now reset FID. Previously FID was only recorded for the first SPA page view.
