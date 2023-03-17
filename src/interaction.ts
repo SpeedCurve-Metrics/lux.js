@@ -1,13 +1,20 @@
 import { hasParentNode } from "./dom";
 
 export interface InteractionInfo {
-  c?: number; // Click time
-  ci?: string; // Click attribution identifier
-  cx?: number; // Click X position
-  cy?: number; // Click Y position
-  k?: number; // Key press time
-  ki?: string; // Key press attribution identifier
-  s?: number; // Scroll time
+  /** Click time */
+  c?: number;
+  /** Click attribution identifier */
+  ci?: string;
+  /** Click X position */
+  cx?: number;
+  /** Click Y position */
+  cy?: number;
+  /** Key press time */
+  k?: number;
+  /** Key press attribution identifier */
+  ki?: string;
+  /** Scroll time */
+  s?: number;
 }
 
 type ButtonOrLinkElement = HTMLButtonElement | HTMLLinkElement;
