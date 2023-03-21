@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2023-??-??: v307
+
+### Improvements
+
+- The code that determines the page label based on [Page Label URL Rules](https://support.speedcurve.com/docs/rum-page-labels#page-label-url-rules) has been optimized, reducing the size of lux.js.
+
 ## 2023-03-20: v306
 
 ### New features
