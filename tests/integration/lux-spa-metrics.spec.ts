@@ -1,5 +1,5 @@
-import { getNavTiming, getPageStat, getPerformanceTimingMs } from "../helpers/lux";
 import Flags, { hasFlag } from "../../src/flags";
+import { getNavTiming, getPageStat, getPerformanceTimingMs } from "../helpers/lux";
 
 describe("LUX SPA", () => {
   const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");

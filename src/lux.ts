@@ -1,11 +1,14 @@
-import scriptStartTime from "./start-marker";
+import { fitUserTimingEntries } from "./beacon";
 import * as Config from "./config";
-import * as CustomData from "./custom-data";
-import Logger, { LogEvent } from "./logger";
 import { END_MARK, START_MARK } from "./constants";
+import * as CustomData from "./custom-data";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
+import Logger, { LogEvent } from "./logger";
+import Matching from "./matching";
+import * as INP from "./metric/INP";
+import now from "./now";
 import {
   msSinceNavigationStart,
   performance,
@@ -15,11 +18,8 @@ import {
   navigationType,
   getNavigationEntry,
 } from "./performance";
-import now from "./now";
 import * as PO from "./performance-observer";
-import Matching from "./matching";
-import { fitUserTimingEntries } from "./beacon";
-import * as INP from "./metric/INP";
+import scriptStartTime from "./start-marker";
 
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;

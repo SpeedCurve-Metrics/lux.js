@@ -1,5 +1,5 @@
-import { getNavTiming, getPerformanceTimingMs, parseUserTiming } from "../helpers/lux";
 import { END_MARK } from "../../src/constants";
+import { getNavTiming, getPerformanceTimingMs, parseUserTiming } from "../helpers/lux";
 
 describe("LUX inline snippet", () => {
   test("LUX.markLoadTime works before the script is loaded", async () => {

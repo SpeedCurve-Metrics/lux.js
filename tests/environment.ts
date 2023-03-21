@@ -1,7 +1,7 @@
 import PuppeteerEnvironment from "jest-environment-puppeteer";
 import { HTTPResponse, PuppeteerLifeCycleEvent } from "puppeteer";
-import RequestInterceptor from "./request-interceptor";
 import { LuxGlobal } from "../src/global";
+import RequestInterceptor from "./request-interceptor";
 declare global {
   const LUX: LuxGlobal;
   const requestInterceptor: RequestInterceptor;

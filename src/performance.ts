@@ -1,5 +1,5 @@
-import scriptStartTime from "./start-marker";
 import now from "./now";
+import scriptStartTime from "./start-marker";
 
 // If the various performance APIs aren't available, we export an empty object to
 // prevent having to make regular typeof checks.
