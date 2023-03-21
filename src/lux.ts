@@ -6,7 +6,6 @@ import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
-import Matching from "./matching";
 import * as INP from "./metric/INP";
 import now from "./now";
 import {
@@ -20,6 +19,7 @@ import {
 } from "./performance";
 import * as PO from "./performance-observer";
 import scriptStartTime from "./start-marker";
+import { patternMatchesUrl } from "./url-matcher";
 
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
@@ -1686,13 +1686,12 @@ LUX = (function () {
       return LUX.label;
     } else if (typeof LUX.pagegroups !== "undefined") {
       const pagegroups = LUX.pagegroups;
-      const url = document.location.hostname + document.location.pathname;
       let label = "";
       for (const pagegroup in pagegroups) {
         const rules = pagegroups[pagegroup];
         if (Array.isArray(rules)) {
           rules.every((rule: string) => {
-            if (Matching.isMatching(rule, url)) {
+            if (patternMatchesUrl(rule, document.location.hostname, document.location.pathname)) {
               label = pagegroup;
               return false; // stop when first match is found
             }
@@ -1700,7 +1699,7 @@ LUX = (function () {
           });
         }
         // exits loop when first match is found
-        if (label.length) {
+        if (label) {
           gFlags = addFlag(gFlags, Flags.PageLabelFromPagegroup);
           return label;
         }

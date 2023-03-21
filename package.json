@@ -10,8 +10,6 @@
     "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts' 'docs/debug-parser/**/*.ts'",
     "lint-fix": "npm run lint -- --fix",
     "test": "npm run type-check && npm run lint && npm run jest",
-    "test-unit": "npm run jest /tests/unit --watchAll",
-    "test-integration": "npm run jest /tests/integration --watchAll",
     "watch": "npm run rollup -- --watch"
   },
   "devDependencies": {
