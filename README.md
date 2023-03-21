@@ -24,8 +24,8 @@ Package page: [lux.js](https://github.com/SpeedCurve-Metrics/lux.js/packages/158
 
 To publish a new version to [private GitHub Packages](https://github.com/orgs/SpeedCurve-Metrics/packages):
 
-1. Navigate to your local version of the repo e.g. `cd ~/MyProjects/lux.js`
-2. Add environment variable with personal access token from 1Password (search `GitHub Packages npm personal access token`):
+1. Update the version in package.json to a semver-compatible version of the `SCRIPT_VERSION` constant. You may want to also run `npm version prerelease --preid=next` to mark the version as pre-release (this might be required to use a new version of lux.js in the SpeedCurve app before it's released on our CDN).
+2. Add an environment variable with personal access token from 1Password (search `GitHub Packages npm personal access token`):
 
 ```
 export NPM_AUTH_TOKEN="%token%"
