@@ -19,19 +19,24 @@ This repository contains the source code for lux.js, SpeedCurve's real user moni
 
 ## Publishing in GitHub Packages
 
-This repo is used in `speedcurve-app` as an NPM package.
+This repo is used in `speedcurve-app` as an npm package.
 Package page: [lux.js](https://github.com/SpeedCurve-Metrics/lux.js/packages/1586797)
 
 To publish a new version to [private GitHub Packages](https://github.com/orgs/SpeedCurve-Metrics/packages):
+
 1. Navigate to your local version of the repo e.g. `cd ~/MyProjects/lux.js`
-2. Add environment variable with personal access token from 1Password (search `GitHub Packages NPM personal access token`):
+2. Add environment variable with personal access token from 1Password (search `GitHub Packages npm personal access token`):
+
 ```
 export NPM_AUTH_TOKEN="%token%"
 ```
+
 3. Login to Github Packages with your Github user's credentials (or `speedcurve-bot`):
+
 ```
 npm login --scope=@speedcurve-metrics --registry=https://npm.pkg.github.com
 ```
+
 4. Run `npm publish`
 
 Read more: [Working with the npm registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry)
