@@ -740,7 +740,7 @@ LUX = (function () {
   }
 
   // Return a string of Interaction Metrics formatted for beacon querystring.
-  function ixValues() {
+  function ixValues(): string {
     const aIx = [];
     for (const key in ghIx) {
       aIx.push(key + "|" + ghIx[key as keyof InteractionInfo]);
@@ -1343,16 +1343,24 @@ LUX = (function () {
       _markLoadTime();
     }
 
-    const sET = elementTimingValues(); // Element Timing data
-    let sIx = ""; // Interaction Metrics
+    let sIx = "";
+    let INP = getINP();
+
+    // It's possible that the interaction beacon has been sent before the main beacon. We don't want
+    // to send the interaction metrics twice, so we only include them here if the interaction beacon
+    // has not been sent.
     if (!gbIxSent) {
-      // It is possible for the IX beacon to be sent BEFORE the "main" window.onload LUX beacon.
-      // Make sure we do not send the IX data twice.
       sIx = ixValues();
+
+      if (sIx === "") {
+        // If there are no interaction metrics, we
+        INP = undefined;
+      }
     }
+
+    const sET = elementTimingValues(); // Element Timing data
     const sCPU = cpuTimes();
     const DCLS = getDCLS();
-    const INP = getINP();
     const sLuxjs = selfLoading();
     if (document.visibilityState && "visible" !== document.visibilityState) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);

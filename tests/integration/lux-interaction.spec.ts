@@ -61,8 +61,11 @@ describe("LUX interaction", () => {
     await page.click("#button-with-js");
     await waitForNetworkIdle();
 
+    const mainBeacon = luxRequests.getUrl(0);
     const ixBeacon = luxRequests.getUrl(1);
 
+    expect(mainBeacon.searchParams.get("FID")).toBeNull();
+    expect(mainBeacon.searchParams.get("INP")).toBeNull();
     expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
     expect(parseInt(ixBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
   });
@@ -74,8 +77,11 @@ describe("LUX interaction", () => {
     await button.press("Enter");
     await waitForNetworkIdle();
 
+    const mainBeacon = luxRequests.getUrl(0);
     const ixBeacon = luxRequests.getUrl(1);
 
+    expect(mainBeacon.searchParams.get("FID")).toBeNull();
+    expect(mainBeacon.searchParams.get("INP")).toBeNull();
     expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
     expect(parseInt(ixBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
   });

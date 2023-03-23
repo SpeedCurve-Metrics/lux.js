@@ -16,6 +16,10 @@ declare global {
     detachEvent(event: string, listener: EventListener): void;
   }
 
+  interface Performance {
+    interactionCount: number;
+  }
+
   // Internet Explorer 9 compatibility
   interface PerformanceTiming {
     msFirstPaint: number;
