@@ -12,13 +12,14 @@ let interactionDurations: number[] = [];
 // The total number of interactions recorded on the page
 let interactionCount = 0;
 
-export function reset() {
+export function reset(): void {
   interactionCount = 0;
+  interactionDurations = [];
 }
 
-export function addEvent(event: PerformanceEventTiming) {
+export function addEntry(entry: PerformanceEventTiming): void {
   interactionCount++;
-  interactionDurations.push(event.duration);
+  interactionDurations.push(entry.duration);
 
   // Only store the longest <MAX_INTERACTIONS> interactions
   interactionDurations = interactionDurations.sort((a, b) => b - a).slice(0, MAX_INTERACTIONS);

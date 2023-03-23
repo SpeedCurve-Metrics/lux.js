@@ -105,10 +105,10 @@ LUX = (function () {
       }
 
       // Allow first-input events to be considered for INP
-      INP.addEvent(entry);
+      INP.addEntry(entry);
     });
 
-    PO.observe("event", INP.addEvent, {
+    PO.observe("event", INP.addEntry, {
       // TODO: Enable this once performance.interactionCount is widely supported. Right now we
       // have to count every event to get the total interaction count so that we can estimate
       // a high percentile value for INP.
@@ -814,6 +814,7 @@ LUX = (function () {
     gSyncId = createSyncId();
     gUid = refreshUniqueId(gSyncId);
     PO.clearEntries();
+    INP.reset();
     nErrors = 0;
     gFirstInputDelay = undefined;
 
