@@ -9,13 +9,17 @@
 <body>
     <h1>Layout shift test page</h1>
     <script>
-        for (let i = 1; i < 10; i++) {
-            const el = document.createElement("img");
-            el.src = `red.png?delay=${i * 10}`;
-            el.width = i * 30;
+        function createLayoutShifts(count) {
+            for (let i = 1; i < count; i++) {
+                const el = document.createElement("img");
+                el.src = `red.png?delay=${i * count}`;
+                el.width = i * 30;
 
-            document.body.appendChild(el);
+                document.body.appendChild(el);
+            }
         }
+
+        createLayoutShifts(20);
     </script>
 </body>
 </html>

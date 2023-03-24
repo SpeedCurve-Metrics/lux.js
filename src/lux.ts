@@ -6,6 +6,7 @@ import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
+import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import now from "./now";
 import {
@@ -95,7 +96,11 @@ LUX = (function () {
     PO.observe("largest-contentful-paint", processEntry);
     PO.observe("element", processEntry);
     PO.observe("paint", processEntry);
-    PO.observe("layout-shift", processEntry);
+
+    PO.observe("layout-shift", (entry) => {
+      processEntry(entry);
+      CLS.addEntry(entry);
+    });
 
     PO.observe("first-input", (entry) => {
       const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
@@ -652,19 +657,9 @@ LUX = (function () {
       return undefined;
     }
 
-    let DCLS = 0;
-
-    PO.getEntries("layout-shift").forEach((entry) => {
-      if (entry.hadRecentInput) {
-        return;
-      }
-      logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
-      DCLS += entry.value;
-    });
-
-    // The DCL column in Redshift is REAL (FLOAT4) which stores a maximum
+    // The DCLS column in Redshift is REAL (FLOAT4) which stores a maximum
     // of 6 significant digits.
-    return DCLS.toFixed(6);
+    return CLS.getCLS().toFixed(6);
   }
 
   // Return the median value from an array of integers.

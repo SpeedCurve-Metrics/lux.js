@@ -53,6 +53,8 @@ describe("LUX interaction", () => {
 
     expect(ixBeacon.searchParams.get("HN")).toEqual("localhost");
     expect(ixBeacon.searchParams.get("PN")).toEqual("/interaction.html");
+    expect(ixBeacon.searchParams.get("PS")).toBeNull();
+    expect(ixBeacon.searchParams.get("NT")).toBeNull();
   });
 
   test("FID and INP are gathered for clicks", async () => {
