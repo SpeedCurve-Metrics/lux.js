@@ -27,28 +27,67 @@ describe("INP", () => {
   });
 
   test("INP is calculated correctly for large sets of interactions", () => {
-    // This is generating 200 interactions, each with a duration equal to their index.
-    for (let i = 0; i < 200; i++) {
-      INP.addEntry(makeEntry(i, i + 1));
+    // Generate some long interactions
+    INP.addEntry(makeEntry(1, 600));
+    INP.addEntry(makeEntry(2, 400));
+    INP.addEntry(makeEntry(3, 200));
+
+    let interactions = 3;
+
+    // And some shorter ones to make 50 total interactions (50 is the point at which we use an
+    // estimated high percentile value rather than the longest value
+    while (interactions < 50) {
+      interactions++;
+      INP.addEntry(makeEntry(interactions, 50));
     }
 
-    // The high percentile index is calculated as (N_INTERACTIONS / 50), which will be 4 for 200
-    // interactions. Since we store the slowest 10 interactions in reverse order, the 4th slowest
-    // should be the 196th interaction, with a duration of 196.
-    expect(INP.getHighPercentileINP()).toEqual(196);
+    expect(INP.getHighPercentileINP()).toEqual(400);
+
+    // The logic to estimate the high percentile is basically to use the Nth slowest interaction,
+    // where N is the interaction count divided by 50. So at 100 interactions we should use the
+    // third-slowest interaction
+    while (interactions < 100) {
+      interactions++;
+      INP.addEntry(makeEntry(interactions, 50));
+    }
+
+    expect(INP.getHighPercentileINP()).toEqual(200);
   });
 
   test("INP is calculated correctly for large sets of interactions with duplicate IDs", () => {
-    // This generates 200 entries, each of which uses `(index % 2) + 2` as both the interaction ID
-    // and the duration. We expect events with duplicate IDs to be merged together, so in reality
-    for (let i = 0; i < 200; i++) {
-      INP.addEntry(makeEntry(i, i + 1));
+    // Generate some duplicate long interactions
+    INP.addEntry(makeEntry(1, 590));
+    INP.addEntry(makeEntry(1, 600));
+    INP.addEntry(makeEntry(1, 580));
+    INP.addEntry(makeEntry(2, 400));
+    INP.addEntry(makeEntry(2, 399));
+    INP.addEntry(makeEntry(2, 390));
+    INP.addEntry(makeEntry(2, 400));
+    INP.addEntry(makeEntry(3, 200));
+    INP.addEntry(makeEntry(3, 200));
+
+    expect(INP.getHighPercentileINP()).toEqual(600);
+
+    let interactions = 3;
+
+    // And some shorter ones to make 50 total interactions (50 is the point at which we use an
+    // estimated high percentile value rather than the longest value
+    while (interactions < 50) {
+      interactions++;
+      INP.addEntry(makeEntry(interactions, 50));
     }
 
-    // The high percentile index is calculated as (N_INTERACTIONS / 50), which will be 4 for 200
-    // interactions. Since we store the slowest 10 interactions in reverse order, the 4th slowest
-    // should be the 196th interaction, with a duration of 196.
-    expect(INP.getHighPercentileINP()).toEqual(196);
+    expect(INP.getHighPercentileINP()).toEqual(400);
+
+    // The logic to estimate the high percentile is basically to use the Nth slowest interaction,
+    // where N is the interaction count divided by 50. So at 100 interactions we should use the
+    // third-slowest interaction
+    while (interactions < 100) {
+      interactions++;
+      INP.addEntry(makeEntry(interactions, 50));
+    }
+
+    expect(INP.getHighPercentileINP()).toEqual(200);
   });
 });
 

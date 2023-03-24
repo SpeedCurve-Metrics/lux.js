@@ -17,34 +17,33 @@ interface Interaction {
 let slowestEntries: Interaction[] = [];
 
 // A map of the slowest interactions by ID
-let slowestEntryMap: Record<number, Interaction> = {};
+let slowestEntriesMap: Record<number, Interaction> = {};
 
 // The total number of interactions recorded on the page
-let interactionCount = 0;
+let interactionCountEstimate = 0;
 
 export function reset(): void {
-  interactionCount = 0;
+  interactionCountEstimate = 0;
   slowestEntries = [];
-  slowestEntryMap = {};
+  slowestEntriesMap = {};
 }
 
 export function addEntry(entry: PerformanceEventTiming): void {
-  interactionCount++;
-
   const { duration, interactionId } = entry;
-  const existingEntry = slowestEntryMap[interactionId!];
+  const existingEntry = slowestEntriesMap[interactionId!];
 
   if (existingEntry) {
     existingEntry.duration = Math.max(duration, existingEntry.duration);
   } else {
-    slowestEntryMap[interactionId!] = { duration, interactionId };
-    slowestEntries.push(slowestEntryMap[interactionId!]);
+    interactionCountEstimate++;
+    slowestEntriesMap[interactionId!] = { duration, interactionId };
+    slowestEntries.push(slowestEntriesMap[interactionId!]);
   }
 
   // Only store the longest <MAX_INTERACTIONS> interactions
   slowestEntries.sort((a, b) => b.duration - a.duration);
   slowestEntries.splice(MAX_INTERACTIONS).forEach((entry) => {
-    delete slowestEntryMap[entry.interactionId!];
+    delete slowestEntriesMap[entry.interactionId!];
   });
 }
 
@@ -63,5 +62,5 @@ function getInteractionCount(): number {
     return performance.interactionCount;
   }
 
-  return interactionCount;
+  return interactionCountEstimate;
 }
