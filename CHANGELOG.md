@@ -2,6 +2,11 @@
 
 ## 2023-??-??: v307
 
+### Bug fixes
+
+- INP is now reset when `LUX.init()` is called.
+- Fixed a bug where INP could be recorded twice for a single page view.
+
 ### Improvements
 
 - The code that determines the page label based on [Page Label URL Rules](https://support.speedcurve.com/docs/rum-page-labels#page-label-url-rules) has been optimized, reducing the size of lux.js.
