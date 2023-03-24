@@ -6,6 +6,7 @@
 
 - INP is now reset when `LUX.init()` is called.
 - Fixed a bug where INP could be recorded twice for a single page view.
+- Ignore first-input entries for INP when there is a matching event entry.
 
 ### Improvements
 

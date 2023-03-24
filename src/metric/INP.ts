@@ -11,6 +11,7 @@ const MAX_INTERACTIONS = 10;
 interface Interaction {
   interactionId: number | undefined;
   duration: number;
+  startTime: number;
 }
 
 // A list of the slowest interactions
@@ -29,22 +30,28 @@ export function reset(): void {
 }
 
 export function addEntry(entry: PerformanceEventTiming): void {
-  const { duration, interactionId } = entry;
-  const existingEntry = slowestEntriesMap[interactionId!];
+  if (entry.interactionId || (entry.entryType === "first-input" && !entryExists(entry))) {
+    const { duration, startTime, interactionId } = entry;
+    const existingEntry = slowestEntriesMap[interactionId!];
 
-  if (existingEntry) {
-    existingEntry.duration = Math.max(duration, existingEntry.duration);
-  } else {
-    interactionCountEstimate++;
-    slowestEntriesMap[interactionId!] = { duration, interactionId };
-    slowestEntries.push(slowestEntriesMap[interactionId!]);
+    if (existingEntry) {
+      existingEntry.duration = Math.max(duration, existingEntry.duration);
+    } else {
+      interactionCountEstimate++;
+      slowestEntriesMap[interactionId!] = { duration, interactionId, startTime };
+      slowestEntries.push(slowestEntriesMap[interactionId!]);
+    }
+
+    // Only store the longest <MAX_INTERACTIONS> interactions
+    slowestEntries.sort((a, b) => b.duration - a.duration);
+    slowestEntries.splice(MAX_INTERACTIONS).forEach((entry) => {
+      delete slowestEntriesMap[entry.interactionId!];
+    });
   }
+}
 
-  // Only store the longest <MAX_INTERACTIONS> interactions
-  slowestEntries.sort((a, b) => b.duration - a.duration);
-  slowestEntries.splice(MAX_INTERACTIONS).forEach((entry) => {
-    delete slowestEntriesMap[entry.interactionId!];
-  });
+function entryExists(e1: PerformanceEntry): boolean {
+  return slowestEntries.some((e2) => e1.startTime === e2.startTime && e1.duration === e2.duration);
 }
 
 /**
