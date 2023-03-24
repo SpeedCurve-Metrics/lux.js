@@ -61,8 +61,11 @@ describe("LUX interaction", () => {
     await page.click("#button-with-js");
     await waitForNetworkIdle();
 
+    const mainBeacon = luxRequests.getUrl(0);
     const ixBeacon = luxRequests.getUrl(1);
 
+    expect(mainBeacon.searchParams.get("FID")).toBeNull();
+    expect(mainBeacon.searchParams.get("INP")).toBeNull();
     expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
     expect(parseInt(ixBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
   });
@@ -74,27 +77,31 @@ describe("LUX interaction", () => {
     await button.press("Enter");
     await waitForNetworkIdle();
 
+    const mainBeacon = luxRequests.getUrl(0);
     const ixBeacon = luxRequests.getUrl(1);
 
+    expect(mainBeacon.searchParams.get("FID")).toBeNull();
+    expect(mainBeacon.searchParams.get("INP")).toBeNull();
     expect(parseInt(ixBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
     expect(parseInt(ixBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
   });
 
   test("gather IX metrics in a SPA", async () => {
     const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-    await navigateTo("/interaction.html?injectScript=LUX.auto=false;");
+    await navigateTo("/interaction.html?blockFor=20&injectScript=LUX.auto=false;");
     await page.evaluate("LUX.send()");
     await page.waitForTimeout(100);
 
     await page.evaluate("LUX.init()");
     await page.waitForTimeout(20);
-    await page.click("#button-with-id");
+    await page.click("#button-with-js");
+    await waitForNetworkIdle();
     await page.evaluate("LUX.send()");
-    await page.waitForTimeout(20);
 
     await page.evaluate("LUX.init()");
     await page.waitForTimeout(20);
     await page.evaluate("LUX.send()");
+    await waitForNetworkIdle();
 
     const secondPageBeacon = luxRequests.getUrl(1);
     const thirdPageBeacon = luxRequests.getUrl(2);
@@ -103,7 +110,9 @@ describe("LUX interaction", () => {
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThan(100);
     expect(parseInt(secondPageBeacon.searchParams.get("FID"))).toBeGreaterThanOrEqual(0);
+    expect(parseInt(secondPageBeacon.searchParams.get("INP"))).toBeGreaterThanOrEqual(0);
     expect(thirdPageBeacon.searchParams.get("FID")).toBeNull();
+    expect(thirdPageBeacon.searchParams.get("INP")).toBeNull();
   });
 
   test("mousedown handler doesn't throw errors when the event target is not an Element", async () => {

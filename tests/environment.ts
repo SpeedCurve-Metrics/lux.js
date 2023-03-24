@@ -12,6 +12,10 @@ class CustomEnvironment extends PuppeteerEnvironment {
   async setup() {
     await super.setup();
 
+    this.global.window = {
+      performance: {},
+    };
+
     this.global.reportErrors = true;
     this.global.requestInterceptor = new RequestInterceptor(this.global.page);
     this.global.waitForNetworkIdle = async (idleTime = 120) => {
