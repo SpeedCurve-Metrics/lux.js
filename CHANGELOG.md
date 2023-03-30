@@ -1,6 +1,10 @@
 # lux.js changelog
 
-## 2023-??-??: v307
+## 2023-03-04: v307
+
+### New features
+
+- [Session windows](https://web.dev/evolving-cls/) have been implemented for the CLS metric. This may reduce CLS scores on long-lived pages.
 
 ### Bug fixes
 
