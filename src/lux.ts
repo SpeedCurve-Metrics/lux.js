@@ -6,6 +6,7 @@ import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
+import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import now from "./now";
 import {
@@ -73,29 +74,37 @@ LUX = (function () {
   }
   window.addEventListener("error", errorHandler);
 
-  // Most PerformanceEntry types we log an event for and add it to the global entry store.
-  const processEntry = (entry: PerformanceEntry) => {
-    PO.addEntry(entry);
+  const logEntry = (entry: PerformanceEntry) => {
     logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
+  };
+
+  // Most PerformanceEntry types we log an event for and add it to the global entry store.
+  const processAndLogEntry = (entry: PerformanceEntry) => {
+    PO.addEntry(entry);
+    logEntry(entry);
   };
 
   // Before long tasks were buffered, we added a PerformanceObserver to the lux.js snippet to capture
   // any long tasks that occurred before the full script was loaded. To deal with this, we process
   // all of the snippet long tasks, and we check for double-ups in the new PerformanceObserver.
   const snippetLongTasks = typeof window.LUX_al === "object" ? window.LUX_al : [];
-  snippetLongTasks.forEach(processEntry);
+  snippetLongTasks.forEach(processAndLogEntry);
 
   try {
     PO.observe("longtask", (entry) => {
       if (PO.ALL_ENTRIES.indexOf(entry) === -1) {
-        processEntry(entry);
+        processAndLogEntry(entry);
       }
     });
 
-    PO.observe("largest-contentful-paint", processEntry);
-    PO.observe("element", processEntry);
-    PO.observe("paint", processEntry);
-    PO.observe("layout-shift", processEntry);
+    PO.observe("largest-contentful-paint", processAndLogEntry);
+    PO.observe("element", processAndLogEntry);
+    PO.observe("paint", processAndLogEntry);
+
+    PO.observe("layout-shift", (entry) => {
+      CLS.addEntry(entry);
+      logEntry(entry);
+    });
 
     PO.observe("first-input", (entry) => {
       const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
@@ -108,12 +117,10 @@ LUX = (function () {
       INP.addEntry(entry);
     });
 
-    PO.observe("event", INP.addEntry, {
-      // TODO: Enable this once performance.interactionCount is widely supported. Right now we
-      // have to count every event to get the total interaction count so that we can estimate
-      // a high percentile value for INP.
-      // durationThreshold: 40,
-    });
+    // TODO: Add { durationThreshold: 40 } once performance.interactionCount is widely supported.
+    // Right now we have to count every event to get the total interaction count so that we can
+    // estimate a high percentile value for INP.
+    PO.observe("event", INP.addEntry);
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
@@ -647,24 +654,14 @@ LUX = (function () {
     return { count, median, max, fci };
   }
 
-  function getDCLS(): string | undefined {
+  function getCLS(): string | undefined {
     if (!("LayoutShift" in self)) {
       return undefined;
     }
 
-    let DCLS = 0;
-
-    PO.getEntries("layout-shift").forEach((entry) => {
-      if (entry.hadRecentInput) {
-        return;
-      }
-      logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
-      DCLS += entry.value;
-    });
-
-    // The DCL column in Redshift is REAL (FLOAT4) which stores a maximum
+    // The DCLS column in Redshift is REAL (FLOAT4) which stores a maximum
     // of 6 significant digits.
-    return DCLS.toFixed(6);
+    return CLS.getCLS().toFixed(6);
   }
 
   // Return the median value from an array of integers.
@@ -814,6 +811,7 @@ LUX = (function () {
     gSyncId = createSyncId();
     gUid = refreshUniqueId(gSyncId);
     PO.clearEntries();
+    CLS.reset();
     INP.reset();
     nErrors = 0;
     gFirstInputDelay = undefined;
@@ -1360,7 +1358,7 @@ LUX = (function () {
 
     const sET = elementTimingValues(); // Element Timing data
     const sCPU = cpuTimes();
-    const DCLS = getDCLS();
+    const CLS = getCLS();
     const sLuxjs = selfLoading();
     if (document.visibilityState && "visible" !== document.visibilityState) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
@@ -1415,7 +1413,7 @@ LUX = (function () {
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
-      (typeof DCLS !== "undefined" ? "&CLS=" + DCLS : "") +
+      (typeof CLS !== "undefined" ? "&CLS=" + CLS : "") +
       (typeof INP !== "undefined" ? "&INP=" + INP : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
