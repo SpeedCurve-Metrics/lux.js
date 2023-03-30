@@ -8,18 +8,26 @@
 </head>
 <body>
     <h1>Layout shift test page</h1>
+    <div id="container"></div>
+    <p>This is text that will be shifted by the images.</p>
     <script>
-        function createLayoutShifts(count) {
-            for (let i = 1; i < count; i++) {
+        const container = document.getElementById("container");
+
+        function createLayoutShifts(count = 20) {
+            for (let i = 0; i < count; i++) {
                 const el = document.createElement("img");
-                el.src = `red.png?delay=${i * count}`;
+                el.src = `red.png?delay=${i * 10}&ts=${performance.now()}`;
                 el.width = i * 30;
 
-                document.body.appendChild(el);
+                container.appendChild(el);
             }
         }
 
-        createLayoutShifts(20);
+        function clearContainer() {
+            container.innerHTML = "";
+        }
+
+        createLayoutShifts();
     </script>
 </body>
 </html>
