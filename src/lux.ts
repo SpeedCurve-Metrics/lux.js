@@ -74,32 +74,36 @@ LUX = (function () {
   }
   window.addEventListener("error", errorHandler);
 
-  // Most PerformanceEntry types we log an event for and add it to the global entry store.
-  const processEntry = (entry: PerformanceEntry) => {
-    PO.addEntry(entry);
+  const logEntry = (entry: PerformanceEntry) => {
     logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
+  };
+
+  // Most PerformanceEntry types we log an event for and add it to the global entry store.
+  const processAndLogEntry = (entry: PerformanceEntry) => {
+    PO.addEntry(entry);
+    logEntry(entry);
   };
 
   // Before long tasks were buffered, we added a PerformanceObserver to the lux.js snippet to capture
   // any long tasks that occurred before the full script was loaded. To deal with this, we process
   // all of the snippet long tasks, and we check for double-ups in the new PerformanceObserver.
   const snippetLongTasks = typeof window.LUX_al === "object" ? window.LUX_al : [];
-  snippetLongTasks.forEach(processEntry);
+  snippetLongTasks.forEach(processAndLogEntry);
 
   try {
     PO.observe("longtask", (entry) => {
       if (PO.ALL_ENTRIES.indexOf(entry) === -1) {
-        processEntry(entry);
+        processAndLogEntry(entry);
       }
     });
 
-    PO.observe("largest-contentful-paint", processEntry);
-    PO.observe("element", processEntry);
-    PO.observe("paint", processEntry);
+    PO.observe("largest-contentful-paint", processAndLogEntry);
+    PO.observe("element", processAndLogEntry);
+    PO.observe("paint", processAndLogEntry);
 
     PO.observe("layout-shift", (entry) => {
-      processEntry(entry);
       CLS.addEntry(entry);
+      logEntry(entry);
     });
 
     PO.observe("first-input", (entry) => {
@@ -113,12 +117,10 @@ LUX = (function () {
       INP.addEntry(entry);
     });
 
-    PO.observe("event", INP.addEntry, {
-      // TODO: Enable this once performance.interactionCount is widely supported. Right now we
-      // have to count every event to get the total interaction count so that we can estimate
-      // a high percentile value for INP.
-      // durationThreshold: 40,
-    });
+    // TODO: Add { durationThreshold: 40 } once performance.interactionCount is widely supported.
+    // Right now we have to count every event to get the total interaction count so that we can
+    // estimate a high percentile value for INP.
+    PO.observe("event", INP.addEntry);
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
