@@ -652,7 +652,7 @@ LUX = (function () {
     return { count, median, max, fci };
   }
 
-  function getDCLS(): string | undefined {
+  function getCLS(): string | undefined {
     if (!("LayoutShift" in self)) {
       return undefined;
     }
@@ -1355,7 +1355,7 @@ LUX = (function () {
 
     const sET = elementTimingValues(); // Element Timing data
     const sCPU = cpuTimes();
-    const DCLS = getDCLS();
+    const CLS = getCLS();
     const sLuxjs = selfLoading();
     if (document.visibilityState && "visible" !== document.visibilityState) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
@@ -1410,7 +1410,7 @@ LUX = (function () {
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
-      (typeof DCLS !== "undefined" ? "&CLS=" + DCLS : "") +
+      (typeof CLS !== "undefined" ? "&CLS=" + CLS : "") +
       (typeof INP !== "undefined" ? "&INP=" + INP : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
