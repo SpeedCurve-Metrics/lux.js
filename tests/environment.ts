@@ -1,11 +1,13 @@
 import PuppeteerEnvironment from "jest-environment-puppeteer";
-import { HTTPResponse, PuppeteerLifeCycleEvent } from "puppeteer";
+import { HTTPResponse, Page, PuppeteerLifeCycleEvent } from "puppeteer";
 import { LuxGlobal } from "../src/global";
 import RequestInterceptor from "./request-interceptor";
 declare global {
   const LUX: LuxGlobal;
+  const reportErrors: boolean;
   const requestInterceptor: RequestInterceptor;
   const navigateTo: (url: string, waitUntil?: PuppeteerLifeCycleEvent) => Promise<HTTPResponse>;
+  const waitForNetworkIdle: (idleTime?: number) => Promise<void>;
 }
 
 class CustomEnvironment extends PuppeteerEnvironment {
