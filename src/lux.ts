@@ -809,6 +809,7 @@ LUX = (function () {
     gSyncId = createSyncId();
     gUid = refreshUniqueId(gSyncId);
     PO.clearEntries();
+    CLS.reset();
     INP.reset();
     nErrors = 0;
     gFirstInputDelay = undefined;

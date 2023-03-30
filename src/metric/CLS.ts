@@ -11,13 +11,17 @@ export function addEntry(entry: LayoutShift): void {
       (entry.startTime - latestEntry.startTime >= 1000 ||
         entry.startTime - firstEntry.startTime >= 5000)
     ) {
-      sessionValue = 0;
-      sessionEntries = [];
+      reset();
     }
 
     sessionValue += entry.value;
     sessionEntries.push(entry);
   }
+}
+
+export function reset(): void {
+  sessionValue = 0;
+  sessionEntries = [];
 }
 
 export function getCLS(): number {
