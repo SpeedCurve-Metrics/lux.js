@@ -1801,7 +1801,7 @@ LUX = (function () {
     sendBeaconAfterMinimumMeasureTime();
   }
 
-  // Add the unload handlers for auto mode, or when LUX.measureUntil is "pagehidden"
+  // Add the unload handlers when sendBeaconOnPageHidden is enabled
   if (globalConfig.sendBeaconOnPageHidden) {
     _addUnloadHandlers();
   }

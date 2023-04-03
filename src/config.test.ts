@@ -7,12 +7,10 @@ describe("Config.fromObject()", () => {
     expect(config.auto).toEqual(true);
     expect(config.beaconUrl).toEqual("https://lux.speedcurve.com/lux/");
     expect(config.customerid).toBeUndefined();
-    expect(config.debug).toEqual(false);
     expect(config.jspagelabel).toBeUndefined();
     expect(config.label).toBeUndefined();
     expect(config.maxErrors).toEqual(5);
     expect(config.maxMeasureTime).toEqual(60_000);
-    expect(config.measureUntil).toEqual("onload");
     expect(config.minMeasureTime).toEqual(0);
     expect(config.samplerate).toEqual(100);
     expect(config.sendBeaconOnPageHidden).toEqual(true);
