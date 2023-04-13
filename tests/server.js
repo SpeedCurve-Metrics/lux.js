@@ -4,8 +4,6 @@ const { readFileSync } = require("fs");
 const path = require("path");
 const url = require("url");
 
-const SERVER_PORT = 3000;
-
 const testPagesDir = path.join(__dirname, "test-pages");
 const distDir = path.join(__dirname, "..", "dist");
 
@@ -18,6 +16,8 @@ const server = createServer(async (req, res) => {
   const inlineSnippet = readFileSync(path.join(distDir, "lux-snippet.js"));
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
+
+  console.log(`[${req.method}] ${parsedUrl.pathname}`);
 
   const filePath = path.join(testPagesDir, pathname);
   let contentType = "text/html";
@@ -86,4 +86,6 @@ const server = createServer(async (req, res) => {
   }
 });
 
+const SERVER_PORT = process.env.PORT || 3000;
 server.listen(SERVER_PORT);
+console.log(`Server listening on port ${SERVER_PORT}`);
