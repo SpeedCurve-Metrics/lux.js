@@ -5,6 +5,7 @@ type PerformanceEntryMap = {
   "first-input": PerformanceEventTiming;
   "largest-contentful-paint": LargestContentfulPaint;
   "layout-shift": LayoutShift;
+  navigation: PerformanceNavigationTiming;
   paint: PerformancePaintTiming;
 };
 
