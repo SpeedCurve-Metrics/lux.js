@@ -1,32 +1,35 @@
-import { parseUserTiming } from "../helpers/lux";
+import { test, expect } from "@playwright/test";
+import { getSearchParam, parseUserTiming } from "../helpers/lux";
+import RequestInterceptor from "../request-interceptor";
 
-describe("LUX beacon request", () => {
-  test("beacon is sent with a GET request", async () => {
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+test.describe("LUX beacon request", () => {
+  test("beacon is sent with a GET request", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
 
-    await navigateTo("/default.html");
+    await page.goto("/default.html", { waitUntil: "networkidle" });
 
     expect(luxRequests.count()).toEqual(1);
-    expect(luxRequests.get(0).method()).toEqual("GET");
+    expect(luxRequests.get(0)!.method()).toEqual("GET");
   });
 
-  test("beacon is split into multiple requests when there are too many user timing entries", async () => {
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-
-    await navigateTo("/default.html?injectScript=LUX.auto=false;");
+  test("beacon is split into multiple requests when there are too many user timing entries", async ({
+    page,
+  }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await page.evaluate(() => {
       new Array(30).fill(null).forEach((_, i) => {
         performance.mark(`ut-mark-${i}`);
       });
     });
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     expect(luxRequests.count()).toEqual(2);
 
-    const beacon1 = luxRequests.getUrl(0);
-    const beacon2 = luxRequests.getUrl(1);
-    const UT1 = parseUserTiming(beacon1.searchParams.get("UT"));
-    const UT2 = parseUserTiming(beacon2.searchParams.get("UT"));
+    const beacon1 = luxRequests.getUrl(0)!;
+    const beacon2 = luxRequests.getUrl(1)!;
+    const UT1 = parseUserTiming(getSearchParam(beacon1, "UT"));
+    const UT2 = parseUserTiming(getSearchParam(beacon2, "UT"));
 
     // Test that the number of user timing entries in each beacon is what we expect
     expect(Object.keys(UT1).length).toEqual(20);
@@ -38,68 +41,77 @@ describe("LUX beacon request", () => {
     expect(beacon2.searchParams.get("PN")).toEqual("/default.html");
   });
 
-  test("maximum user timing entries is configurable via LUX.maxBeaconUTEntries", async () => {
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+  test("maximum user timing entries is configurable via LUX.maxBeaconUTEntries", async ({
+    page,
+  }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.maxBeaconUTEntries = 10;
 
-    await navigateTo("/default.html?injectScript=LUX.auto=false;");
-    await page.evaluate(() => {
-      LUX.maxBeaconUTEntries = 10;
+        new Array(30).fill(null).forEach((_, i) => {
+          performance.mark(`ut-mark-${i}`);
+        });
 
-      new Array(30).fill(null).forEach((_, i) => {
-        performance.mark(`ut-mark-${i}`);
-      });
-    });
-    await page.evaluate("LUX.send()");
+        LUX.send();
+      })
+    );
 
     expect(luxRequests.count()).toEqual(3);
 
     luxRequests.reset();
-    await page.evaluate("LUX.init()");
-    await page.evaluate(() => {
-      LUX.maxBeaconUTEntries = 50;
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        LUX.maxBeaconUTEntries = 50;
 
-      new Array(30).fill(null).forEach((_, i) => {
-        performance.mark(`ut-mark-${i}`);
-      });
-    });
-    await page.evaluate("LUX.send()");
+        new Array(30).fill(null).forEach((_, i) => {
+          performance.mark(`ut-mark-${i}`);
+        });
+
+        LUX.send();
+      })
+    );
 
     expect(luxRequests.count()).toEqual(1);
   });
 
-  test("beacon is split into multiple requests when the URL is too long", async () => {
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+  test("beacon is split into multiple requests when the URL is too long", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    page.on("console", (msg) => console.log("PAGE LOG:", msg.text()));
 
     // The URL length limit is about 8KB. We create multiple long UT marks to go over the limit
     const longString = new Array(3500).fill("A").join("");
 
-    await navigateTo("/default.html?injectScript=LUX.auto=false;");
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await page.evaluate((longString) => {
-      performance.mark(`${longString}-1`);
-      performance.mark(`${longString}-2`);
+      performance.mark(`${longString}-1`, { startTime: performance.now() - 20 });
+      performance.mark(`${longString}-2`, { startTime: performance.now() - 15 });
     }, longString);
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     expect(luxRequests.count()).toEqual(1);
 
-    const beacon = luxRequests.getUrl(0);
+    const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.toString()).toContain(`${longString}-1`);
     expect(beacon.toString()).toContain(`${longString}-2`);
     luxRequests.reset();
 
-    await page.evaluate("LUX.init()");
+    await page.evaluate(() => LUX.init());
+    await page.waitForTimeout(50);
     await page.evaluate((longString) => {
-      performance.mark(`${longString}-1`);
-      performance.mark(`${longString}-2`);
-      performance.mark(`${longString}-3`);
+      performance.mark(`${longString}-1`, { startTime: performance.now() - 20 });
+      performance.mark(`${longString}-2`, { startTime: performance.now() - 15 });
+      performance.mark(`${longString}-3`, { startTime: performance.now() - 10 });
     }, longString);
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     expect(luxRequests.count()).toEqual(2);
 
-    const beacon1 = luxRequests.getUrl(0);
-    const beacon2 = luxRequests.getUrl(1);
+    const beacon1 = luxRequests.getUrl(0)!;
+    const beacon2 = luxRequests.getUrl(1)!;
 
     expect(beacon1.toString()).toContain(`${longString}-1`);
     expect(beacon1.toString()).toContain(`${longString}-2`);
@@ -109,18 +121,19 @@ describe("LUX beacon request", () => {
     expect(beacon2.toString()).toContain(`${longString}-3`);
   });
 
-  test("at least one user timing entry is sent even when it goes over the URL length limit", async () => {
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-
+  test("at least one user timing entry is sent even when it goes over the URL length limit", async ({
+    page,
+  }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     const longString = new Array(9000).fill("A").join("");
 
-    await navigateTo("/default.html?injectScript=LUX.auto=false;");
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await page.evaluate(`performance.mark("${longString}")`);
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     expect(luxRequests.count()).toEqual(1);
 
-    const beacon = luxRequests.getUrl(0);
+    const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.toString()).toContain(longString);
   });

@@ -1,17 +1,26 @@
+import { test, expect } from "@playwright/test";
 import { END_MARK } from "../../src/constants";
-import { getNavTiming, getPerformanceTimingMs, parseUserTiming } from "../helpers/lux";
+import {
+  getNavTiming,
+  getPerformanceTimingMs,
+  getSearchParam,
+  parseUserTiming,
+} from "../helpers/lux";
+import RequestInterceptor from "../request-interceptor";
+import { referenceErrorMessage } from "../helpers/browsers";
 
-describe("LUX inline snippet", () => {
-  test("LUX.markLoadTime works before the script is loaded", async () => {
-    const beaconRequests = requestInterceptor.createRequestMatcher("/beacon/");
+test.describe("LUX inline snippet", () => {
+  test("LUX.markLoadTime works before the script is loaded", async ({ page }) => {
+    const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
 
-    await navigateTo(
-      "/default.html?injectScript=window.loadTime=performance.now();LUX.markLoadTime();"
+    await page.goto(
+      "/default.html?injectScript=window.loadTime=performance.now();LUX.markLoadTime();",
+      { waitUntil: "networkidle" }
     );
 
-    const beacon = beaconRequests.getUrl(0);
+    const beacon = beaconRequests.getUrl(0)!;
     const loadEventStart = getNavTiming(beacon, "le") || 0;
-    const loadTime = (await page.evaluate("window.loadTime")) as number;
+    const loadTime = await page.evaluate(() => window.loadTime as number);
     const loadTimeMark = await page.evaluate(
       (mark) => performance.getEntriesByName(mark)[0].startTime,
       END_MARK
@@ -32,31 +41,32 @@ describe("LUX inline snippet", () => {
     expect(loadTimeMark).toBeLessThan(loadTime + 5);
   });
 
-  test("LUX.mark works before the script is loaded", async () => {
-    const beaconRequests = requestInterceptor.createRequestMatcher("/beacon/");
+  test("LUX.mark works before the script is loaded", async ({ page }) => {
+    const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
 
-    await navigateTo(
+    await page.goto(
       `/default.html?injectScript=${[
         "performance.mark = undefined",
         "window.markTime = performance.now()",
         "LUX.mark('mark-1')",
         "LUX.mark('mark-2', { startTime: 200 })",
-      ].join(";")}`
+      ].join(";")}`,
+      { waitUntil: "networkidle" }
     );
 
-    const beacon = beaconRequests.getUrl(0);
-    const markTime = (await page.evaluate("window.markTime")) as number;
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
+    const beacon = beaconRequests.getUrl(0)!;
+    const markTime = (await page.evaluate(() => window.markTime)) as number;
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["mark-1"].startTime).toBeGreaterThanOrEqual(Math.floor(markTime));
     expect(UT["mark-1"].startTime).toBeLessThan(markTime + 5);
     expect(UT["mark-2"].startTime).toEqual(200);
   });
 
-  test("LUX.measure works before the script is loaded", async () => {
-    const beaconRequests = requestInterceptor.createRequestMatcher("/beacon/");
+  test("LUX.measure works before the script is loaded", async ({ page }) => {
+    const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
 
-    await navigateTo(
+    await page.goto(
       `/default.html?injectScript=${[
         "performance.measure = undefined",
         "window.markTime = performance.now()",
@@ -68,13 +78,14 @@ describe("LUX inline snippet", () => {
         "window.beforeMeasureTime = performance.now()",
         "LUX.measure('measure-5', { start: 5 })",
         "LUX.measure('measure-6', { start: 100, duration: 200 })",
-      ].join(";")}`
+      ].join(";")}`,
+      { waitUntil: "networkidle" }
     );
 
-    const beacon = beaconRequests.getUrl(0);
-    const beforeMeasureTime = (await page.evaluate("window.beforeMeasureTime")) as number;
+    const beacon = beaconRequests.getUrl(0)!;
+    const beforeMeasureTime = await page.evaluate(() => window.beforeMeasureTime as number);
     const connectEnd = await getPerformanceTimingMs(page, "connectEnd");
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["measure-1"].startTime).toEqual(UT["mark-1"].startTime);
 
@@ -95,15 +106,15 @@ describe("LUX inline snippet", () => {
     expect(UT["measure-6"].duration).toEqual(200);
   });
 
-  test("errors that occur before the lux.js script are tracked by the snippet", async () => {
-    const errorRequests = requestInterceptor.createRequestMatcher("/error/");
+  test("errors that occur before the lux.js script are tracked by the snippet", async ({
+    page,
+    browserName,
+  }) => {
+    const errorRequests = new RequestInterceptor(page).createRequestMatcher("/error/");
+    await page.goto("/default.html?injectScript=snippet();", { waitUntil: "networkidle" });
 
-    reportErrors = false;
-    await navigateTo("/default.html?injectScript=snippet();");
-    reportErrors = true;
-
-    expect(errorRequests.getUrl(0).searchParams.get("msg")).toContain(
-      "ReferenceError: snippet is not defined"
+    expect(getSearchParam(errorRequests.getUrl(0)!, "msg")).toContain(
+      referenceErrorMessage(browserName, "snippet")
     );
   });
 });

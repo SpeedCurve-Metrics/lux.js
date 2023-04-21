@@ -1,232 +1,296 @@
+import { test, expect } from "@playwright/test";
 import Flags from "../../src/flags";
 import { hasFlag } from "../helpers/lux";
+import RequestInterceptor from "../request-interceptor";
 
-describe("LUX page labels", () => {
-  describe("in auto mode", () => {
-    test("no custom label set", async () => {
-      await navigateTo("/default.html");
-      const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-      const beacon = luxRequests.getUrl(0);
+test.describe("LUX page labels in auto mode", () => {
+  test("no custom label set", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html", { waitUntil: "networkidle" });
+    const beacon = luxRequests.getUrl(0)!;
 
-      expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
-      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(true);
-      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+    expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
+    expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(true);
+    expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+  });
+
+  test("using a custom label", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.label='Custom Label';", {
+      waitUntil: "networkidle",
     });
+    const beacon = luxRequests.getUrl(0)!;
 
-    test("using a custom label", async () => {
-      await navigateTo("/default.html?injectScript=LUX.label='Custom Label';");
-      const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-      const beacon = luxRequests.getUrl(0);
+    expect(beacon.searchParams.get("l")).toEqual("Custom Label");
+    expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(true);
+    expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+  });
 
-      expect(beacon.searchParams.get("l")).toEqual("Custom Label");
-      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(true);
-      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
-    });
+  test("custom label is null", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.label=null;", { waitUntil: "networkidle" });
+    const beacon = luxRequests.getUrl(0)!;
 
-    test("custom label is null", async () => {
-      await navigateTo("/default.html?injectScript=LUX.label=null;");
-      const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-      const beacon = luxRequests.getUrl(0);
+    expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
+    expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(true);
+    expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+  });
 
-      expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
-      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(true);
-      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
-    });
+  test("using a pagegroup label", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
+      "/default.html?injectScript=LUX.label=null;LUX.pagegroups={'Pagegroup':['localhost/default.html']};",
+      { waitUntil: "networkidle" }
+    );
+    const beacon = luxRequests.getUrl(0)!;
 
-    test("using a pagegroup label", async () => {
-      await navigateTo(
-        "/default.html?injectScript=LUX.label=null;LUX.pagegroups={'Pagegroup':['localhost/default.html']};"
-      );
-      const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-      const beacon = luxRequests.getUrl(0);
+    expect(beacon.searchParams.get("l")).toEqual("Pagegroup");
+    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(true);
+    expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
+  });
 
-      expect(beacon.searchParams.get("l")).toEqual("Pagegroup");
-      expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(true);
-      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
-    });
+  test("LUX.label takes priority over pagegroup label", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
+      "/default.html?injectScript=LUX.pagegroups={'Pagegroup':['localhost/default.html']};LUX.label='custom label';",
+      { waitUntil: "networkidle" }
+    );
+    const beacon = luxRequests.getUrl(0)!;
 
-    test("LUX.label takes priority over pagegroup label", async () => {
-      await navigateTo(
-        "/default.html?injectScript=LUX.pagegroups={'Pagegroup':['localhost/default.html']};LUX.label='custom label';"
-      );
-      const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-      const beacon = luxRequests.getUrl(0);
+    expect(beacon.searchParams.get("l")).toEqual("custom label");
+    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(true);
+    expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
+  });
+});
 
-      expect(beacon.searchParams.get("l")).toEqual("custom label");
-      expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(true);
-      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
+test.describe("LUX page labels in a SPA", () => {
+  test("page label can be changed between SPA page loads", async ({ page }) => {
+    let beacon;
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.label = "First Label";
+        LUX.send();
+      })
+    );
+
+    beacon = luxRequests.getUrl(0)!;
+    expect(beacon.searchParams.get("l")).toEqual("First Label");
+
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        LUX.label = "Second Label";
+        LUX.send();
+      })
+    );
+
+    beacon = luxRequests.getUrl(1)!;
+    expect(beacon.searchParams.get("l")).toEqual("Second Label");
+  });
+
+  test("default page label changes when document.title changes", async ({ page }) => {
+    let beacon;
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+
+    beacon = luxRequests.getUrl(0)!;
+    expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
+
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        document.title = "New Document Title";
+        LUX.send();
+      })
+    );
+
+    beacon = luxRequests.getUrl(1)!;
+    expect(beacon.searchParams.get("l")).toEqual("New Document Title");
+  });
+});
+
+test.describe("LUX JS page label", () => {
+  let luxRequests;
+
+  test.beforeEach(async ({ page }) => {
+    luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
+      "/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';",
+      { waitUntil: "networkidle" }
+    );
+
+    await page.evaluate(() => {
+      window.config = {
+        page: [
+          {
+            name: "default",
+          },
+        ],
+      };
     });
   });
 
-  describe("in a SPA", () => {
-    test("page label can be changed between SPA page loads", async () => {
-      let beacon;
-      const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+  test("can be taken from a global JS variable", async ({ page }) => {
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        window.config.page[0].name = "JS Label";
+        LUX.send();
+      })
+    );
 
-      await navigateTo("/default.html?injectScript=LUX.auto=false;");
-      await page.evaluate("LUX.label = 'First Label'");
-      await page.evaluate("LUX.send()");
+    const beacon = luxRequests.getUrl(0)!;
+    expect(beacon.searchParams.get("l")).toEqual("JS Label");
+    expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(true);
+    expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
 
-      beacon = luxRequests.getUrl(0);
-      expect(beacon.searchParams.get("l")).toEqual("First Label");
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        window.config.page[0].name = "Another JS Label";
+        LUX.send();
+      })
+    );
 
-      await page.evaluate("LUX.init()");
-      await page.evaluate("LUX.label = 'Second Label'");
-      await page.evaluate("LUX.send()");
-
-      beacon = luxRequests.getUrl(1);
-      expect(beacon.searchParams.get("l")).toEqual("Second Label");
-    });
-
-    test("default page label changes when document.title changes", async () => {
-      let beacon;
-      const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-
-      await navigateTo("/default.html?injectScript=LUX.auto=false;");
-      await page.evaluate("LUX.send()");
-
-      beacon = luxRequests.getUrl(0);
-      expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
-
-      await page.evaluate("LUX.init()");
-      await page.evaluate("document.title = 'New Document Title'");
-      await page.evaluate("LUX.send()");
-
-      beacon = luxRequests.getUrl(1);
-      expect(beacon.searchParams.get("l")).toEqual("New Document Title");
-    });
+    expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("Another JS Label");
   });
 
-  describe("LUX JS page label", () => {
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+  test("the variable can be changed on the fly", async ({ page }) => {
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        window.config.page[0].name = "First JS Label";
+        LUX.send();
+      })
+    );
 
-    beforeEach(async () => {
-      luxRequests.reset();
+    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("First JS Label");
 
-      await page.evaluate(() => {
-        window.config = {
-          page: [
-            {
-              name: "default",
-            },
-          ],
-        };
-      });
-    });
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        LUX.jspagelabel = "window.config.page[0].label";
+        window.config.page[0].label = "Different Variable Label";
+        LUX.send();
+      })
+    );
 
-    beforeAll(async () => {
-      await navigateTo(
-        "/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';"
-      );
-    });
+    expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("Different Variable Label");
 
-    test("can be taken from a global JS variable", async () => {
-      await page.evaluate("LUX.init()");
-      await page.evaluate("window.config.page[0].name = 'JS Label'");
-      await page.evaluate("LUX.send()");
+    // Restore jspagelabel to previous state
+    await page.evaluate(() => (LUX.jspagelabel = "window.config.page[0].name"));
+  });
 
-      const beacon = luxRequests.getUrl(0);
-      expect(beacon.searchParams.get("l")).toEqual("JS Label");
-      expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(true);
-      expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
-      expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
+  test("LUX.label takes priority over JS page label", async ({ page }) => {
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        LUX.label = "custom label";
+        LUX.send();
+      })
+    );
 
-      await page.evaluate("LUX.init()");
-      await page.evaluate("window.config.page[0].name = 'Another JS Label'");
-      await page.evaluate("LUX.send()");
+    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("custom label");
 
-      expect(luxRequests.getUrl(1).searchParams.get("l")).toEqual("Another JS Label");
-    });
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        delete LUX.label;
+        window.config.page[0].name = "JS Label";
+        LUX.send();
+      })
+    );
 
-    test("the variable can be changed on the fly", async () => {
-      await page.evaluate("LUX.init()");
-      await page.evaluate("window.config.page[0].name = 'First JS Label'");
-      await page.evaluate("LUX.send()");
+    expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("JS Label");
+  });
 
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("First JS Label");
+  test("LUX.pagegroups takes priority over JS page label", async ({ page }) => {
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        LUX.pagegroups = { Pagegroup: ["localhost/default.html"] };
+        LUX.send();
+      })
+    );
 
-      await page.evaluate("LUX.init()");
-      await page.evaluate("LUX.jspagelabel = 'window.config.page[0].label'");
-      await page.evaluate("window.config.page[0].label = 'Different Variable Label'");
-      await page.evaluate("LUX.send()");
+    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("Pagegroup");
 
-      expect(luxRequests.getUrl(1).searchParams.get("l")).toEqual("Different Variable Label");
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        delete LUX.pagegroups;
+        window.config.page[0].name = "JS Label";
+        LUX.send();
+      })
+    );
 
-      // Restore jspagelabel to previous state
-      await page.evaluate("LUX.jspagelabel = 'window.config.page[0].name'");
-    });
+    expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("JS Label");
+  });
 
-    test("LUX.label takes priority over JS page label", async () => {
-      await page.evaluate("LUX.init()");
-      await page.evaluate("LUX.label = 'custom label'");
-      await page.evaluate("LUX.send()");
+  test("falls back to JS variable when pagegroup doesn't match", async ({ page }) => {
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        window.config.page[0].name = "JS Label";
+        LUX.pagegroups = { Pagegroup: ["/not-this-page/*"] };
+        LUX.send();
+      })
+    );
 
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("custom label");
+    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("JS Label");
+  });
 
-      await page.evaluate("LUX.init()");
-      await page.evaluate("delete LUX.label");
-      await page.evaluate("window.config.page[0].name = 'JS Label'");
-      await page.evaluate("LUX.send()");
+  test("falls back to document title when JS variable doesn't eval", async ({ page }) => {
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        window.config = {};
+        LUX.send();
+      })
+    );
 
-      expect(luxRequests.getUrl(1).searchParams.get("l")).toEqual("JS Label");
-    });
+    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");
+  });
 
-    test("LUX.pagegroups takes priority over JS page label", async () => {
-      await page.evaluate("LUX.init()");
-      await page.evaluate("LUX.pagegroups = {'Pagegroup':['localhost/default.html']}");
-      await page.evaluate("LUX.send()");
+  test("falls back to document title when JS variable evaluates to a falsey value", async ({
+    page,
+  }) => {
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        window.config.page[0].name = "";
+        LUX.send();
+      })
+    );
 
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("Pagegroup");
+    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");
+  });
 
-      await page.evaluate("LUX.init()");
-      await page.evaluate("delete LUX.pagegroups");
-      await page.evaluate("window.config.page[0].name = 'JS Label'");
-      await page.evaluate("LUX.send()");
+  test("internal LUX variables can't be accessed", async ({ page }) => {
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        LUX.jspagelabel = "_getPageLabel.toString()";
+        LUX.send();
+      })
+    );
 
-      expect(luxRequests.getUrl(1).searchParams.get("l")).toEqual("JS Label");
-    });
-
-    test("falls back to JS variable when pagegroup doesn't match", async () => {
-      await page.evaluate("LUX.init()");
-      await page.evaluate("window.config.page[0].name = 'JS Label'");
-      await page.evaluate("LUX.pagegroups = {'Pagegroup':['/not-this-page/*']}");
-      await page.evaluate("LUX.send()");
-
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("JS Label");
-    });
-
-    test("falls back to document title when JS variable doesn't eval", async () => {
-      await page.evaluate("LUX.init()");
-      await page.evaluate("window.config = {}");
-      await page.evaluate("LUX.send()");
-
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("LUX default test page");
-    });
-
-    test("falls back to document title when JS variable evaluates to a falsey value", async () => {
-      await page.evaluate("LUX.init()");
-      await page.evaluate("window.config.page[0].name = ''");
-      await page.evaluate("LUX.send()");
-
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("LUX default test page");
-    });
-
-    test("internal LUX variables can't be accessed", async () => {
-      await page.evaluate("LUX.init()");
-      await page.evaluate("LUX.jspagelabel = '_getPageLabel.toString()'");
-      await page.evaluate("LUX.send()");
-
-      expect(luxRequests.getUrl(0).searchParams.get("l")).toEqual("LUX default test page");
-    });
+    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");
   });
 });

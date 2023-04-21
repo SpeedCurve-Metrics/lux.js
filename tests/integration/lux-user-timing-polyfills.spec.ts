@@ -1,21 +1,24 @@
-import { getElapsedMs, parseUserTiming } from "../helpers/lux";
+import { test, expect } from "@playwright/test";
+import { getElapsedMs, getSearchParam, parseUserTiming } from "../helpers/lux";
+import RequestInterceptor from "../request-interceptor";
 
-describe("LUX user timing polyfills", () => {
-  const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
-
-  beforeEach(async () => {
-    luxRequests.reset();
-  });
-
-  test("LUX.mark(name)", async () => {
-    await navigateTo("/default.html?injectScript=LUX.auto=false;performance.mark=undefined;");
+test.describe("LUX user timing polyfills", () => {
+  test("LUX.mark(name)", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.auto=false;performance.mark=undefined;", {
+      waitUntil: "networkidle",
+    });
     const timeBeforeMark = await getElapsedMs(page);
-    await page.evaluate("LUX.mark('test-mark')");
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.mark("test-mark");
+        LUX.send();
+      })
+    );
 
-    const beacon = luxRequests.getUrl(0);
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
-    const nativeEntries = await page.evaluate("performance.getEntriesByName('test-mark')");
+    const beacon = luxRequests.getUrl(0)!;
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
+    const nativeEntries = await page.evaluate(() => performance.getEntriesByName("test-mark"));
 
     // The mark and measure values will vary from test to test, so there is ~10ms margin of error.
     // To test the mark, we get the current timestamp just before creating the mark.
@@ -26,62 +29,88 @@ describe("LUX user timing polyfills", () => {
     expect(nativeEntries.length).toEqual(0);
   });
 
-  test("LUX.mark(name, options)", async () => {
-    await navigateTo("/default.html?injectScript=LUX.auto=false;performance.mark=undefined;");
-    await page.evaluate("LUX.mark('test-mark', { startTime: 10 })");
-    await page.evaluate("LUX.send()");
+  test("LUX.mark(name, options)", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.auto=false;performance.mark=undefined;", {
+      waitUntil: "networkidle",
+    });
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.mark("test-mark", { startTime: 10 });
+        LUX.send();
+      })
+    );
 
-    const beacon = luxRequests.getUrl(0);
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
-    const nativeEntries = await page.evaluate("performance.getEntriesByName('test-mark')");
+    const beacon = luxRequests.getUrl(0)!;
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
+    const nativeEntries = await page.evaluate(() => performance.getEntriesByName("test-mark"));
 
     expect(UT["test-mark"].startTime).toEqual(10);
     expect(nativeEntries.length).toEqual(0);
   });
 
-  test("LUX.measure(name)", async () => {
-    await navigateTo("/default.html?injectScript=LUX.auto=false;performance.measure=undefined;");
+  test("LUX.measure(name)", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.auto=false;performance.measure=undefined;", {
+      waitUntil: "networkidle",
+    });
     const timeBeforeMeasure = await getElapsedMs(page);
-    await page.evaluate("LUX.measure('test-measure')");
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.measure("test-measure");
+        LUX.send();
+      })
+    );
 
-    const beacon = luxRequests.getUrl(0);
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
+    const beacon = luxRequests.getUrl(0)!;
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-measure"].startTime).toEqual(0);
     expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(timeBeforeMeasure);
     expect(UT["test-measure"].duration).toBeLessThan(timeBeforeMeasure + 10);
   });
 
-  test("LUX.measure(name, startMark)", async () => {
-    await navigateTo(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
+  test("LUX.measure(name, startMark)", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
+      { waitUntil: "networkidle" }
     );
-    await page.evaluate("LUX.mark('start-mark')");
+    await page.evaluate(() => LUX.mark("start-mark"));
     await page.waitForTimeout(30);
-    await page.evaluate("LUX.measure('test-measure', 'start-mark')");
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.measure("test-measure", "start-mark");
+        LUX.send();
+      })
+    );
 
-    const beacon = luxRequests.getUrl(0);
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
+    const beacon = luxRequests.getUrl(0)!;
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-measure"].startTime).toEqual(UT["start-mark"].startTime);
     expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(30);
     expect(UT["test-measure"].duration).toBeLessThan(40);
   });
 
-  test("LUX.measure(name, startMark, endMark)", async () => {
-    await navigateTo(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
+  test("LUX.measure(name, startMark, endMark)", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
+      { waitUntil: "networkidle" }
     );
-    await page.evaluate("LUX.mark('start-mark')");
+    await page.evaluate(() => LUX.mark("start-mark"));
     await page.waitForTimeout(30);
-    await page.evaluate("LUX.mark('end-mark')");
-    await page.evaluate("LUX.measure('test-measure', 'start-mark', 'end-mark')");
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.mark("end-mark");
+        LUX.measure("test-measure", "start-mark", "end-mark");
+        LUX.send();
+      })
+    );
 
-    const beacon = luxRequests.getUrl(0);
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
+    const beacon = luxRequests.getUrl(0)!;
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-measure"].startTime).toEqual(UT["start-mark"].startTime);
     expect(UT["test-measure"].duration).toEqual(
@@ -89,54 +118,64 @@ describe("LUX user timing polyfills", () => {
     );
   });
 
-  test("LUX.measure(name, undefined, endMark)", async () => {
-    await navigateTo(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
+  test("LUX.measure(name, undefined, endMark)", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
+      { waitUntil: "networkidle" }
     );
-    await page.evaluate("LUX.mark('end-mark')");
-    await page.evaluate("LUX.measure('test-measure', undefined, 'end-mark')");
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.mark("end-mark");
+        LUX.measure("test-measure", undefined, "end-mark");
+        LUX.send();
+      })
+    );
 
-    const beacon = luxRequests.getUrl(0);
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
+    const beacon = luxRequests.getUrl(0)!;
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-measure"].startTime).toEqual(0);
     expect(UT["test-measure"].duration).toEqual(UT["end-mark"].startTime);
   });
 
-  test("LUX.measure(name, options)", async () => {
-    await navigateTo(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
+  test("LUX.measure(name, options)", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
+      { waitUntil: "networkidle" }
     );
-    await page.evaluate("LUX.mark('start-mark')");
+    await page.evaluate(() => LUX.mark("start-mark"));
     await page.waitForTimeout(30);
-    await page.evaluate("LUX.mark('end-mark')");
+    await page.evaluate(() => LUX.mark("end-mark"));
 
     const timeBeforeMeasure = await getElapsedMs(page);
-    await page.evaluate(`
-      // Equivalent of mark(name, startMark)
-      LUX.measure('test-measure-1', { start: 'start-mark' });
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate((timeBeforeMeasure) => {
+        // Equivalent of mark(name, startMark)
+        LUX.measure("test-measure-1", { start: "start-mark" });
 
-      // Equivalent of mark(name, startMark, endMark)
-      LUX.measure('test-measure-2', { start: 'start-mark', end: 'end-mark' });
+        // Equivalent of mark(name, startMark, endMark)
+        LUX.measure("test-measure-2", { start: "start-mark", end: "end-mark" });
 
-      // Equivalent of mark(name, undefined, endMark)
-      LUX.measure('test-measure-3', { end: 'end-mark' });
+        // Equivalent of mark(name, undefined, endMark)
+        LUX.measure("test-measure-3", { end: "end-mark" });
 
-      // Specifying a duration with a start mark
-      LUX.measure('test-measure-4', { start: 'start-mark', duration: 400 });
+        // Specifying a duration with a start mark
+        LUX.measure("test-measure-4", { start: "start-mark", duration: 400 });
 
-      // Specifying a duration with a start mark
-      LUX.measure('test-measure-5', { end: 'end-mark', duration: 500 });
+        // Specifying a duration with a start mark
+        LUX.measure("test-measure-5", { end: "end-mark", duration: 500 });
 
-      // Specifying a start timestamp
-      LUX.measure('test-measure-6', { start: ${timeBeforeMeasure} });
-    `);
+        // Specifying a start timestamp
+        LUX.measure("test-measure-6", { start: timeBeforeMeasure });
 
-    await page.evaluate("LUX.send()");
+        LUX.send();
+      }, timeBeforeMeasure)
+    );
 
-    const beacon = luxRequests.getUrl(0);
-    const UT = parseUserTiming(beacon.searchParams.get("UT"));
+    const beacon = luxRequests.getUrl(0)!;
+    const UT = parseUserTiming(getSearchParam(beacon, "UT"));
     const startMarkTime = UT["start-mark"].startTime;
     const endMarkTime = UT["end-mark"].startTime;
 

@@ -1,13 +1,21 @@
+import { test, expect } from "@playwright/test";
 import { getCpuStat } from "../helpers/lux";
+import RequestInterceptor from "../request-interceptor";
 
-describe("LUX SPA CPU metrics", () => {
-  test("long tasks are only reported for the SPA page they were associated with", async () => {
-    const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+test.describe("LUX SPA CPU metrics", () => {
+  test.skip(
+    ({ browserName }) => browserName !== "chromium",
+    "Long tasks are only supported in Chromium"
+  );
 
-    await navigateTo("/long-tasks.html?injectScript=LUX.auto=false;");
-    await page.evaluate("LUX.send()");
+  test("long tasks are only reported for the SPA page they were associated with", async ({
+    page,
+  }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/long-tasks.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
-    let beacon = luxRequests.getUrl(0);
+    let beacon = luxRequests.getUrl(0)!;
     const longTaskCount = getCpuStat(beacon, "n");
     const longTaskTotal = getCpuStat(beacon, "s");
     const longTaskMedian = getCpuStat(beacon, "d");
@@ -23,19 +31,23 @@ describe("LUX SPA CPU metrics", () => {
     expect(longTaskMax).toEqual(longTaskTotal);
 
     // Initiate a second page view with no long tasks
-    await page.evaluate("LUX.init()");
-    await page.evaluate("LUX.send()");
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.init();
+        LUX.send();
+      })
+    );
 
-    beacon = luxRequests.getUrl(1);
+    beacon = luxRequests.getUrl(1)!;
 
     expect(getCpuStat(beacon, "n")).toEqual(0);
 
     // Initiate a third page view with long tasks
-    await page.evaluate("LUX.init()");
-    await page.click("#create-long-task");
-    await page.evaluate("LUX.send()");
+    await page.evaluate(() => LUX.init());
+    await page.locator("#create-long-task").click();
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
-    beacon = luxRequests.getUrl(2);
+    beacon = luxRequests.getUrl(2)!;
 
     expect(getCpuStat(beacon, "n")).toEqual(1);
   });
