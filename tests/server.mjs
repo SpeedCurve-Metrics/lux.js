@@ -1,9 +1,10 @@
-const { createServer } = require("http");
-const { readFile } = require("fs/promises");
-const { readFileSync } = require("fs");
-const path = require("path");
-const url = require("url");
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { createServer } from "node:http";
+import path from "node:path";
+import url from "node:url";
 
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const testPagesDir = path.join(__dirname, "test-pages");
 const distDir = path.join(__dirname, "..", "dist");
 
@@ -13,11 +14,19 @@ const headers = (contentType) => ({
 });
 
 const server = createServer(async (req, res) => {
-  const inlineSnippet = readFileSync(path.join(distDir, "lux-snippet.js"));
+  const reqTime = new Date();
+  const inlineSnippet = await readFile(path.join(distDir, "lux-snippet.js"));
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
 
-  console.log(`[${req.method}] ${parsedUrl.pathname}`);
+  const sendResponse = (status, headers, body) => {
+    console.log(
+      [reqTime.toISOString(), status, req.method, `${pathname}${parsedUrl.search || ""}`].join(" ")
+    );
+
+    res.writeHead(status, headers);
+    res.end(body);
+  };
 
   const filePath = path.join(testPagesDir, pathname);
   let contentType = "text/html";
@@ -32,16 +41,16 @@ const server = createServer(async (req, res) => {
       break;
   }
 
-  if (pathname === "/js/lux.js") {
+  if (pathname === "/") {
+    sendResponse(200, headers("text/plain"), "OK");
+  } else if (pathname === "/js/lux.js") {
     const contents = await readFile(path.join(distDir, "lux.min.js"));
     let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/';`;
 
-    res.writeHead(200, headers(contentType));
-    res.end(preamble + contents);
+    sendResponse(200, headers(contentType), preamble + contents);
   } else if (pathname == "/beacon/" || pathname == "/error/") {
-    res.writeHead(200, headers("image/webp"));
-    res.end();
-  } else {
+    sendResponse(200, headers("image/webp"));
+  } else if (existsSync(filePath)) {
     try {
       let contents = await readFile(filePath);
 
@@ -68,21 +77,20 @@ const server = createServer(async (req, res) => {
         contents = contents.toString().replace("/*INJECT_SCRIPT*/", injectScript);
       }
 
-      const sendResponse = () => {
-        res.writeHead(200, headers(contentType));
-        res.end(contents);
-      };
-
       if (parsedUrl.query.delay) {
-        setTimeout(sendResponse, parseInt(parsedUrl.query.delay));
+        setTimeout(
+          () => sendResponse(200, headers(contentType), contents),
+          parseInt(parsedUrl.query.delay)
+        );
       } else {
-        sendResponse();
+        sendResponse(200, headers(contentType), contents);
       }
     } catch (e) {
       console.error(e);
-      res.writeHead(404);
-      res.end("Not Found");
+      sendResponse(404, headers("text/plain"), "Not Found");
     }
+  } else {
+    sendResponse(404, headers("text/plain"), "Not Found");
   }
 });
 
