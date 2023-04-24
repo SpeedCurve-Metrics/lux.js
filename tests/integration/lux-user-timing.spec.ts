@@ -36,7 +36,9 @@ test.describe("LUX user timing", () => {
     expect(UT["test-mark"].startTime).toBeLessThan(timeAfterMark);
     expect(UT["test-measure"].startTime).toEqual(UT["test-mark"].startTime);
     expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(30);
-    expect(UT["test-measure"].duration).toBeLessThan(timeAfterMeasure - UT["test-mark"].startTime);
+    expect(UT["test-measure"].duration).toBeLessThanOrEqual(
+      timeAfterMeasure - UT["test-mark"].startTime
+    );
   });
 
   test("the most recent mark takes priority over previous marks with the same name", async ({
@@ -48,18 +50,15 @@ test.describe("LUX user timing", () => {
     await page.evaluate(() => performance.mark("test-mark"));
     await page.waitForTimeout(30);
     const timeBeforeMark = await getElapsedMs(page);
-    await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => {
-        performance.mark("test-mark");
-        LUX.send();
-      })
-    );
+    await page.evaluate(() => performance.mark("test-mark"));
+    const timeAfterMark = await getElapsedMs(page);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(0)!;
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-mark"].startTime).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(UT["test-mark"].startTime).toBeLessThan(timeBeforeMark + 10);
+    expect(UT["test-mark"].startTime).toBeLessThan(timeAfterMark);
   });
 
   test("user timing marks in a SPA are relative to the previous LUX.init call", async ({

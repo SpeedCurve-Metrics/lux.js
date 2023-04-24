@@ -25,7 +25,7 @@ test.describe("LUX element timing", () => {
 
   test("element timing is collected in a SPA", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-
+    const imageRequests = new RequestInterceptor(page).createRequestMatcher("red.png");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
@@ -42,7 +42,7 @@ test.describe("LUX element timing", () => {
       img.elementTiming = "spa-image";
       document.body.appendChild(img);
     });
-    await page.waitForLoadState("networkidle");
+    await imageRequests.waitForMatchingRequest();
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         // Delay calling LUX.send() so the element timing has a chance to register

@@ -6,6 +6,7 @@ test.describe("LUX interaction", () => {
   test("click interaction metrics are gathered", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest();
     const timeBeforeClick = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-id").click());
     const ixBeacon = luxRequests.getUrl(1)!;
@@ -28,6 +29,7 @@ test.describe("LUX interaction", () => {
   test("keypress interaction metrics are gathered", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest();
     const timeBeforeKeyPress = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-id").press("Enter"));
 
@@ -57,6 +59,11 @@ test.describe("LUX interaction", () => {
   test("FID and INP are gathered for clicks", async ({ page, browserName }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html?blockFor=100", { waitUntil: "networkidle" });
+
+    // Wait for the main beacon
+    await luxRequests.waitForMatchingRequest();
+
+    // Then wait for the interaction beacon after clicking
     await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-js").click());
 
     const mainBeacon = luxRequests.getUrl(0)!;
@@ -99,15 +106,17 @@ test.describe("LUX interaction", () => {
     await page.goto("/interaction.html?blockFor=20&injectScript=LUX.auto=false;", {
       waitUntil: "networkidle",
     });
-    await page.evaluate(() => LUX.send());
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     await page.waitForTimeout(100);
 
     // Note: we use force: true for the click operation because we are making assertions about the
     // interaction time that is recorded. Setting force: true disables Playwright's accountability
     // checks, which can add delays before the actual click operation is performed.
+    const timeBeforeInit = await getElapsedMs(page);
     await page.evaluate(() => LUX.init());
     await page.waitForTimeout(20);
     await page.locator("#button-with-js").click({ force: true });
+    const timeAfterClick = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     await page.evaluate(() => LUX.init());
@@ -119,7 +128,7 @@ test.describe("LUX interaction", () => {
     const ixMetrics = parseNestedPairs(getSearchParam(secondPageBeacon, "IX"));
 
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
-    expect(parseInt(ixMetrics.c)).toBeLessThan(100);
+    expect(parseInt(ixMetrics.c)).toBeLessThanOrEqual(timeAfterClick - timeBeforeInit);
     expect(parseInt(getSearchParam(secondPageBeacon, "FID"))).toBeGreaterThanOrEqual(0);
 
     if (browserName === "webkit") {

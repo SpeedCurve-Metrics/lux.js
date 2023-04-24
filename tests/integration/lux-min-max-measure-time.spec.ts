@@ -26,16 +26,19 @@ test.describe("LUX minimum and maximum measure times", () => {
       "/default.html?injectScript=LUX.minMeasureTime=300;setTimeout(LUX.send, 100);",
       { waitUntil: "networkidle" }
     );
+    await luxRequests.waitForMatchingRequest();
 
-    const beacon = luxRequests.getUrl(0)!;
-    const loadEventStart = getNavTiming(beacon, "ls")!;
-    const beaconTiming: PerformanceNavigationTiming = await page.evaluate(() =>
+    const getBeaconResourceTiming = () =>
       performance
         .getEntriesByType("resource")
         .filter((r) => r.name.search(/\/beacon\//) > -1)
         .map((r) => r.toJSON())
-        .pop()
-    );
+        .pop();
+
+    const beacon = luxRequests.getUrl(0)!;
+    const loadEventStart = getNavTiming(beacon, "ls")!;
+    await page.waitForFunction(getBeaconResourceTiming);
+    const beaconTiming: PerformanceNavigationTiming = await page.evaluate(getBeaconResourceTiming);
 
     expect(beaconTiming.startTime).toBeGreaterThanOrEqual(loadEventStart);
     expect(beaconTiming.startTime).toBeLessThan(300);
@@ -46,6 +49,7 @@ test.describe("LUX minimum and maximum measure times", () => {
     await page.goto("/default.html?injectScript=LUX.auto=false;LUX.maxMeasureTime=200;", {
       waitUntil: "networkidle",
     });
+    await luxRequests.waitForMatchingRequest();
 
     const secondBeaconStartTime = await getElapsedMs(page);
     await page.evaluate(() => LUX.init());
