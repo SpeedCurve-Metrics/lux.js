@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import Flags, { hasFlag } from "../../src/flags";
-import { getNavTiming, getPageStat, getPerformanceTimingMs, getSearchParam } from "../helpers/lux";
+import {
+  getElapsedMs,
+  getNavTiming,
+  getPageStat,
+  getPerformanceTimingMs,
+  getSearchParam,
+} from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
 
 test.describe("LUX SPA", () => {
@@ -63,13 +69,14 @@ test.describe("LUX SPA", () => {
 
   test("load time value for the first pages is the time between navigationStart and loadEventStart", async ({
     page,
+    browserName,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const beacon = luxRequests.getUrl(0)!;
     const luxLoadEventStart = getNavTiming(beacon, "ls");
-    const luxLoadEventEnd = getNavTiming(beacon, "ls");
+    const luxLoadEventEnd = getNavTiming(beacon, "le");
     const pageLoadEventStart = await getPerformanceTimingMs(page, "loadEventStart");
     const pageLoadEventEnd = await getPerformanceTimingMs(page, "loadEventEnd");
 
@@ -84,9 +91,14 @@ test.describe("LUX SPA", () => {
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
-    await page.evaluate(() => LUX.init());
+    const timeBeforeInit = await page.evaluate(() => {
+      const beforeInit = Math.floor(performance.now());
+      LUX.init();
+      return beforeInit;
+    });
     await page.waitForTimeout(50);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    const timeAfterSend = await getElapsedMs(page);
 
     const beacon = luxRequests.getUrl(1)!;
     const loadEventStart = getNavTiming(beacon, "ls");
@@ -95,8 +107,8 @@ test.describe("LUX SPA", () => {
     // We waited 50ms between LUX.init() and LUX.send(), so the load time should
     // be at least 50ms. 60ms is an arbitrary upper limit to make sure we're not
     // over-reporting load time.
-    expect(loadEventStart).toBeGreaterThanOrEqual(20);
-    expect(loadEventStart).toBeLessThan(60);
+    expect(loadEventStart).toBeGreaterThanOrEqual(50);
+    expect(loadEventStart).toBeLessThanOrEqual(timeAfterSend - timeBeforeInit);
     expect(loadEventStart).toEqual(loadEventEnd);
 
     // Check that the InitCalled flag was set

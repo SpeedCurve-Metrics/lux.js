@@ -138,8 +138,9 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
     // Send the first beacon and call LUX.init() so we have a known "zero" point
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const timeBeforeInit = await page.evaluate(() => {
+      const beforeInit = Math.floor(performance.now());
       LUX.init();
-      return Math.floor(performance.now());
+      return beforeInit;
     });
 
     // Wait for 30ms before making the marks and measures
