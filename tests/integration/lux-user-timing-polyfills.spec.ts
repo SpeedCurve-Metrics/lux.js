@@ -15,6 +15,7 @@ test.describe("LUX user timing polyfills", () => {
         LUX.send();
       })
     );
+    const timeAfterMark = await getElapsedMs(page);
 
     const beacon = luxRequests.getUrl(0)!;
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
@@ -23,7 +24,7 @@ test.describe("LUX user timing polyfills", () => {
     // The mark and measure values will vary from test to test, so there is ~10ms margin of error.
     // To test the mark, we get the current timestamp just before creating the mark.
     expect(UT["test-mark"].startTime).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(UT["test-mark"].startTime).toBeLessThan(timeBeforeMark + 10);
+    expect(UT["test-mark"].startTime).toBeLessThanOrEqual(timeAfterMark);
 
     // Double-check that the polyfill was used and not the native implementation
     expect(nativeEntries.length).toEqual(0);
@@ -61,13 +62,14 @@ test.describe("LUX user timing polyfills", () => {
         LUX.send();
       })
     );
+    const timeAfterMeasure = await getElapsedMs(page);
 
     const beacon = luxRequests.getUrl(0)!;
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-measure"].startTime).toEqual(0);
     expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(timeBeforeMeasure);
-    expect(UT["test-measure"].duration).toBeLessThan(timeBeforeMeasure + 10);
+    expect(UT["test-measure"].duration).toBeLessThanOrEqual(timeAfterMeasure);
   });
 
   test("LUX.measure(name, startMark)", async ({ page }) => {
@@ -76,21 +78,19 @@ test.describe("LUX user timing polyfills", () => {
       "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
       { waitUntil: "networkidle" }
     );
+    const timeBeforeStartMark = await getElapsedMs(page);
     await page.evaluate(() => LUX.mark("start-mark"));
     await page.waitForTimeout(30);
-    await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => {
-        LUX.measure("test-measure", "start-mark");
-        LUX.send();
-      })
-    );
+    await page.evaluate(() => LUX.measure("test-measure", "start-mark"));
+    const timeAfterMeasure = await getElapsedMs(page);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(0)!;
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-measure"].startTime).toEqual(UT["start-mark"].startTime);
     expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(30);
-    expect(UT["test-measure"].duration).toBeLessThan(40);
+    expect(UT["test-measure"].duration).toBeLessThanOrEqual(timeAfterMeasure - timeBeforeStartMark);
   });
 
   test("LUX.measure(name, startMark, endMark)", async ({ page }) => {
@@ -145,34 +145,34 @@ test.describe("LUX user timing polyfills", () => {
       "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
       { waitUntil: "networkidle" }
     );
+
+    const timeBeforeStartMark = await getElapsedMs(page);
     await page.evaluate(() => LUX.mark("start-mark"));
     await page.waitForTimeout(30);
     await page.evaluate(() => LUX.mark("end-mark"));
 
     const timeBeforeMeasure = await getElapsedMs(page);
-    await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate((timeBeforeMeasure) => {
-        // Equivalent of mark(name, startMark)
-        LUX.measure("test-measure-1", { start: "start-mark" });
+    await page.evaluate((timeBeforeMeasure) => {
+      // Equivalent of mark(name, startMark)
+      LUX.measure("test-measure-1", { start: "start-mark" });
 
-        // Equivalent of mark(name, startMark, endMark)
-        LUX.measure("test-measure-2", { start: "start-mark", end: "end-mark" });
+      // Equivalent of mark(name, startMark, endMark)
+      LUX.measure("test-measure-2", { start: "start-mark", end: "end-mark" });
 
-        // Equivalent of mark(name, undefined, endMark)
-        LUX.measure("test-measure-3", { end: "end-mark" });
+      // Equivalent of mark(name, undefined, endMark)
+      LUX.measure("test-measure-3", { end: "end-mark" });
 
-        // Specifying a duration with a start mark
-        LUX.measure("test-measure-4", { start: "start-mark", duration: 400 });
+      // Specifying a duration with a start mark
+      LUX.measure("test-measure-4", { start: "start-mark", duration: 400 });
 
-        // Specifying a duration with a start mark
-        LUX.measure("test-measure-5", { end: "end-mark", duration: 500 });
+      // Specifying a duration with a start mark
+      LUX.measure("test-measure-5", { end: "end-mark", duration: 500 });
 
-        // Specifying a start timestamp
-        LUX.measure("test-measure-6", { start: timeBeforeMeasure });
-
-        LUX.send();
-      }, timeBeforeMeasure)
-    );
+      // Specifying a start timestamp
+      LUX.measure("test-measure-6", { start: timeBeforeMeasure });
+    }, timeBeforeMeasure);
+    const timeAfterMeasure = await getElapsedMs(page);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(0)!;
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
@@ -181,7 +181,9 @@ test.describe("LUX user timing polyfills", () => {
 
     expect(UT["test-measure-1"].startTime).toEqual(startMarkTime);
     expect(UT["test-measure-1"].duration).toBeGreaterThanOrEqual(timeBeforeMeasure - startMarkTime);
-    expect(UT["test-measure-1"].duration).toBeLessThan(timeBeforeMeasure - startMarkTime + 10);
+    expect(UT["test-measure-1"].duration).toBeLessThanOrEqual(
+      timeAfterMeasure - timeBeforeStartMark
+    );
 
     expect(UT["test-measure-2"].startTime).toEqual(startMarkTime);
     expect(UT["test-measure-2"].duration).toEqual(endMarkTime - startMarkTime);

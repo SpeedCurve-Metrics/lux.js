@@ -134,22 +134,24 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
-    await page.waitForTimeout(50);
-    await page.evaluate(() => {
-      LUX.send();
+
+    // Send the first beacon and call LUX.init() so we have a known "zero" point
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    const timeBeforeInit = await page.evaluate(() => {
       LUX.init();
+      return Math.floor(performance.now());
     });
 
+    // Wait for 30ms before making the marks and measures
     await page.waitForTimeout(30);
-    await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => {
-        LUX.measure("test-measure-1");
-        performance.mark("end-mark");
-        LUX.measure("test-measure-2", undefined, "end-mark");
-        LUX.measure("test-measure-3", { end: "end-mark" });
-        LUX.send();
-      })
-    );
+    const timeAfterMarks = await page.evaluate(() => {
+      LUX.measure("test-measure-1");
+      performance.mark("end-mark");
+      LUX.measure("test-measure-2", undefined, "end-mark");
+      LUX.measure("test-measure-3", { end: "end-mark" });
+      return Math.floor(performance.now());
+    });
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     // Check that the second beacon has a measure relative to the LUX.init call
     const beacon = luxRequests.getUrl(1)!;
@@ -158,7 +160,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
 
     expect(UT["test-measure-1"].startTime).toEqual(0);
     expect(UT["test-measure-1"].duration).toBeGreaterThanOrEqual(30);
-    expect(UT["test-measure-1"].duration).toBeLessThan(40);
+    expect(UT["test-measure-1"].duration).toBeLessThanOrEqual(timeAfterMarks - timeBeforeInit);
 
     expect(UT["test-measure-2"].startTime).toEqual(0);
     expect(UT["test-measure-2"].duration).toEqual(endMarkTime);
