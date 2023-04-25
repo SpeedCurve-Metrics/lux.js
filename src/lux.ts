@@ -8,6 +8,7 @@ import { interactionAttributionForElement, InteractionInfo } from "./interaction
 import Logger, { LogEvent } from "./logger";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
+import { getNavTimingValue } from "./metric/navigation-timing";
 import now from "./now";
 import {
   msSinceNavigationStart,
@@ -959,34 +960,44 @@ LUX = (function () {
         "";
     } else if (performance.timing) {
       // Return the real Nav Timing metrics because this is the "main" page view (not a SPA)
-      const t = timing;
-      const startRender = getStartRender(); // first paint
-      const fcp = getFcp(); // first contentful paint
-      const lcp = getLcp(); // largest contentful paint
-      s =
-        ns +
-        (t.redirectStart ? "rs" + (t.redirectStart - ns) : "") +
-        (t.redirectEnd ? "re" + (t.redirectEnd - ns) : "") +
-        (t.fetchStart ? "fs" + (t.fetchStart - ns) : "") +
-        (t.domainLookupStart ? "ds" + (t.domainLookupStart - ns) : "") +
-        (t.domainLookupEnd ? "de" + (t.domainLookupEnd - ns) : "") +
-        (t.connectStart ? "cs" + (t.connectStart - ns) : "") +
-        (t.secureConnectionStart ? "sc" + (t.secureConnectionStart - ns) : "") +
-        (t.connectEnd ? "ce" + (t.connectEnd - ns) : "") +
-        (t.requestStart ? "qs" + (t.requestStart - ns) : "") + // reQuest start
-        (t.responseStart ? "bs" + (t.responseStart - ns) : "") + // body start
-        (t.responseEnd ? "be" + (t.responseEnd - ns) : "") +
-        (t.domLoading ? "ol" + (t.domLoading - ns) : "") +
-        (t.domInteractive ? "oi" + (t.domInteractive - ns) : "") +
-        (t.domContentLoadedEventStart ? "os" + (t.domContentLoadedEventStart - ns) : "") +
-        (t.domContentLoadedEventEnd ? "oe" + (t.domContentLoadedEventEnd - ns) : "") +
-        (t.domComplete ? "oc" + (t.domComplete - ns) : "") +
-        (t.loadEventStart ? "ls" + (t.loadEventStart - ns) : "") +
-        (t.loadEventEnd ? "le" + (t.loadEventEnd - ns) : "") +
-        (typeof startRender !== "undefined" ? "sr" + startRender : "") +
-        (typeof fcp !== "undefined" ? "fc" + fcp : "") +
-        (typeof lcp !== "undefined" ? "lc" + lcp : "") +
-        "";
+      const startRender = getStartRender();
+      const fcp = getFcp();
+      const lcp = getLcp();
+
+      const prefixNTValue = (key: PerfTimingKey, prefix: string) => {
+        const value = getNavTimingValue(key);
+
+        if (typeof value === "undefined") {
+          return "";
+        }
+
+        return prefix + value;
+      };
+
+      s = [
+        ns,
+        prefixNTValue("redirectStart", "rs"),
+        prefixNTValue("redirectEnd", "re"),
+        prefixNTValue("fetchStart", "fs"),
+        prefixNTValue("domainLookupStart", "ds"),
+        prefixNTValue("domainLookupEnd", "de"),
+        prefixNTValue("connectStart", "cs"),
+        prefixNTValue("secureConnectionStart", "sc"),
+        prefixNTValue("connectEnd", "ce"),
+        prefixNTValue("requestStart", "qs"),
+        prefixNTValue("responseStart", "bs"),
+        prefixNTValue("responseEnd", "be"),
+        prefixNTValue("domLoading", "ol"),
+        prefixNTValue("domInteractive", "oi"),
+        prefixNTValue("domContentLoadedEventStart", "os"),
+        prefixNTValue("domContentLoadedEventEnd", "oe"),
+        prefixNTValue("domComplete", "oc"),
+        prefixNTValue("loadEventStart", "ls"),
+        prefixNTValue("loadEventEnd", "le"),
+        typeof startRender !== "undefined" ? "sr" + startRender : "",
+        typeof fcp !== "undefined" ? "fc" + fcp : "",
+        typeof lcp !== "undefined" ? "lc" + lcp : "",
+      ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
       const end = Math.round(endMark.startTime);

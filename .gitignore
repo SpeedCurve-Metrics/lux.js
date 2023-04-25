@@ -3,3 +3,6 @@ node_modules/
 dist/
 server.log
 .DS_Store
+/test-results/
+/playwright-report/
+/playwright/.cache/

@@ -1,4 +1,5 @@
 import { UserConfig } from "./config";
+import { LogEventRecord } from "./logger";
 
 export type Command = [CommandFunction, ...CommandArg[]];
 type CommandFunction = "addData" | "init" | "mark" | "markLoadTime" | "measure" | "send";
@@ -15,7 +16,7 @@ export interface LuxGlobal extends UserConfig {
   /** @deprecated */
   doUpdate?: () => void;
   forceSample?: () => void;
-  getDebug?: () => void;
+  getDebug?: () => LogEventRecord[];
   getSessionId?: () => void;
   init: () => void;
   mark: (...args: Parameters<PerfMarkFn>) => ReturnType<PerfMarkFn> | void;

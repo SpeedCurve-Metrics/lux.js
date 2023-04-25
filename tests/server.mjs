@@ -58,9 +58,8 @@ const server = createServer(async (req, res) => {
         let injectScript = `
           window.createLongTask = (duration = 50) => {
               const startTime = performance.now();
-              const random = Math.random() * 10;
 
-              while (performance.now() < startTime + duration + random) {
+              while (performance.now() < startTime + duration) {
                   // Block the main thread for the specified time
               }
           };

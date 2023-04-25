@@ -11,7 +11,9 @@
 </head>
 <body>
     <h1>LUX user timing test page</h1>
+    <img src="/red.png">
     <script>
+        createLongTask(10);
         performance.mark("test-mark");
         performance.measure("test-measure", "first-mark");
     </script>

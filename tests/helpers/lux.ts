@@ -1,27 +1,31 @@
 import * as Flags from "../../src/flags";
 
 export function getCpuStat(beacon: URL, key: string): number | null {
-  const cpu = parseNestedPairs(beacon.searchParams.get("CPU"));
+  const cpu = parseNestedPairs(getSearchParam(beacon, "CPU"));
 
   return parseInt(cpu[key]);
 }
 
 export function getLuxJsStat(beacon: URL, key: string): number | null {
-  return extractCondensedValue(beacon.searchParams.get("LJS"), key);
+  return extractCondensedValue(getSearchParam(beacon, "LJS"), key);
 }
 
 export function getPageStat(beacon: URL, key: string): number | null {
-  return extractCondensedValue(beacon.searchParams.get("PS"), key);
+  return extractCondensedValue(getSearchParam(beacon, "PS"), key);
 }
 
 export function getNavTiming(beacon: URL, key: string): number | null {
-  return extractCondensedValue(beacon.searchParams.get("NT"), key);
+  return extractCondensedValue(getSearchParam(beacon, "NT"), key);
 }
 
 export function hasFlag(beacon: URL, flag: number): boolean {
-  const beaconFlags = parseInt(beacon.searchParams.get("fl"));
+  const beaconFlags = parseInt(getSearchParam(beacon, "fl"));
 
   return Flags.hasFlag(beaconFlags, flag);
+}
+
+export function getSearchParam(url: URL, param: string): string {
+  return url.searchParams.get(param) || "";
 }
 
 /**
@@ -79,10 +83,10 @@ export function parseUserTiming(userTimingString: string): Record<string, UserTi
  * Gets a performance.timing value as milliseconds since navigation start
  */
 export async function getPerformanceTimingMs(page, metric): Promise<number> {
-  const navigationStart = await page.evaluate("performance.timing.navigationStart");
-  const timingValue = await page.evaluate(`performance.timing.${metric}`);
-
-  return timingValue - navigationStart;
+  return page.evaluate(
+    (metric) => performance.timing[metric] - performance.timing.navigationStart,
+    metric
+  );
 }
 
 /**
