@@ -30,10 +30,10 @@ test.describe("LUX SPA", () => {
     const beacon = luxRequests.getUrl(0)!;
 
     // Paint metrics
-    expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
     expect(getNavTiming(beacon, "fc")).toBeGreaterThan(0);
 
     if (browserName === "chromium") {
+      expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(0);
     } else {
       expect(beacon.searchParams.get("lc")).toBeNull();
@@ -57,10 +57,10 @@ test.describe("LUX SPA", () => {
 
     const beacon = luxRequests.getUrl(0)!;
 
-    expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
     expect(getNavTiming(beacon, "fc")).toBeGreaterThan(0);
 
     if (browserName === "chromium") {
+      expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(0);
     } else {
       expect(beacon.searchParams.get("lc")).toBeNull();

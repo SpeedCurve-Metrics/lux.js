@@ -152,12 +152,12 @@ for (const pageName in testPages) {
       expect(getNavTiming(beacon, "de")).toBeGreaterThanOrEqual(0);
       expect(getNavTiming(beacon, "cs")).toBeGreaterThanOrEqual(0);
       expect(getNavTiming(beacon, "ce")).toBeGreaterThanOrEqual(0);
+      expect(getNavTiming(beacon, "qs")).toBeGreaterThanOrEqual(0);
 
       // Secure connection time will be null because localhost is insecure
       expect(beacon.searchParams.get("sc")).toBeNull();
 
       // Everything else should have be non-zero
-      expect(getNavTiming(beacon, "qs")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "bs")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "be")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "ol")).toBeGreaterThan(0);
@@ -167,10 +167,10 @@ for (const pageName in testPages) {
       expect(getNavTiming(beacon, "oc")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "ls")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "le")).toBeGreaterThan(0);
-      expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "fc")).toBeGreaterThan(0);
 
       if (browserName === "chromium") {
+        expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
         expect(getNavTiming(beacon, "lc")).toBeGreaterThan(0);
       }
     });

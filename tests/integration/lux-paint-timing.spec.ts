@@ -7,15 +7,18 @@ test.describe("LUX paint timing", () => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
     const beacon = luxRequests.getUrl(0)!;
-    const startRender = getNavTiming(beacon, "sr")!;
-
-    expect(startRender).toBeGreaterThan(0);
-    expect(getNavTiming(beacon, "fc")).toBeGreaterThanOrEqual(startRender);
+    let startRender = 0;
 
     if (browserName === "chromium") {
+      startRender = getNavTiming(beacon, "sr")!;
+
+      // Start render and LCP are only supported in Chromium
+      expect(startRender).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(startRender);
     } else {
       expect(beacon.searchParams.get("lc")).toBeNull();
     }
+
+    expect(getNavTiming(beacon, "fc")).toBeGreaterThanOrEqual(startRender);
   });
 });
