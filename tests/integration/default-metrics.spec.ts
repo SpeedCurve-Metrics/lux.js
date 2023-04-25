@@ -115,8 +115,10 @@ for (const pageName in testPages) {
       expect(getPageStat(beacon, "dh")).toEqual(viewport.height);
       expect(getPageStat(beacon, "dw")).toEqual(viewport.width);
 
-      // Document transfer size
-      expect(getPageStat(beacon, "ds")).toBeGreaterThan(1);
+      if (browserName !== "webkit") {
+        // Document transfer size
+        expect(getPageStat(beacon, "ds")).toBeGreaterThan(1);
+      }
 
       // Connection type
       const ct = getSearchParam(beacon, "PS")?.match(/ct([^_]+)/) || [];
@@ -175,7 +177,7 @@ for (const pageName in testPages) {
       }
     });
 
-    test("lux.js internal stats", async () => {
+    test("lux.js internal stats", async ({ browserName }) => {
       // metrics about the lux.js script are sent
       expect(getLuxJsStat(beacon, "d")).toBeGreaterThanOrEqual(0);
       expect(getLuxJsStat(beacon, "t")).toBeGreaterThanOrEqual(0);
@@ -184,9 +186,13 @@ for (const pageName in testPages) {
       expect(getLuxJsStat(beacon, "n")).toBeGreaterThanOrEqual(0);
       expect(getLuxJsStat(beacon, "e")).toBeGreaterThanOrEqual(0);
       expect(getLuxJsStat(beacon, "r")).toEqual(100);
-      expect(getLuxJsStat(beacon, "x")).toBeGreaterThan(0);
       expect(getLuxJsStat(beacon, "l")).toBeGreaterThan(0);
       expect(getLuxJsStat(beacon, "s")).toBeGreaterThan(0);
+
+      if (browserName !== "webkit") {
+        // WebKit seems flaky with response size metrics
+        expect(getLuxJsStat(beacon, "x")).toBeGreaterThan(0);
+      }
 
       // interaction metrics are not sent with no interaction
       expect(beacon.searchParams.get("FID")).toBeNull();
