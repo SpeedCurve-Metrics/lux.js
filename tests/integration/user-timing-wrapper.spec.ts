@@ -110,6 +110,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate(() => performance.mark("end-mark"));
+    const timeAfterMark = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.measure("lux-measure", undefined, "end-mark");
@@ -126,7 +127,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
     expect(UT["lux-measure"].duration).toEqual(UT["perf-measure"].duration);
     expect(UT["lux-measure"].duration).toEqual(endMarkTime);
     expect(endMarkTime).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(endMarkTime).toBeLessThan(timeBeforeMark + 10);
+    expect(endMarkTime).toBeLessThanOrEqual(timeAfterMark);
   });
 
   test("Calling LUX.measure with an undefined startMark in a SPA uses the last LUX.init call as the start mark", async ({

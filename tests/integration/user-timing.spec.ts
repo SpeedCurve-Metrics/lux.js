@@ -33,7 +33,7 @@ test.describe("LUX user timing", () => {
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-mark"].startTime).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(UT["test-mark"].startTime).toBeLessThan(timeAfterMark);
+    expect(UT["test-mark"].startTime).toBeLessThanOrEqual(timeAfterMark);
     expect(UT["test-measure"].startTime).toEqual(UT["test-mark"].startTime);
     expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(30);
     expect(UT["test-measure"].duration).toBeLessThanOrEqual(
@@ -58,7 +58,7 @@ test.describe("LUX user timing", () => {
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-mark"].startTime).toBeGreaterThanOrEqual(timeBeforeMark);
-    expect(UT["test-mark"].startTime).toBeLessThan(timeAfterMark);
+    expect(UT["test-mark"].startTime).toBeLessThanOrEqual(timeAfterMark);
   });
 
   test("user timing marks in a SPA are relative to the previous LUX.init call", async ({
@@ -78,7 +78,7 @@ test.describe("LUX user timing", () => {
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["test-mark"].startTime).toBeGreaterThanOrEqual(30);
-    expect(UT["test-mark"].startTime).toBeLessThan(timeAfterMark);
+    expect(UT["test-mark"].startTime).toBeLessThanOrEqual(timeAfterMark);
   });
 
   test("global state is not affected by LUX", async ({ page }) => {
