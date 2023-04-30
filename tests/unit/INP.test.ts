@@ -1,4 +1,5 @@
-import * as INP from "./INP";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import * as INP from "../../src/metric/INP";
 
 describe("INP", () => {
   beforeEach(() => {

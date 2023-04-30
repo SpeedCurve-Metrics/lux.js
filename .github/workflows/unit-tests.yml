@@ -1,4 +1,4 @@
-name: lux.js integration tests
+name: lux.js unit tests
 
 on:
   pull_request:
@@ -17,7 +17,5 @@ jobs:
       run: npm ci
     - name: Build lux.js
       run: npm run build
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npm run test:e2e
+    - name: Run Jest tests
+      run: npm run test:unit

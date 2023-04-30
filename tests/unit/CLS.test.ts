@@ -1,4 +1,5 @@
-import * as CLS from "./CLS";
+import { describe, expect, test } from "@jest/globals";
+import * as CLS from "../../src/metric/CLS";
 
 describe("CLS", () => {
   test("CLS is windowed", () => {

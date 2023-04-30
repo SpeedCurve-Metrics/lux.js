@@ -1,7 +1,8 @@
-import * as Config from "./config";
+import { describe, expect, test } from "@jest/globals";
+import * as Config from "../../src/config";
 
 describe("Config.fromObject()", () => {
-  it("has default values when no config object is provided", () => {
+  test("it has default values when no config object is provided", () => {
     const config = Config.fromObject({});
 
     expect(config.auto).toEqual(true);
@@ -17,7 +18,7 @@ describe("Config.fromObject()", () => {
     expect(config.trackErrors).toEqual(true);
   });
 
-  it("uses values from the config object when they are provided", () => {
+  test("it uses values from the config object when they are provided", () => {
     const config = Config.fromObject({
       trackErrors: false,
       samplerate: 50,
@@ -27,7 +28,7 @@ describe("Config.fromObject()", () => {
     expect(config.trackErrors).toEqual(false);
   });
 
-  it("allows sendBeaconOnPageHidden to be false in auto mode", () => {
+  test("it allows sendBeaconOnPageHidden to be false in auto mode", () => {
     const config = Config.fromObject({
       sendBeaconOnPageHidden: false,
     });
@@ -35,7 +36,7 @@ describe("Config.fromObject()", () => {
     expect(config.sendBeaconOnPageHidden).toEqual(false);
   });
 
-  it("disables sendBeaconOnPageHidden when auto is set to false", () => {
+  test("it disables sendBeaconOnPageHidden when auto is set to false", () => {
     const config = Config.fromObject({
       auto: false,
     });
@@ -43,7 +44,7 @@ describe("Config.fromObject()", () => {
     expect(config.sendBeaconOnPageHidden).toEqual(false);
   });
 
-  it("allows sendBeaconOnPageHidden to be true even when auto is set to false", () => {
+  test("it allows sendBeaconOnPageHidden to be true even when auto is set to false", () => {
     const config = Config.fromObject({
       auto: false,
       sendBeaconOnPageHidden: true,

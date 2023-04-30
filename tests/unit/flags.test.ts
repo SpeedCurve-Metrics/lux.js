@@ -1,4 +1,5 @@
-import Flags, { addFlag, hasFlag, removeFlag } from "./flags";
+import { describe, expect, test } from "@jest/globals";
+import Flags, { addFlag, hasFlag, removeFlag } from "../../src/flags";
 
 describe("Flags", () => {
   test("every flag is unique", () => {

@@ -1,4 +1,5 @@
-import Logger, { LogEvent } from "./logger";
+import { describe, expect, test } from "@jest/globals";
+import Logger, { LogEvent } from "../../src/logger";
 
 describe("Logger", () => {
   test("every event is unique", () => {
