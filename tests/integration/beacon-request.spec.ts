@@ -46,16 +46,18 @@ test.describe("LUX beacon request", () => {
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
-    await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => {
-        LUX.maxBeaconUTEntries = 10;
+    await luxRequests.waitForMatchingRequest(
+      () =>
+        page.evaluate(() => {
+          LUX.maxBeaconUTEntries = 10;
 
-        new Array(30).fill(null).forEach((_, i) => {
-          performance.mark(`ut-mark-${i}`);
-        });
+          new Array(30).fill(null).forEach((_, i) => {
+            performance.mark(`ut-mark-${i}`);
+          });
 
-        LUX.send();
-      })
+          LUX.send();
+        }),
+      3
     );
 
     expect(luxRequests.count()).toEqual(3);

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { END_MARK } from "../../src/constants";
+import { referenceErrorMessage } from "../helpers/browsers";
 import {
   getNavTiming,
   getPerformanceTimingMs,
@@ -7,7 +8,6 @@ import {
   parseUserTiming,
 } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
-import { referenceErrorMessage } from "../helpers/browsers";
 
 test.describe("LUX inline snippet", () => {
   test("LUX.markLoadTime works before the script is loaded", async ({ page }) => {

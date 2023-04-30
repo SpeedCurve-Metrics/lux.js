@@ -31,16 +31,32 @@ export default class RequestMatcher {
    * wait until any number of requests has been received, i.e. if a request has already been received
    * this function will return immediately.
    */
-  async waitForMatchingRequest(afterCb?: () => Promise<unknown>): Promise<void> {
-    return this.waitForChange(this.requests, afterCb);
+  async waitForMatchingRequest(
+    afterCb?: () => Promise<unknown>,
+    requestCount?: number
+  ): Promise<void> {
+    return this.waitForChange(this.requests, requestCount, afterCb);
   }
 
-  async waitForMatchingResponse(afterCb?: () => Promise<unknown>): Promise<void> {
-    return this.waitForChange(this.responses, afterCb);
+  async waitForMatchingResponse(
+    afterCb?: () => Promise<unknown>,
+    responseCount?: number
+  ): Promise<void> {
+    return this.waitForChange(this.responses, responseCount, afterCb);
   }
 
-  async waitForChange(watch: Array<unknown>, afterCb?: () => Promise<unknown>): Promise<void> {
-    const requestThreshold = afterCb ? watch.length + 1 : 1;
+  async waitForChange(
+    watch: Array<unknown>,
+    watchCount?: number,
+    afterCb?: () => Promise<unknown>
+  ): Promise<void> {
+    let requestThreshold: number;
+
+    if (typeof watchCount !== "undefined") {
+      requestThreshold = watchCount;
+    } else {
+      requestThreshold = afterCb ? watch.length + 1 : 1;
+    }
 
     if (afterCb) {
       await afterCb();

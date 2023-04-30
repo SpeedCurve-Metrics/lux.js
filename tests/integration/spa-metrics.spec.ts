@@ -69,7 +69,6 @@ test.describe("LUX SPA", () => {
 
   test("load time value for the first pages is the time between navigationStart and loadEventStart", async ({
     page,
-    browserName,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
