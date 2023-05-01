@@ -16,7 +16,7 @@ export type PerfTimingKey = keyof Omit<PerformanceTiming, "toJSON">;
 
 export function msSinceNavigationStart(): number {
   if (performance.now) {
-    return performance.now();
+    return Math.floor(performance.now());
   }
 
   return now() - timing.navigationStart;

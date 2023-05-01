@@ -7,6 +7,7 @@ import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
+import { floor } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import { getNavTimingValue } from "./metric/navigation-timing";
@@ -169,7 +170,7 @@ LUX = (function () {
   // Record the FIRST input delay.
   function recordDelay(delay: number) {
     if (!gFirstInputDelay) {
-      gFirstInputDelay = Math.round(delay); // milliseconds
+      gFirstInputDelay = delay;
 
       // remove event listeners
       gaEventTypes.forEach(function (eventType) {
@@ -380,7 +381,7 @@ LUX = (function () {
         }
       }
 
-      let duration = Math.round(endTime) - Math.round(startTime);
+      let duration = endTime - startTime;
       let detail = null;
 
       if (options) {
@@ -472,7 +473,7 @@ LUX = (function () {
         return;
       }
 
-      const startTime = Math.round(mark.startTime - tZero);
+      const startTime = floor(mark.startTime - tZero);
 
       if (startTime < 0) {
         // Exclude marks that were taken before the current SPA page view
@@ -494,8 +495,8 @@ LUX = (function () {
       }
 
       const name = measure.name;
-      const startTime = Math.round(measure.startTime - tZero);
-      const duration = Math.round(measure.duration);
+      const startTime = floor(measure.startTime - tZero);
+      const duration = floor(measure.duration);
 
       if (typeof hUT[name] === "undefined" || startTime > hUT[name].startTime) {
         hUT[name] = { startTime, duration };
@@ -529,7 +530,7 @@ LUX = (function () {
     PO.getEntries("element").forEach((entry) => {
       if (entry.identifier && entry.startTime) {
         logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
-        aET.push(entry.identifier + "|" + Math.round(entry.startTime - tZero));
+        aET.push(entry.identifier + "|" + floor(entry.startTime - tZero));
       }
     });
 
@@ -569,7 +570,7 @@ LUX = (function () {
       }
 
       longTaskEntries.forEach((entry) => {
-        let dur = Math.round(entry.duration);
+        let dur = floor(entry.duration);
         if (entry.startTime < tZero) {
           // In a SPA it is possible that we were in the middle of a Long Task when
           // LUX.init() was called. If so, only include the duration after tZero.
@@ -590,7 +591,7 @@ LUX = (function () {
         }
         hCPU[type] += dur;
         // Send back the raw startTime and duration, as well as the adjusted duration.
-        hCPUDetails[type] += "," + Math.round(entry.startTime) + "|" + dur;
+        hCPUDetails[type] += "," + floor(entry.startTime) + "|" + dur;
       });
     }
 
@@ -672,7 +673,7 @@ LUX = (function () {
       return 0;
     }
 
-    const half = Math.floor(aValues.length / 2);
+    const half = floor(aValues.length / 2);
     aValues.sort(function (a, b) {
       return a - b;
     });
@@ -698,10 +699,10 @@ LUX = (function () {
           const r = aResources[0] as PerformanceResourceTiming;
           // DO NOT USE DURATION!!!!!
           // See https://www.stevesouders.com/blog/2014/11/25/serious-confusion-with-resource-timing/
-          const dns = Math.round(r.domainLookupEnd - r.domainLookupStart);
-          const tcp = Math.round(r.connectEnd - r.connectStart); // includes ssl negotiation
-          const fb = Math.round(r.responseStart - r.requestStart); // first byte
-          const content = Math.round(r.responseEnd - r.responseStart);
+          const dns = r.domainLookupEnd - r.domainLookupStart;
+          const tcp = r.connectEnd - r.connectStart; // includes ssl negotiation
+          const fb = r.responseStart - r.requestStart; // first byte
+          const content = r.responseEnd - r.responseStart;
           const networkDuration = dns + tcp + fb + content;
           const parseEval = scriptEndTime - scriptStartTime;
           const transferSize = r.encodedBodySize ? r.encodedBodySize : 0;
@@ -947,9 +948,9 @@ LUX = (function () {
     const endMark = _getMark(END_MARK);
     if (startMark && endMark) {
       // This is a SPA page view, so send the SPA marks & measures instead of Nav Timing.
-      const start = Math.round(startMark.startTime); // the start mark is "zero"
+      const start = floor(startMark.startTime); // the start mark is "zero"
       ns += start; // "navigationStart" for a SPA is the real navigationStart plus the start mark
-      const end = Math.round(endMark.startTime) - start; // delta from start mark
+      const end = floor(endMark.startTime) - start; // delta from start mark
       s =
         ns +
         "fs" +
@@ -1001,7 +1002,7 @@ LUX = (function () {
       ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
-      const end = Math.round(endMark.startTime);
+      const end = floor(endMark.startTime);
       s =
         ns +
         "fs" +
@@ -1024,7 +1025,7 @@ LUX = (function () {
       const entry = paintEntries[i];
 
       if (entry.name === "first-contentful-paint") {
-        return Math.round(entry.startTime);
+        return floor(entry.startTime);
       }
     }
 
@@ -1038,7 +1039,7 @@ LUX = (function () {
     if (lcpEntries.length) {
       const lastEntry = lcpEntries[lcpEntries.length - 1];
       logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
-      return Math.max(0, Math.round(lastEntry.startTime - getNavigationEntry().activationStart));
+      return floor(lastEntry.startTime);
     }
 
     return undefined;
@@ -1055,10 +1056,10 @@ LUX = (function () {
         // If the Paint Timing API is supported, use the value of the first paint event
         const paintValues = paintEntries.map((entry) => entry.startTime);
 
-        return Math.round(Math.min.apply(null, paintValues));
+        return floor(Math.min.apply(null, paintValues));
       } else if (timing.msFirstPaint && __ENABLE_POLYFILLS) {
         // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
-        return Math.round(timing.msFirstPaint - timing.navigationStart);
+        return floor(timing.msFirstPaint - timing.navigationStart);
       }
     }
 
@@ -1540,14 +1541,14 @@ LUX = (function () {
     // Note for scroll input we don't remove the handlers or send the IX beacon because we want to
     // capture click and key events as well, since these are typically more important than scrolls.
     if (typeof ghIx["s"] === "undefined") {
-      ghIx["s"] = Math.round(_now());
+      ghIx["s"] = _now();
     }
   }
 
   function _keyHandler(e: KeyboardEvent) {
     _removeIxHandlers();
     if (typeof ghIx["k"] === "undefined") {
-      ghIx["k"] = Math.round(_now());
+      ghIx["k"] = _now();
 
       if (e && e.target instanceof Element) {
         const trackId = interactionAttributionForElement(e.target);
@@ -1562,7 +1563,7 @@ LUX = (function () {
   function _clickHandler(e: MouseEvent) {
     _removeIxHandlers();
     if (typeof ghIx["c"] === "undefined") {
-      ghIx["c"] = Math.round(_now());
+      ghIx["c"] = _now();
 
       let target: Element | undefined;
       try {

@@ -3,7 +3,7 @@ import * as Flags from "../../src/flags";
 export function getCpuStat(beacon: URL, key: string): number | null {
   const cpu = parseNestedPairs(getSearchParam(beacon, "CPU"));
 
-  return parseInt(cpu[key]);
+  return parseFloat(cpu[key]);
 }
 
 export function getLuxJsStat(beacon: URL, key: string): number | null {
@@ -35,7 +35,7 @@ export function getSearchParam(url: URL, param: string): string {
 export function extractCondensedValue(timingString: string, key: string): number | null {
   const matches = timingString.match(new RegExp(`${key}(\\d+)`));
 
-  return matches ? parseInt(matches[1]) : null;
+  return matches ? parseFloat(matches[1]) : null;
 }
 
 /**
@@ -66,12 +66,12 @@ export function parseUserTiming(userTimingString: string): Record<string, UserTi
       const parts = value.split("|");
 
       userTiming[key] = {
-        startTime: parseInt(parts[0]),
-        duration: parseInt(parts[1]),
+        startTime: parseFloat(parts[0]),
+        duration: parseFloat(parts[1]),
       };
     } else {
       userTiming[key] = {
-        startTime: parseInt(value),
+        startTime: parseFloat(value),
       };
     }
   }

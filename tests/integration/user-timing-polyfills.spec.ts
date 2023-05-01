@@ -100,7 +100,7 @@ test.describe("LUX user timing polyfills", () => {
       { waitUntil: "networkidle" }
     );
     await page.evaluate(() => LUX.mark("start-mark"));
-    await page.waitForTimeout(30);
+    await page.waitForTimeout(20);
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.mark("end-mark");
