@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>LUX prerender test page</title>
     <script>/*INJECT_SCRIPT*/</script>
-    <script src="/js/lux.js?id=10001" async crossorigin="anonymous"></script>
+    <script src="/js/lux.js?id=10001" async crossorigin="anonymous" onload="log('lux.js loaded')"></script>
 </head>
 <body>
     <h1>LUX prerender test page</h1>
@@ -12,38 +12,41 @@
     <ul id="log"></ul>
 
     <script>
-    const events = [
-        "visibilitychange",
-        "pageshow",
-        "load",
-        "DOMContentLoaded",
-    ];
+    const logVisibilityState = () => log(`visibilityState = ${document.visibilityState}`);
+    const logPrerenderingState = () => log(`prerendering = ${document.prerendering}`);
 
-    log(`[${performance.now().toFixed(0)} ms] Visibility state ${document.visibilityState}`);
-    log(`[${performance.now().toFixed(0)} ms] Prerendering ${document.prerendering}`);
+    logPrerenderingState();
+    logVisibilityState();
 
-    events.forEach((eventName) => {
-        addEventListener(eventName, () => {
-            let extras = "";
+    const prerenderInterval = setInterval(() => {
+        logPrerenderingState();
 
-            if (eventName === "visibilitychange") {
-                extras = document.visibilityState;
-                extras = `${document.prerendering}`;
-            }
+        if (!document.prerendering) {
+            clearInterval(prerenderInterval);
+        }
+    }, 1000);
 
-            log(`[${performance.now().toFixed(0)} ms] ${eventName} ${extras}`);
-        });
+    ["pageshow", "load", "DOMContentLoaded"].forEach((eventName) => {
+        addEventListener(eventName, () => log(eventName));
     });
 
+    addEventListener("visibilitychange", logVisibilityState);
+
     document.addEventListener("prerenderingchange", () => {
-        log(`[${performance.now().toFixed(0)} ms] Prerendering ${document.prerendering}`);
+        clearInterval(prerenderInterval);
+        logPrerenderingState();
     });
 
     function log(message) {
         const li = document.createElement("li");
-        li.textContent = message;
+        li.textContent = `[${performance.now().toFixed(0)} ms] ${message}`;
         document.getElementById("log").appendChild(li);
     }
+    </script>
+    <script>
+        while (performance.now() < 3000) {
+            // Block the main thread
+        }
     </script>
 </body>
 </html>

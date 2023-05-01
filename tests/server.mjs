@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 import url from "node:url";
+import BeaconStore from "./helpers/beacon-store.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const testPagesDir = path.join(__dirname, "test-pages");
@@ -13,49 +14,67 @@ const headers = (contentType) => ({
   connection: "close",
 });
 
-const server = createServer(async (req, res) => {
-  const reqTime = new Date();
-  const inlineSnippet = await readFile(path.join(distDir, "lux-snippet.js"));
-  const parsedUrl = url.parse(req.url, true);
-  const pathname = parsedUrl.pathname;
+BeaconStore.open().then(async (store) => {
+  await store.dropTable();
+  await store.createTable();
 
-  const sendResponse = (status, headers, body) => {
-    console.log(
-      [reqTime.toISOString(), status, req.method, `${pathname}${parsedUrl.search || ""}`].join(" ")
-    );
+  const server = createServer(async (req, res) => {
+    const reqTime = new Date();
+    const inlineSnippet = await readFile(path.join(distDir, "lux-snippet.js"));
+    const parsedUrl = url.parse(req.url, true);
+    const pathname = parsedUrl.pathname;
 
-    res.writeHead(status, headers);
-    res.end(body);
-  };
+    const sendResponse = async (status, headers, body) => {
+      console.log(
+        [reqTime.toISOString(), status, req.method, `${pathname}${parsedUrl.search || ""}`].join(
+          " "
+        )
+      );
 
-  const filePath = path.join(testPagesDir, pathname);
-  let contentType = "text/html";
+      res.writeHead(status, headers);
+      res.end(body);
+    };
 
-  switch (path.extname(pathname)) {
-    case ".js":
-      contentType = "application/javascript";
-      break;
+    const filePath = path.join(testPagesDir, pathname);
+    let contentType = "text/html";
 
-    case ".png":
-      contentType = "image/png";
-      break;
-  }
+    switch (path.extname(pathname)) {
+      case ".js":
+        contentType = "application/javascript";
+        break;
 
-  if (pathname === "/") {
-    sendResponse(200, headers("text/plain"), "OK");
-  } else if (pathname === "/js/lux.js") {
-    const contents = await readFile(path.join(distDir, "lux.min.js"));
-    let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/';`;
+      case ".png":
+        contentType = "image/png";
+        break;
+    }
 
-    sendResponse(200, headers(contentType), preamble + contents);
-  } else if (pathname == "/beacon/" || pathname == "/error/") {
-    sendResponse(200, headers("image/webp"));
-  } else if (existsSync(filePath)) {
-    try {
-      let contents = await readFile(filePath);
+    if (pathname === "/") {
+      sendResponse(200, headers("text/plain"), "OK");
+    } else if (pathname === "/js/lux.js") {
+      const contents = await readFile(path.join(distDir, "lux.min.js"));
+      let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/';`;
 
-      if (contentType === "text/html") {
-        let injectScript = `
+      sendResponse(200, headers(contentType), preamble + contents);
+    } else if (pathname == "/beacon/" || pathname == "/error/") {
+      const referrerUrl = url.parse(req.headers.referer, true);
+
+      if ("useBeaconStore" in referrerUrl.query) {
+        store.put(
+          reqTime.getTime(),
+          req.headers["user-agent"],
+          new URL(req.url, `http://${req.headers.host}`).href,
+          parsedUrl.query.l,
+          decodeURIComponent(parsedUrl.query.PN)
+        );
+      }
+
+      sendResponse(200, headers("image/webp"));
+    } else if (existsSync(filePath)) {
+      try {
+        let contents = await readFile(filePath);
+
+        if (contentType === "text/html") {
+          let injectScript = `
           window.createLongTask = (duration = 50) => {
               const startTime = performance.now();
 
@@ -65,34 +84,35 @@ const server = createServer(async (req, res) => {
           };
         `;
 
-        if (!parsedUrl.query.noInlineSnippet) {
-          injectScript += inlineSnippet;
+          if (!parsedUrl.query.noInlineSnippet) {
+            injectScript += inlineSnippet;
+          }
+
+          if (parsedUrl.query.injectScript) {
+            injectScript += parsedUrl.query.injectScript;
+          }
+
+          contents = contents.toString().replace("/*INJECT_SCRIPT*/", injectScript);
         }
 
-        if (parsedUrl.query.injectScript) {
-          injectScript += parsedUrl.query.injectScript;
+        if (parsedUrl.query.delay) {
+          setTimeout(
+            () => sendResponse(200, headers(contentType), contents),
+            parseInt(parsedUrl.query.delay)
+          );
+        } else {
+          sendResponse(200, headers(contentType), contents);
         }
-
-        contents = contents.toString().replace("/*INJECT_SCRIPT*/", injectScript);
+      } catch (e) {
+        console.error(e);
+        sendResponse(404, headers("text/plain"), "Not Found");
       }
-
-      if (parsedUrl.query.delay) {
-        setTimeout(
-          () => sendResponse(200, headers(contentType), contents),
-          parseInt(parsedUrl.query.delay)
-        );
-      } else {
-        sendResponse(200, headers(contentType), contents);
-      }
-    } catch (e) {
-      console.error(e);
+    } else {
       sendResponse(404, headers("text/plain"), "Not Found");
     }
-  } else {
-    sendResponse(404, headers("text/plain"), "Not Found");
-  }
-});
+  });
 
-const SERVER_PORT = process.env.PORT || 3000;
-server.listen(SERVER_PORT);
-console.log(`Server listening on port ${SERVER_PORT}`);
+  const SERVER_PORT = process.env.PORT || 3000;
+  server.listen(SERVER_PORT);
+  console.log(`Server listening on port ${SERVER_PORT}`);
+});

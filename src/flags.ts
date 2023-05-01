@@ -9,6 +9,7 @@ const Flags = {
   PageLabelFromLabelProp: 1 << 7,
   PageLabelFromGlobalVariable: 1 << 8,
   PageLabelFromPagegroup: 1 << 9,
+  PageWasPrerendered: 1 << 10,
 };
 
 export function addFlag(flags: number, flag: number): number {

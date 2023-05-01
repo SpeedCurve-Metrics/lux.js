@@ -2,6 +2,7 @@ import { fitUserTimingEntries } from "./beacon";
 import * as Config from "./config";
 import { END_MARK, START_MARK } from "./constants";
 import * as CustomData from "./custom-data";
+import { onVisible, isVisible, wasPrerendered } from "./document";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
@@ -1051,14 +1052,10 @@ LUX = (function () {
       const paintEntries = getEntriesByType("paint");
 
       if (paintEntries.length) {
-        // If Paint Timing API is supported, use it.
-        for (let i = 0; i < paintEntries.length; i++) {
-          const entry = paintEntries[i];
+        // If the Paint Timing API is supported, use the value of the first paint event
+        const paintValues = paintEntries.map((entry) => entry.startTime);
 
-          if (entry.name === "first-paint") {
-            return Math.round(entry.startTime);
-          }
-        }
+        return Math.round(Math.min.apply(null, paintValues));
       } else if (timing.msFirstPaint && __ENABLE_POLYFILLS) {
         // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
         return Math.round(timing.msFirstPaint - timing.navigationStart);
@@ -1371,8 +1368,13 @@ LUX = (function () {
     const sCPU = cpuTimes();
     const CLS = getCLS();
     const sLuxjs = selfLoading();
-    if (document.visibilityState && "visible" !== document.visibilityState) {
+
+    if (!isVisible()) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
+    }
+
+    if (wasPrerendered()) {
+      gFlags = addFlag(gFlags, Flags.PageWasPrerendered);
     }
 
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
@@ -1809,7 +1811,13 @@ LUX = (function () {
       }
     };
 
-    sendBeaconAfterMinimumMeasureTime();
+    if (globalConfig.autoWhenHidden) {
+      // The autoWhenHidden config forces the beacon to be sent even when the page is not visible.
+      sendBeaconAfterMinimumMeasureTime();
+    } else {
+      // Otherwise we only send the beacon when the page is visible.
+      onVisible(sendBeaconAfterMinimumMeasureTime);
+    }
   }
 
   // Add the unload handlers when sendBeaconOnPageHidden is enabled

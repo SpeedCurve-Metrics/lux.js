@@ -2,6 +2,7 @@ coverage/
 node_modules/
 dist/
 server.log
+beacon-store.db
 .DS_Store
 /test-results/
 /playwright-report/

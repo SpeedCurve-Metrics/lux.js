@@ -16,6 +16,11 @@ declare global {
     detachEvent(event: string, listener: EventListener): void;
   }
 
+  interface Document {
+    // Prerendering: https://wicg.github.io/nav-speculation/prerendering.html#document-prerendering
+    prerendering?: boolean;
+  }
+
   interface Performance {
     interactionCount: number;
   }

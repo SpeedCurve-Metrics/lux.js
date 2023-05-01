@@ -1,5 +1,6 @@
 export interface ConfigObject {
   auto: boolean;
+  autoWhenHidden: boolean;
   beaconUrl: string;
   customerid?: string;
   errorBeaconUrl: string;
@@ -27,6 +28,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
 
   return {
     auto: autoMode,
+    autoWhenHidden: getProperty(obj, "autoWhenHidden", false),
     beaconUrl: getProperty(obj, "beaconUrl", "https://lux.speedcurve.com/lux/"),
     customerid: getProperty(obj, "customerid", undefined),
     errorBeaconUrl: getProperty(obj, "errorBeaconUrl", "https://lux.speedcurve.com/error/"),

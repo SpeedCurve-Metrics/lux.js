@@ -1,6 +1,12 @@
 # lux.js changelog
 
-## 2023-03-04: v307
+## 2023-??-??: v308
+
+### Improvements
+
+- The beacon will no longer be sent automatically if the page visibility is hidden. This can be overridden by setting `LUX.autoWhenHidden = true`.
+
+## 2023-04-03: v307
 
 ### New features
 
