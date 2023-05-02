@@ -1,7 +1,10 @@
+import { UrlPatternMapping } from "./url-matcher";
+
 export interface ConfigObject {
   auto: boolean;
   autoWhenHidden: boolean;
   beaconUrl: string;
+  conversions?: UrlPatternMapping;
   customerid?: string;
   errorBeaconUrl: string;
   jspagelabel?: string;
@@ -14,11 +17,7 @@ export interface ConfigObject {
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   trackErrors: boolean;
-  pagegroups?: PageGroups;
-}
-
-interface PageGroups {
-  [key: string]: string[];
+  pagegroups?: UrlPatternMapping;
 }
 
 export type UserConfig = Partial<ConfigObject>;
@@ -30,6 +29,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     auto: autoMode,
     autoWhenHidden: getProperty(obj, "autoWhenHidden", false),
     beaconUrl: getProperty(obj, "beaconUrl", "https://lux.speedcurve.com/lux/"),
+    conversions: getProperty(obj, "conversions", undefined),
     customerid: getProperty(obj, "customerid", undefined),
     errorBeaconUrl: getProperty(obj, "errorBeaconUrl", "https://lux.speedcurve.com/error/"),
     jspagelabel: getProperty(obj, "jspagelabel", undefined),
