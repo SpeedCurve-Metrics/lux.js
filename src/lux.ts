@@ -699,10 +699,10 @@ LUX = (function () {
           const r = aResources[0] as PerformanceResourceTiming;
           // DO NOT USE DURATION!!!!!
           // See https://www.stevesouders.com/blog/2014/11/25/serious-confusion-with-resource-timing/
-          const dns = r.domainLookupEnd - r.domainLookupStart;
-          const tcp = r.connectEnd - r.connectStart; // includes ssl negotiation
-          const fb = r.responseStart - r.requestStart; // first byte
-          const content = r.responseEnd - r.responseStart;
+          const dns = floor(r.domainLookupEnd - r.domainLookupStart);
+          const tcp = floor(r.connectEnd - r.connectStart);
+          const fb = floor(r.responseStart - r.requestStart);
+          const content = floor(r.responseEnd - r.responseStart);
           const networkDuration = dns + tcp + fb + content;
           const parseEval = scriptEndTime - scriptStartTime;
           const transferSize = r.encodedBodySize ? r.encodedBodySize : 0;
