@@ -966,7 +966,7 @@ LUX = (function () {
       const fcp = getFcp();
       const lcp = getLcp();
 
-      const prefixNTValue = (key: PerfTimingKey, prefix: string) => {
+      const prefixNTValue = (key: PerfTimingKey, prefix: string): string => {
         const value = getNavTimingValue(key);
 
         if (typeof value === "undefined") {
