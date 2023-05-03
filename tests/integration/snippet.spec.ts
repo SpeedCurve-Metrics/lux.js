@@ -3,7 +3,7 @@ import { END_MARK } from "../../src/constants";
 import { referenceErrorMessage } from "../helpers/browsers";
 import {
   getNavTiming,
-  getPerformanceTimingMs,
+  getNavigationTimingMs,
   getSearchParam,
   parseUserTiming,
 } from "../helpers/lux";
@@ -84,7 +84,7 @@ test.describe("LUX inline snippet", () => {
 
     const beacon = beaconRequests.getUrl(0)!;
     const beforeMeasureTime = await page.evaluate(() => window.beforeMeasureTime as number);
-    const connectEnd = await getPerformanceTimingMs(page, "connectEnd");
+    const connectEnd = await getNavigationTimingMs(page, "connectEnd");
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["measure-1"].startTime).toEqual(UT["mark-1"].startTime);
