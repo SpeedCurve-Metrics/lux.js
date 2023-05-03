@@ -8,40 +8,91 @@
 </head>
 <body>
     <h1>LUX prerender test page</h1>
-    <p>This page can be prerendered from <a href="/prerender-index.html">the prerender test index page</a>.</p>
+    <p>
+        This page can be prerendered from
+        <a href="/prerender-index.html">the prerender test index page</a>.
+    </p>
+    <p><img src="/eve.jpg" width="120" elementtiming="eve-image"></p>
+    <script>
+        const qs = new URLSearchParams(location.search);
+
+        setTimeout(() => {
+            const img = document.createElement("img");
+            img.src = "charlie.jpg";
+            img.elementTiming = "charlie-image";
+            img.width = "400";
+            document.body.insertBefore(img, document.getElementById("log"));
+        }, Number(qs.get("imageDelay") || 0));
+    </script>
     <ul id="log"></ul>
 
+    <h3>Performance metrics:</h3>
+    <ul id="perf-metrics"></ul>
+
     <script>
-    const logVisibilityState = () => log(`visibilityState = ${document.visibilityState}`);
-    const logPrerenderingState = () => log(`prerendering = ${document.prerendering}`);
+        const logVisibilityState = () => log(`visibilityState = ${document.visibilityState}`);
+        const logPrerenderingState = () => {
+            if (!document.prerendering) {
+                const navEntry = performance.getEntriesByType("navigation")[0];
+                log(`activationStart = ${navEntry.activationStart.toFixed(0)} ms`);
+            }
 
-    logPrerenderingState();
-    logVisibilityState();
+            log(`prerendering = ${document.prerendering}`);
+        };
 
-    const prerenderInterval = setInterval(() => {
         logPrerenderingState();
+        logVisibilityState();
 
-        if (!document.prerendering) {
-            clearInterval(prerenderInterval);
+        let prerenderInterval;
+
+        if (document.prerendering) {
+            prerenderInterval = setInterval(() => {
+                logPrerenderingState();
+
+                if (!document.prerendering) {
+                    clearInterval(prerenderInterval);
+                }
+            }, 200);
         }
-    }, 1000);
 
-    ["pageshow", "load", "DOMContentLoaded"].forEach((eventName) => {
-        addEventListener(eventName, () => log(eventName));
-    });
+        ["pageshow", "load", "DOMContentLoaded"].forEach((eventName) => {
+            addEventListener(eventName, () => log(eventName))
+        });
 
-    addEventListener("visibilitychange", logVisibilityState);
+        addEventListener("visibilitychange", logVisibilityState);
 
-    document.addEventListener("prerenderingchange", () => {
-        clearInterval(prerenderInterval);
-        logPrerenderingState();
-    });
+        document.addEventListener("prerenderingchange", () => {
+            clearInterval(prerenderInterval);
+            logPrerenderingState();
+        });
 
-    function log(message) {
-        const li = document.createElement("li");
-        li.textContent = `[${performance.now().toFixed(0)} ms] ${message}`;
-        document.getElementById("log").appendChild(li);
-    }
+        const po = new PerformanceObserver((list) => {
+            list.getEntries().forEach((entry) => {
+                let name = entry.identifier || entry.name || entry.entryType;
+
+                if (entry.entryType === "largest-contentful-paint") {
+                    const details = [entry.element.tagName];
+
+                    if (entry.url) {
+                        details.push(new URL(entry.url).pathname);
+                    }
+
+                    name += ` (${details.join(" ")})`;
+                }
+
+                log(`${name} ${Math.floor(entry.startTime)} ms`, "perf-metrics");
+            });
+        });
+
+        po.observe({ type: "element", buffered: true });
+        po.observe({ type: "paint", buffered: true });
+        po.observe({ type: "largest-contentful-paint", buffered: true });
+
+        function log(message, containerId = "log") {
+            const li = document.createElement("li");
+            li.textContent = `[${performance.now().toFixed(0)} ms] ${message}`;
+            document.getElementById(containerId).appendChild(li);
+        }
     </script>
 </body>
 </html>

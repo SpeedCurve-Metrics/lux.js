@@ -8,6 +8,7 @@ export default class BeaconStore {
     pathname: string
   ): Promise<void>;
   findAll(): Promise<Beacon[]>;
+  findByUrl(url: string): Promise<Beacon[]>;
   findByPathname(pathname: string): Promise<Beacon[]>;
   deleteByPathname(pathname: string): Promise<void>;
   dropTable(): Promise<void>;

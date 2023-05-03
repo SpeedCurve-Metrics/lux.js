@@ -43,8 +43,8 @@ BeaconStore.open().then(async (store) => {
         contentType = "application/javascript";
         break;
 
-      case ".png":
-        contentType = "image/png";
+      case ".jpg":
+        contentType = "image/jpeg";
         break;
     }
 
