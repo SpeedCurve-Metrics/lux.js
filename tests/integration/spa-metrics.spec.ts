@@ -4,7 +4,7 @@ import {
   getElapsedMs,
   getNavTiming,
   getPageStat,
-  getPerformanceTimingMs,
+  getNavigationTimingMs,
   getSearchParam,
 } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
@@ -76,8 +76,8 @@ test.describe("LUX SPA", () => {
     const beacon = luxRequests.getUrl(0)!;
     const luxLoadEventStart = getNavTiming(beacon, "ls");
     const luxLoadEventEnd = getNavTiming(beacon, "le");
-    const pageLoadEventStart = await getPerformanceTimingMs(page, "loadEventStart");
-    const pageLoadEventEnd = await getPerformanceTimingMs(page, "loadEventEnd");
+    const pageLoadEventStart = await getNavigationTimingMs(page, "loadEventStart");
+    const pageLoadEventEnd = await getNavigationTimingMs(page, "loadEventEnd");
 
     expect(luxLoadEventStart).toEqual(pageLoadEventStart);
     expect(luxLoadEventEnd).toEqual(pageLoadEventEnd);
