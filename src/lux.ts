@@ -525,7 +525,7 @@ LUX = (function () {
   function elementTimingValues(): string {
     const aET: string[] = [];
     const startMark = _getMark(START_MARK);
-    const tZero = startMark ? startMark.startTime : 0;
+    const tZero = startMark ? startMark.startTime : getNavigationEntry().activationStart;
 
     PO.getEntries("element").forEach((entry) => {
       if (entry.identifier && entry.startTime) {
@@ -966,7 +966,7 @@ LUX = (function () {
       const fcp = getFcp();
       const lcp = getLcp();
 
-      const prefixNTValue = (key: PerfTimingKey, prefix: string): string => {
+      const prefixNTValue = (key: keyof PerformanceNavigationTiming, prefix: string): string => {
         const value = getNavTimingValue(key);
 
         if (typeof value === "undefined") {
@@ -978,6 +978,7 @@ LUX = (function () {
 
       s = [
         ns,
+        prefixNTValue("activationStart", "as"),
         prefixNTValue("redirectStart", "rs"),
         prefixNTValue("redirectEnd", "re"),
         prefixNTValue("fetchStart", "fs"),
@@ -989,7 +990,6 @@ LUX = (function () {
         prefixNTValue("requestStart", "qs"),
         prefixNTValue("responseStart", "bs"),
         prefixNTValue("responseEnd", "be"),
-        prefixNTValue("domLoading", "ol"),
         prefixNTValue("domInteractive", "oi"),
         prefixNTValue("domContentLoadedEventStart", "os"),
         prefixNTValue("domContentLoadedEventEnd", "oe"),
@@ -1020,12 +1020,13 @@ LUX = (function () {
   // Return First Contentful Paint or undefined if not supported.
   function getFcp(): number | undefined {
     const paintEntries = getEntriesByType("paint");
+    const navEntry = getNavigationEntry();
 
     for (let i = 0; i < paintEntries.length; i++) {
       const entry = paintEntries[i];
 
       if (entry.name === "first-contentful-paint") {
-        return floor(entry.startTime);
+        return floor(entry.startTime - navEntry.activationStart);
       }
     }
 
@@ -1035,11 +1036,12 @@ LUX = (function () {
   // Return Largest Contentful Paint or undefined if not supported.
   function getLcp(): number | undefined {
     const lcpEntries = PO.getEntries("largest-contentful-paint");
+    const navEntry = getNavigationEntry();
 
     if (lcpEntries.length) {
       const lastEntry = lcpEntries[lcpEntries.length - 1];
       logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
-      return floor(lastEntry.startTime);
+      return floor(lastEntry.startTime - navEntry.activationStart);
     }
 
     return undefined;
@@ -1049,18 +1051,21 @@ LUX = (function () {
   // Mostly works on just Chrome and IE.
   // Return undefined if not supported.
   function getStartRender(): number | undefined {
-    if (performance.timing) {
+    if ("PerformancePaintTiming" in self) {
       const paintEntries = getEntriesByType("paint");
+      const navEntry = getNavigationEntry();
 
       if (paintEntries.length) {
         // If the Paint Timing API is supported, use the value of the first paint event
         const paintValues = paintEntries.map((entry) => entry.startTime);
 
-        return floor(Math.min.apply(null, paintValues));
-      } else if (timing.msFirstPaint && __ENABLE_POLYFILLS) {
-        // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
-        return floor(timing.msFirstPaint - timing.navigationStart);
+        return floor(Math.min.apply(null, paintValues) - navEntry.activationStart);
       }
+    }
+
+    if (performance.timing && timing.msFirstPaint && __ENABLE_POLYFILLS) {
+      // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
+      return floor(timing.msFirstPaint - timing.navigationStart);
     }
 
     logger.logEvent(LogEvent.PaintTimingNotSupported);

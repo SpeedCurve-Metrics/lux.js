@@ -35,15 +35,22 @@ module.exports = class BeaconStore {
     return this.connection.all(`SELECT * FROM ${TABLE_NAME} ORDER BY timestamp`);
   }
 
+  async findByUrl(url) {
+    return this.connection.all(
+      `SELECT * FROM ${TABLE_NAME} WHERE url LIKE ? ORDER BY timestamp`,
+      url
+    );
+  }
+
   async findByPathname(pathname) {
     return this.connection.all(
-      `SELECT * FROM ${TABLE_NAME} WHERE pathname = ? ORDER BY timestamp`,
+      `SELECT * FROM ${TABLE_NAME} WHERE pathname LIKE ? ORDER BY timestamp`,
       pathname
     );
   }
 
   async deleteByPathname(pathname) {
-    return this.connection.run(`DELETE FROM ${TABLE_NAME} WHERE pathname = ?`, pathname);
+    return this.connection.run(`DELETE FROM ${TABLE_NAME} WHERE pathname LIKE ?`, pathname);
   }
 
   async dropTable() {
@@ -56,8 +63,8 @@ module.exports = class BeaconStore {
       timestamp INTEGER NOT NULL,
       useragent TEXT NOT NULL,
       url TEXT NOT NULL,
-      pagelabel TEXT NOT NULL,
-      pathname TEXT NOT NULL
+      pagelabel TEXT,
+      pathname TEXT
     )`);
   }
 };

@@ -18,14 +18,14 @@ test.describe("LUX element timing", () => {
     const ET = parseUserTiming(getSearchParam(beacon, "ET"));
 
     expect(Object.values(ET).length).toEqual(2);
-    expect(ET["red-image"].startTime).toBeGreaterThan(0);
-    expect(ET["red-image-delayed"].startTime).toBeGreaterThan(ET["red-image"].startTime);
-    expect(ET["red-image-delayed"].startTime).toBeGreaterThan(100);
+    expect(ET["eve-image"].startTime).toBeGreaterThan(0);
+    expect(ET["eve-image-delayed"].startTime).toBeGreaterThan(ET["eve-image"].startTime);
+    expect(ET["eve-image-delayed"].startTime).toBeGreaterThan(100);
   });
 
   test("element timing is collected in a SPA", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    const imageRequests = new RequestInterceptor(page).createRequestMatcher("red.png");
+    const imageRequests = new RequestInterceptor(page).createRequestMatcher("eve.jpg");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
@@ -38,7 +38,7 @@ test.describe("LUX element timing", () => {
     await page.waitForTimeout(30);
     await page.evaluate(() => {
       const img = document.createElement("img");
-      img.src = "red.png";
+      img.src = "eve.jpg";
       img.elementTiming = "spa-image";
       document.body.appendChild(img);
     });

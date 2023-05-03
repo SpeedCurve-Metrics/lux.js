@@ -1,3 +1,4 @@
+import { floor } from "./math";
 import now from "./now";
 import scriptStartTime from "./start-marker";
 
@@ -16,7 +17,7 @@ export type PerfTimingKey = keyof Omit<PerformanceTiming, "toJSON">;
 
 export function msSinceNavigationStart(): number {
   if (performance.now) {
-    return Math.floor(performance.now());
+    return floor(performance.now());
   }
 
   return now() - timing.navigationStart;
@@ -41,7 +42,13 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
   const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
 
   if (navEntries.length) {
-    return navEntries[0] as PartialPerformanceNavigationTiming;
+    const entry = navEntries[0];
+
+    if (typeof entry.activationStart === "undefined") {
+      entry.activationStart = 0;
+    }
+
+    return entry as PartialPerformanceNavigationTiming;
   }
 
   const navType = navigationType();
