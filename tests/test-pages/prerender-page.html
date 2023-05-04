@@ -30,10 +30,10 @@
     <ul id="perf-metrics"></ul>
 
     <script>
+        const navEntry = performance.getEntriesByType("navigation")[0];
         const logVisibilityState = () => log(`visibilityState = ${document.visibilityState}`);
         const logPrerenderingState = () => {
             if (!document.prerendering) {
-                const navEntry = performance.getEntriesByType("navigation")[0];
                 log(`activationStart = ${navEntry.activationStart.toFixed(0)} ms`);
             }
 
@@ -80,7 +80,7 @@
                     name += ` (${details.join(" ")})`;
                 }
 
-                log(`${name} ${Math.floor(entry.startTime)} ms`, "perf-metrics");
+                log(`${name} ${Math.floor(entry.startTime - navEntry.activationStart)} ms`, "perf-metrics");
             });
         });
 
