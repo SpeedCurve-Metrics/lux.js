@@ -10,6 +10,10 @@
     <h1>LUX prerender test page (index)</h1>
     <p>This page uses <a href="https://github.com/WICG/nav-speculation/">speculation rules</a> to prerender <a id="next-page-link">the next page</a>.</p>
 
+    <p>Speculation rules <b id="speculation-status">are not active</b>.</p>
+
+    <button id="add-speculation-rules">Add speculation rules</button>
+
     <script>
         const nextPageUrl = "/prerender-page.html" + document.location.search;
         const speculationRules = document.createElement("script");
@@ -25,8 +29,18 @@
             }
         `;
 
+        const qs = new URLSearchParams(location.search);
+        const addSpeculationRules = () => {
+            document.body.appendChild(speculationRules);
+            document.getElementById("speculation-status").textContent = "are active";
+        };
+
         document.getElementById("next-page-link").href = nextPageUrl;
-        document.body.appendChild(speculationRules);
+        document.getElementById("add-speculation-rules").addEventListener("click", addSpeculationRules);
+
+        if (qs.get("noSpeculationRules") === null) {
+            addSpeculationRules();
+        }
     </script>
 </body>
 </html>
