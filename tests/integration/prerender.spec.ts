@@ -2,7 +2,13 @@ import { test, expect, Page } from "@playwright/test";
 import { chromium } from "playwright";
 import Flags from "../../src/flags.js";
 import BeaconStore from "../helpers/beacon-store.js";
-import { getNavTiming, getSearchParam, hasFlag, parseUserTiming } from "../helpers/lux.js";
+import {
+  getCpuStat,
+  getNavTiming,
+  getSearchParam,
+  hasFlag,
+  parseUserTiming,
+} from "../helpers/lux.js";
 
 test.describe("LUX prerender support", () => {
   test.skip(
@@ -58,15 +64,18 @@ test.describe("LUX prerender support", () => {
   });
 
   test("Prerendered pages record metrics relative to activationStart", async () => {
+    const LONG_TASK_TIME = 60;
     const CLICK_WAIT_TIME = 500;
     const IMAGE_DELAY_TIME = 1000;
+    const SEND_LUX_DELAY = CLICK_WAIT_TIME + IMAGE_DELAY_TIME + 100;
 
     // These setTimeout hacks are to get around a bug in Playwright where it's not possible to
     // interact with a prerendered page. See https://github.com/microsoft/playwright/issues/22733
     const injectScript = [
       "LUX.auto=false",
       `setTimeout(() => document.getElementById('next-page-link')?.click(), ${CLICK_WAIT_TIME})`,
-      `setTimeout(LUX.send, ${CLICK_WAIT_TIME + IMAGE_DELAY_TIME + 100})`,
+      `setTimeout(LUX.send, ${SEND_LUX_DELAY})`,
+      `if (location.pathname === '/prerender-page.html') createLongTask(${LONG_TASK_TIME})`,
     ].join(";");
 
     await page.goto(
@@ -111,16 +120,29 @@ test.describe("LUX prerender support", () => {
     // The first image should have loaded before activationStart
     expect(ET["eve-image"].startTime).toBeLessThan(activationStart);
 
-    // The second image was delayed. This assertion looks confusing but is testing that the image was
-    // loaded roughly IMAGE_DELAY_TIME after the first image, and is relative to activationStart.
+    // The second image was delayed and should have loaded after IMAGE_DELAY TIME, but relative
+    // to activationStart.
     expect(ET["charlie-image"].startTime).toBeGreaterThanOrEqual(
-      ET["eve-image"].startTime + IMAGE_DELAY_TIME - activationStart
+      IMAGE_DELAY_TIME - activationStart
     );
 
     // Paint metrics
     expect(getNavTiming(beacon, "sr")).toBeLessThan(activationStart);
     expect(getNavTiming(beacon, "fc")).toBeLessThan(activationStart);
     expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(ET["charlie-image"].startTime);
+
+    // CPU metrics
+    const longTaskCount = getCpuStat(beacon, "n");
+    const longTaskTotal = getCpuStat(beacon, "s");
+    const longTaskMedian = getCpuStat(beacon, "d");
+    const longTaskMax = getCpuStat(beacon, "x");
+    const firstCpuIdle = getCpuStat(beacon, "i");
+
+    expect(longTaskCount).toEqual(1);
+    expect(longTaskTotal).toBeGreaterThanOrEqual(LONG_TASK_TIME);
+    expect(longTaskMedian).toEqual(longTaskTotal);
+    expect(longTaskMax).toEqual(longTaskTotal);
+    expect(firstCpuIdle).toBeLessThan(activationStart);
 
     // The same Playwright bug mentioned above means we have to forcefully close the page after this test
     await page.close();

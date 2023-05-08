@@ -1,3 +1,4 @@
+import { floor } from "../math";
 import { getNavigationEntry } from "../performance";
 
 /**
@@ -8,7 +9,7 @@ export function getNavTimingValue(key: keyof PerformanceNavigationTiming): numbe
   const relativeTo = key === "activationStart" ? 0 : navEntry.activationStart;
 
   if (typeof navEntry[key] === "number") {
-    return Math.max(0, (navEntry[key] as number) - relativeTo);
+    return Math.max(0, floor((navEntry[key] as number) - relativeTo));
   }
 
   return undefined;

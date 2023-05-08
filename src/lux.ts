@@ -143,6 +143,7 @@ LUX = (function () {
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
   let gCustomerDataTimeout: number; // setTimeout timer for sending a Customer Data beacon after onload
   let gMaxMeasureTimeout: number; // setTimeout timer for sending the beacon after a maximum measurement time
+  const navEntry = getNavigationEntry();
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -525,7 +526,7 @@ LUX = (function () {
   function elementTimingValues(): string {
     const aET: string[] = [];
     const startMark = _getMark(START_MARK);
-    const tZero = startMark ? startMark.startTime : getNavigationEntry().activationStart;
+    const tZero = startMark ? startMark.startTime : navEntry.activationStart;
 
     PO.getEntries("element").forEach((entry) => {
       if (entry.identifier && entry.startTime) {
@@ -617,24 +618,30 @@ LUX = (function () {
     return sCPU;
   }
 
-  // Return a hash of "stats" about the CPU details incl. count, max, and median.
+  /**
+   * Return a hash of "stats" about the CPU details incl. count, max, and median.
+   * sDetails is a string of starttime|duration tuples e.g. 456|250,789|250,1012|250
+   */
   function cpuStats(sDetails: string) {
-    // tuples of starttime|duration, eg: ,456|250,789|250,1012|250
-    let max = 0;
-    let fci: number = getFcp() || 0; // FCI is beginning of 5 second window of no Long Tasks _after_ first contentful paint
-    // If FCP is 0 then that means FCP is not supported.
+    // FCI is beginning of 5 second window of no Long Tasks _after_ first contentful paint
+    const fcp = getFcp(false);
+
     // If FCP is not supported then we can NOT calculate a valid FCI.
     // Thus, leave FCI = 0 and exclude it from the beacon above.
-    let bFoundFci = 0 === fci ? true : false;
+    let fci: number = fcp || 0;
+    let bFoundFci = typeof fcp === undefined;
+    let max = 0;
+
     const aValues = [];
     const aTuples = sDetails.split(",");
+
     for (let i = 0; i < aTuples.length; i++) {
       const aTuple = aTuples[i].split("|");
       if (aTuple.length === 2) {
         const start = parseInt(aTuple[0]);
         const dur = parseInt(aTuple[1]);
         aValues.push(dur);
-        max = dur > max ? dur : max;
+        max = Math.max(max, dur);
 
         // FCI
         if (!bFoundFci && start > fci) {
@@ -654,7 +661,7 @@ LUX = (function () {
     const count = aValues.length;
     const median = arrayMedian(aValues);
 
-    return { count, median, max, fci };
+    return { count, median, max, fci: fci - navEntry.activationStart };
   }
 
   function getCLS(): string | undefined {
@@ -1018,15 +1025,15 @@ LUX = (function () {
   }
 
   // Return First Contentful Paint or undefined if not supported.
-  function getFcp(): number | undefined {
+  function getFcp(relativeToActivationStart = true): number | undefined {
     const paintEntries = getEntriesByType("paint");
-    const navEntry = getNavigationEntry();
+    const relativeTo = relativeToActivationStart ? navEntry.activationStart : 0;
 
     for (let i = 0; i < paintEntries.length; i++) {
       const entry = paintEntries[i];
 
       if (entry.name === "first-contentful-paint") {
-        return floor(entry.startTime - navEntry.activationStart);
+        return floor(entry.startTime - relativeTo);
       }
     }
 
@@ -1036,7 +1043,6 @@ LUX = (function () {
   // Return Largest Contentful Paint or undefined if not supported.
   function getLcp(): number | undefined {
     const lcpEntries = PO.getEntries("largest-contentful-paint");
-    const navEntry = getNavigationEntry();
 
     if (lcpEntries.length) {
       const lastEntry = lcpEntries[lcpEntries.length - 1];
@@ -1053,7 +1059,6 @@ LUX = (function () {
   function getStartRender(): number | undefined {
     if ("PerformancePaintTiming" in self) {
       const paintEntries = getEntriesByType("paint");
-      const navEntry = getNavigationEntry();
 
       if (paintEntries.length) {
         // If the Paint Timing API is supported, use the value of the first paint event
@@ -1171,7 +1176,7 @@ LUX = (function () {
 
   // Return the main HTML document transfer size (in bytes).
   function docSize(): number {
-    return getNavigationEntry().encodedBodySize || 0;
+    return navEntry.encodedBodySize || 0;
   }
 
   // Return the connection type based on Network Information API.
