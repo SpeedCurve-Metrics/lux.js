@@ -1,3 +1,50 @@
+export interface UrlPatternMapping {
+  [key: string]: string[];
+}
+
+export function getMatchesFromPatternMap(
+  patternMap: UrlPatternMapping,
+  hostname: string,
+  pathname: string
+): string[];
+export function getMatchesFromPatternMap(
+  patternMap: UrlPatternMapping,
+  hostname: string,
+  pathname: string,
+  firstOnly: boolean
+): string | undefined;
+export function getMatchesFromPatternMap(
+  patternMap: UrlPatternMapping,
+  hostname: string,
+  pathname: string,
+  firstOnly?: boolean
+): string[] | (string | undefined) {
+  const matches = [];
+
+  for (const key in patternMap) {
+    const patterns = patternMap[key];
+    if (Array.isArray(patterns)) {
+      for (const i in patterns) {
+        const pattern = patterns[i];
+
+        if (patternMatchesUrl(pattern, hostname, pathname)) {
+          if (firstOnly) {
+            return key;
+          }
+
+          matches.push(key);
+        }
+      }
+    }
+  }
+
+  if (firstOnly) {
+    return undefined;
+  }
+
+  return matches;
+}
+
 export function patternMatchesUrl(pattern: string, hostname: string, pathname: string): boolean {
   const regex = createRegExpFromPattern(pattern);
 

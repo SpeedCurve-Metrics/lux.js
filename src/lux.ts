@@ -1,6 +1,6 @@
 import { fitUserTimingEntries } from "./beacon";
 import * as Config from "./config";
-import { END_MARK, START_MARK } from "./constants";
+import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
 import * as CustomData from "./custom-data";
 import { onVisible, isVisible, wasPrerendered } from "./document";
 import Flags, { addFlag } from "./flags";
@@ -23,7 +23,7 @@ import {
 } from "./performance";
 import * as PO from "./performance-observer";
 import scriptStartTime from "./start-marker";
-import { patternMatchesUrl } from "./url-matcher";
+import { getMatchesFromPatternMap } from "./url-matcher";
 
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
@@ -1380,6 +1380,14 @@ LUX = (function () {
       gFlags = addFlag(gFlags, Flags.PageWasPrerendered);
     }
 
+    if (LUX.conversions) {
+      getMatchesFromPatternMap(LUX.conversions, location.hostname, location.pathname).forEach(
+        (conversion) => {
+          LUX.addData(conversion, BOOLEAN_TRUE);
+        }
+      );
+    }
+
     // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
     // So we create a base URL that has all the necessary information:
     const baseUrl = _getBeaconUrl(CustomData.getAllCustomData());
@@ -1705,29 +1713,23 @@ LUX = (function () {
   function _getPageLabel() {
     if (LUX.label) {
       gFlags = addFlag(gFlags, Flags.PageLabelFromLabelProp);
-
       return LUX.label;
-    } else if (typeof LUX.pagegroups !== "undefined") {
-      const pagegroups = LUX.pagegroups;
-      let label = "";
-      for (const pagegroup in pagegroups) {
-        const rules = pagegroups[pagegroup];
-        if (Array.isArray(rules)) {
-          rules.every((rule: string) => {
-            if (patternMatchesUrl(rule, document.location.hostname, document.location.pathname)) {
-              label = pagegroup;
-              return false; // stop when first match is found
-            }
-            return true;
-          });
-        }
-        // exits loop when first match is found
-        if (label) {
-          gFlags = addFlag(gFlags, Flags.PageLabelFromPagegroup);
-          return label;
-        }
+    }
+
+    if (typeof LUX.pagegroups !== "undefined") {
+      const label = getMatchesFromPatternMap(
+        LUX.pagegroups,
+        location.hostname,
+        location.pathname,
+        true
+      );
+
+      if (label) {
+        gFlags = addFlag(gFlags, Flags.PageLabelFromPagegroup);
+        return label;
       }
     }
+
     if (typeof LUX.jspagelabel !== "undefined") {
       const evaluateJsPageLabel = Function('"use strict"; return ' + LUX.jspagelabel);
 
@@ -1736,7 +1738,6 @@ LUX = (function () {
 
         if (label) {
           gFlags = addFlag(gFlags, Flags.PageLabelFromGlobalVariable);
-
           return label;
         }
       } catch (e) {
@@ -1746,7 +1747,6 @@ LUX = (function () {
 
     // default to document.title
     gFlags = addFlag(gFlags, Flags.PageLabelFromDocumentTitle);
-
     return document.title;
   }
 
