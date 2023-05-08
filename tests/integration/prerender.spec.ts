@@ -57,16 +57,17 @@ test.describe("LUX prerender support", () => {
     expect(hasFlag(new URL(beacons[1].url), Flags.VisibilityStateNotVisible)).toBe(true);
   });
 
-  test("Prerendered pages record metrics relative to activationStart", async () => {
+  test("Prerendered pages a non-zero value for activationStart", async () => {
     const CLICK_WAIT_TIME = 500;
     const IMAGE_DELAY_TIME = 1000;
+    const SEND_LUX_DELAY = CLICK_WAIT_TIME + IMAGE_DELAY_TIME + 100;
 
     // These setTimeout hacks are to get around a bug in Playwright where it's not possible to
     // interact with a prerendered page. See https://github.com/microsoft/playwright/issues/22733
     const injectScript = [
       "LUX.auto=false",
       `setTimeout(() => document.getElementById('next-page-link')?.click(), ${CLICK_WAIT_TIME})`,
-      `setTimeout(LUX.send, ${CLICK_WAIT_TIME + IMAGE_DELAY_TIME + 100})`,
+      `setTimeout(LUX.send, ${SEND_LUX_DELAY})`,
     ].join(";");
 
     await page.goto(
@@ -104,23 +105,6 @@ test.describe("LUX prerender support", () => {
     expect(getNavTiming(beacon, "oc")).toEqual(0);
     expect(getNavTiming(beacon, "ls")).toEqual(0);
     expect(getNavTiming(beacon, "le")).toEqual(0);
-
-    // Element timing
-    const ET = parseUserTiming(getSearchParam(beacon, "ET"));
-
-    // The first image should have loaded before activationStart
-    expect(ET["eve-image"].startTime).toBeLessThan(activationStart);
-
-    // The second image was delayed. This assertion looks confusing but is testing that the image was
-    // loaded roughly IMAGE_DELAY_TIME after the first image, and is relative to activationStart.
-    expect(ET["charlie-image"].startTime).toBeGreaterThanOrEqual(
-      ET["eve-image"].startTime + IMAGE_DELAY_TIME - activationStart
-    );
-
-    // Paint metrics
-    expect(getNavTiming(beacon, "sr")).toBeLessThan(activationStart);
-    expect(getNavTiming(beacon, "fc")).toBeLessThan(activationStart);
-    expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(ET["charlie-image"].startTime);
 
     // The same Playwright bug mentioned above means we have to forcefully close the page after this test
     await page.close();

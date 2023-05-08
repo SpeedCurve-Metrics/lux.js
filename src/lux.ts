@@ -525,7 +525,7 @@ LUX = (function () {
   function elementTimingValues(): string {
     const aET: string[] = [];
     const startMark = _getMark(START_MARK);
-    const tZero = startMark ? startMark.startTime : getNavigationEntry().activationStart;
+    const tZero = startMark ? startMark.startTime : 0;
 
     PO.getEntries("element").forEach((entry) => {
       if (entry.identifier && entry.startTime) {
@@ -1020,13 +1020,12 @@ LUX = (function () {
   // Return First Contentful Paint or undefined if not supported.
   function getFcp(): number | undefined {
     const paintEntries = getEntriesByType("paint");
-    const navEntry = getNavigationEntry();
 
     for (let i = 0; i < paintEntries.length; i++) {
       const entry = paintEntries[i];
 
       if (entry.name === "first-contentful-paint") {
-        return floor(entry.startTime - navEntry.activationStart);
+        return floor(entry.startTime);
       }
     }
 
@@ -1036,12 +1035,11 @@ LUX = (function () {
   // Return Largest Contentful Paint or undefined if not supported.
   function getLcp(): number | undefined {
     const lcpEntries = PO.getEntries("largest-contentful-paint");
-    const navEntry = getNavigationEntry();
 
     if (lcpEntries.length) {
       const lastEntry = lcpEntries[lcpEntries.length - 1];
       logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
-      return floor(lastEntry.startTime - navEntry.activationStart);
+      return floor(lastEntry.startTime);
     }
 
     return undefined;
@@ -1053,13 +1051,12 @@ LUX = (function () {
   function getStartRender(): number | undefined {
     if ("PerformancePaintTiming" in self) {
       const paintEntries = getEntriesByType("paint");
-      const navEntry = getNavigationEntry();
 
       if (paintEntries.length) {
         // If the Paint Timing API is supported, use the value of the first paint event
         const paintValues = paintEntries.map((entry) => entry.startTime);
 
-        return floor(Math.min.apply(null, paintValues) - navEntry.activationStart);
+        return floor(Math.min.apply(null, paintValues));
       }
     }
 
