@@ -966,7 +966,7 @@ LUX = (function () {
       const fcp = getFcp();
       const lcp = getLcp();
 
-      const prefixNTValue = (key: PerfTimingKey, prefix: string): string => {
+      const prefixNTValue = (key: keyof PerformanceNavigationTiming, prefix: string): string => {
         const value = getNavTimingValue(key);
 
         if (typeof value === "undefined") {
@@ -978,6 +978,7 @@ LUX = (function () {
 
       s = [
         ns,
+        prefixNTValue("activationStart", "as"),
         prefixNTValue("redirectStart", "rs"),
         prefixNTValue("redirectEnd", "re"),
         prefixNTValue("fetchStart", "fs"),
@@ -989,7 +990,6 @@ LUX = (function () {
         prefixNTValue("requestStart", "qs"),
         prefixNTValue("responseStart", "bs"),
         prefixNTValue("responseEnd", "be"),
-        prefixNTValue("domLoading", "ol"),
         prefixNTValue("domInteractive", "oi"),
         prefixNTValue("domContentLoadedEventStart", "os"),
         prefixNTValue("domContentLoadedEventEnd", "oe"),
@@ -1049,7 +1049,7 @@ LUX = (function () {
   // Mostly works on just Chrome and IE.
   // Return undefined if not supported.
   function getStartRender(): number | undefined {
-    if (performance.timing) {
+    if ("PerformancePaintTiming" in self) {
       const paintEntries = getEntriesByType("paint");
 
       if (paintEntries.length) {
@@ -1057,10 +1057,12 @@ LUX = (function () {
         const paintValues = paintEntries.map((entry) => entry.startTime);
 
         return floor(Math.min.apply(null, paintValues));
-      } else if (timing.msFirstPaint && __ENABLE_POLYFILLS) {
-        // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
-        return floor(timing.msFirstPaint - timing.navigationStart);
       }
+    }
+
+    if (performance.timing && timing.msFirstPaint && __ENABLE_POLYFILLS) {
+      // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
+      return floor(timing.msFirstPaint - timing.navigationStart);
     }
 
     logger.logEvent(LogEvent.PaintTimingNotSupported);

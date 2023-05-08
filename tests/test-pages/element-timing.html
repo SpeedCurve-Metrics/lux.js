@@ -11,11 +11,11 @@
 </head>
 <body>
     <h1>LUX user timing test page</h1>
-    <img src="red.png" elementtiming="red-image">
+    <img src="eve.jpg" elementtiming="eve-image">
     <script>
         const img = document.createElement("img");
-        img.src = "red.png?delayed";
-        img.elementTiming = "red-image-delayed";
+        img.src = "eve.jpg?delayed";
+        img.elementTiming = "eve-image-delayed";
 
         setTimeout(() => document.body.appendChild(img), 200);
     </script>

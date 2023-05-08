@@ -162,7 +162,6 @@ for (const pageName in testPages) {
       // Everything else should have be non-zero
       expect(getNavTiming(beacon, "bs")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "be")).toBeGreaterThan(0);
-      expect(getNavTiming(beacon, "ol")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "oi")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "os")).toBeGreaterThan(0);
       expect(getNavTiming(beacon, "oe")).toBeGreaterThan(0);
@@ -172,6 +171,8 @@ for (const pageName in testPages) {
       expect(getNavTiming(beacon, "fc")).toBeGreaterThan(0);
 
       if (browserName === "chromium") {
+        // activationStart will be zero
+        expect(getNavTiming(beacon, "as")).toEqual(0);
         expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
         expect(getNavTiming(beacon, "lc")).toBeGreaterThan(0);
       }
