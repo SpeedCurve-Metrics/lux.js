@@ -109,6 +109,10 @@ test.describe("LUX user timing", () => {
       })
     );
 
+    // Have a small pause to ensure the marks from the first page view are not included in the
+    // next one.
+    await page.waitForTimeout(50);
+
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.init();
