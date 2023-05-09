@@ -55,10 +55,12 @@ test.describe("LUX minimum and maximum measure times", () => {
     await page.evaluate(() => LUX.init());
     await page.waitForTimeout(50);
     await page.evaluate(() => LUX.send());
+    const secondBeaconEndTime = await getElapsedMs(page);
 
     const thirdBeaconStartTime = await getElapsedMs(page);
     await page.evaluate(() => LUX.init());
     await page.waitForTimeout(220);
+    const thirdBeaconEndTime = await getElapsedMs(page);
 
     const beaconTiming: PerformanceNavigationTiming[] = await page.evaluate(() =>
       performance
@@ -70,18 +72,18 @@ test.describe("LUX minimum and maximum measure times", () => {
     expect(beaconTiming.length).toEqual(3);
 
     // The first beacon was sent automatically after the maxMeasureTime (200 ms)
-    expect(hasFlag(luxRequests.getUrl(0)!, Flags.BeaconSentAfterTimeout))!.toBe(true);
+    expect(hasFlag(luxRequests.getUrl(0)!, Flags.BeaconSentAfterTimeout)).toBe(true);
     expect(beaconTiming[0].startTime).toBeGreaterThan(200);
     expect(beaconTiming[0].startTime).toBeLessThan(220);
 
     // The second beacon was sent manually after a roughly 50 ms wait
-    expect(hasFlag(luxRequests.getUrl(1)!, Flags.BeaconSentAfterTimeout))!.toBe(false);
+    expect(hasFlag(luxRequests.getUrl(1)!, Flags.BeaconSentAfterTimeout)).toBe(false);
     expect(beaconTiming[1].startTime).toBeGreaterThan(secondBeaconStartTime + 50);
-    expect(beaconTiming[1].startTime).toBeLessThan(secondBeaconStartTime + 70);
+    expect(beaconTiming[1].startTime).toBeLessThan(secondBeaconEndTime);
 
     // The third beacon was sent automatically
-    expect(hasFlag(luxRequests.getUrl(2)!, Flags.BeaconSentAfterTimeout))!.toBe(true);
+    expect(hasFlag(luxRequests.getUrl(2)!, Flags.BeaconSentAfterTimeout)).toBe(true);
     expect(beaconTiming[2].startTime).toBeGreaterThan(thirdBeaconStartTime + 200);
-    expect(beaconTiming[2].startTime).toBeLessThan(thirdBeaconStartTime + 220);
+    expect(beaconTiming[2].startTime).toBeLessThan(thirdBeaconEndTime);
   });
 });

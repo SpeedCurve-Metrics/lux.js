@@ -17,7 +17,6 @@ import {
   performance,
   timing,
   getEntriesByType,
-  PerfTimingKey,
   navigationType,
   getNavigationEntry,
 } from "./performance";
@@ -143,6 +142,7 @@ LUX = (function () {
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
   let gCustomerDataTimeout: number; // setTimeout timer for sending a Customer Data beacon after onload
   let gMaxMeasureTimeout: number; // setTimeout timer for sending the beacon after a maximum measurement time
+  const navEntry = getNavigationEntry();
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -361,9 +361,9 @@ LUX = (function () {
         const startMark = _getMark(startMarkName);
         if (startMark) {
           startTime = startMark.startTime;
-        } else if (timing[startMarkName as PerfTimingKey]) {
+        } else if (typeof navEntry[startMarkName] === "number") {
           // the mark name can also be a property from Navigation Timing
-          startTime = timing[startMarkName as PerfTimingKey] - timing.navigationStart;
+          startTime = navEntry[startMarkName] as number;
         } else {
           throwError(startMarkName);
         }
@@ -373,9 +373,9 @@ LUX = (function () {
         const endMark = _getMark(endMarkName);
         if (endMark) {
           endTime = endMark.startTime;
-        } else if (timing[endMarkName as PerfTimingKey]) {
+        } else if (typeof navEntry[endMarkName] === "number") {
           // the mark name can also be a property from Navigation Timing
-          endTime = timing[endMarkName as PerfTimingKey] - timing.navigationStart;
+          endTime = navEntry[endMarkName] as number;
         } else {
           throwError(endMarkName);
         }
@@ -1168,7 +1168,7 @@ LUX = (function () {
 
   // Return the main HTML document transfer size (in bytes).
   function docSize(): number {
-    return getNavigationEntry().encodedBodySize || 0;
+    return navEntry.encodedBodySize || 0;
   }
 
   // Return the connection type based on Network Information API.

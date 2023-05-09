@@ -33,6 +33,7 @@ export function navigationType() {
 
 type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> & {
   [key: string]: number | string;
+  navigationStart: number;
   activationStart: number;
   startTime: number;
   type: PerformanceNavigationTiming["type"];
@@ -42,17 +43,20 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
   const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
 
   if (navEntries.length) {
-    const entry = navEntries[0];
+    const entry = navEntries[0] as PartialPerformanceNavigationTiming;
+
+    entry.navigationStart = 0;
 
     if (typeof entry.activationStart === "undefined") {
       entry.activationStart = 0;
     }
 
-    return entry as PartialPerformanceNavigationTiming;
+    return entry;
   }
 
   const navType = navigationType();
   const entry: PartialPerformanceNavigationTiming = {
+    navigationStart: 0,
     activationStart: 0,
     startTime: 0,
     type: navType == 2 ? "back_forward" : navType === 1 ? "reload" : "navigate",

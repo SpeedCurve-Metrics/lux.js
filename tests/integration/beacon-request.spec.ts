@@ -22,7 +22,7 @@ test.describe("LUX beacon request", () => {
         performance.mark(`ut-mark-${i}`);
       });
     });
-    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()), 2);
 
     expect(luxRequests.count()).toEqual(2);
 
