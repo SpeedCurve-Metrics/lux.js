@@ -2,9 +2,14 @@
 
 ## 2023-??-??: v308
 
+### New features
+
+- Pages that are [prerendered](https://web.dev/speculative-prerendering/) are now flagged as such.
+- Pages that are restored from the [back-forward cache (bfcache)](https://web.dev/bfcache/) can now be tracked by setting `LUX.newBeaconOnPageShow = true`. [Read the documentation](https://support.speedcurve.com/docs/rum-js-api#luxnewbeacononpageshow) for more information on how this works.
+
 ### Improvements
 
-- The beacon will no longer be sent automatically if the page visibility is hidden. This can be overridden by setting `LUX.autoWhenHidden = true`.
+- The beacon will no longer be sent automatically if the page visibility is hidden. This can be overridden by setting `LUX.trackHiddenPages = true`.
 - Navigation timing values with a value of zero are now reported, rather than ignored.
 - The legacy `domLoading` metric is no longer collected.
 - The first paint event of any type will be considered for start render, rather than just first-paint events.

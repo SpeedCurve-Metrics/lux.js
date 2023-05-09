@@ -7,7 +7,7 @@ import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
-import { floor } from "./math";
+import { clamp, floor } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import { getNavTimingValue } from "./metric/navigation-timing";
@@ -112,7 +112,7 @@ LUX = (function () {
       const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
 
       if (!gFirstInputDelay || gFirstInputDelay < fid) {
-        gFirstInputDelay = fid;
+        gFirstInputDelay = floor(fid);
       }
 
       // Allow first-input events to be considered for INP
@@ -140,9 +140,17 @@ LUX = (function () {
   const gSessionTimeout = 30 * 60; // number of seconds after which we consider a session to have "timed out" (used for calculating bouncerate)
   let gSyncId = createSyncId(); // if we send multiple beacons, use this to sync them (eg, LUX & IX) (also called "luxid")
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
-  let gCustomerDataTimeout: number; // setTimeout timer for sending a Customer Data beacon after onload
-  let gMaxMeasureTimeout: number; // setTimeout timer for sending the beacon after a maximum measurement time
+  let gCustomerDataTimeout: number | undefined; // setTimeout timer for sending a Customer Data beacon after onload
+  let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
+  let pageRestoreTime: number | undefined; // ms since navigationStart representing when the page was restored from the bfcache
   const navEntry = getNavigationEntry();
+
+  /**
+   * To measure the way a user experienced a metric, we measure metrics relative to the time the user
+   * started viewing the page. On prerendered pages, this is activationStart. On bfcache restores, this
+   * is the page restore time. On all other pages this value will be zero.
+   */
+  const getZeroTime = () => pageRestoreTime || navEntry.activationStart;
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -253,13 +261,13 @@ LUX = (function () {
    * When `absolute = true` the time is always relative to navigationStart, even
    * in SPAs.
    */
-  function _now(absolute?: boolean) {
+  function _now(absolute?: boolean): number {
     const sinceNavigationStart = msSinceNavigationStart();
     const startMark = _getMark(START_MARK);
 
     // For SPA page views, we use our internal mark as a reference point
     if (startMark && !absolute) {
-      return sinceNavigationStart - startMark.startTime;
+      return floor(sinceNavigationStart - startMark.startTime);
     }
 
     // For "regular" page views, we can use performance.now() if it's available...
@@ -525,7 +533,7 @@ LUX = (function () {
   function elementTimingValues(): string {
     const aET: string[] = [];
     const startMark = _getMark(START_MARK);
-    const tZero = startMark ? startMark.startTime : 0;
+    const tZero = startMark ? startMark.startTime : getZeroTime();
 
     PO.getEntries("element").forEach((entry) => {
       if (entry.identifier && entry.startTime) {
@@ -783,11 +791,11 @@ LUX = (function () {
     return parseInt(nThis) < globalConfig.samplerate;
   }
 
-  // _init()
-  // Use this function in Single Page Apps to reset things.
-  // This function should ONLY be called within a SPA!
-  // Otherwise, you might clear marks & measures that were set by a shim.
-  function _init(): void {
+  /**
+   * Re-initialize lux.js to start a new "page". This is typically called within a SPA at the
+   * beginning of a page transition, but is also called internally when the BF cache is restored.
+   */
+  function _init(startTime?: number): void {
     // Some customers (incorrectly) call LUX.init on the very first page load of a SPA. This would
     // cause some first-page-only data (like paint metrics) to be lost. To prevent this, we silently
     // bail from this function when we detect an unnecessary LUX.init call.
@@ -795,6 +803,14 @@ LUX = (function () {
 
     if (!endMark) {
       return;
+    }
+
+    // Mark the "navigationStart" for this SPA page. A start time can be passed through, for example
+    // to set a page's start time as an event timestamp.
+    if (startTime) {
+      _mark(START_MARK, { startTime });
+    } else {
+      _mark(START_MARK);
     }
 
     logger.logEvent(LogEvent.InitCalled);
@@ -822,9 +838,6 @@ LUX = (function () {
     // Clear flags then set the flag that init was called (ie, this is a SPA).
     gFlags = 0;
     gFlags = addFlag(gFlags, Flags.InitCalled);
-
-    // Mark the "navigationStart" for this SPA page.
-    _mark(START_MARK);
 
     // Reset the maximum measure timeout
     createMaxMeasureTimeout();
@@ -946,8 +959,9 @@ LUX = (function () {
     let ns = timing.navigationStart;
     const startMark = _getMark(START_MARK);
     const endMark = _getMark(END_MARK);
-    if (startMark && endMark) {
+    if (startMark && endMark && !pageRestoreTime) {
       // This is a SPA page view, so send the SPA marks & measures instead of Nav Timing.
+      // Note: pageRestoreTime indicates this was a bfcache restore, which we don't want to treat as a SPA.
       const start = floor(startMark.startTime); // the start mark is "zero"
       ns += start; // "navigationStart" for a SPA is the real navigationStart plus the start mark
       const end = floor(endMark.startTime) - start; // delta from start mark
@@ -967,7 +981,9 @@ LUX = (function () {
       const lcp = getLcp();
 
       const prefixNTValue = (key: keyof PerformanceNavigationTiming, prefix: string): string => {
-        const value = getNavTimingValue(key);
+        // activationStart is always absolute. Other values are relative to activationStart.
+        const zero = key === "activationStart" ? 0 : getZeroTime();
+        const value = getNavTimingValue(key, zero);
 
         if (typeof value === "undefined") {
           return "";
@@ -975,6 +991,16 @@ LUX = (function () {
 
         return prefix + value;
       };
+
+      let loadEventStartStr = prefixNTValue("loadEventStart", "ls");
+      let loadEventEndStr = prefixNTValue("loadEventEnd", "le");
+
+      if (pageRestoreTime && startMark && endMark) {
+        // For bfcache restores, we set the load time to the time it took for the page to be restored.
+        const loadTime = floor(endMark.startTime - startMark.startTime);
+        loadEventStartStr = "ls" + loadTime;
+        loadEventEndStr = "le" + loadTime;
+      }
 
       s = [
         ns,
@@ -994,11 +1020,11 @@ LUX = (function () {
         prefixNTValue("domContentLoadedEventStart", "os"),
         prefixNTValue("domContentLoadedEventEnd", "oe"),
         prefixNTValue("domComplete", "oc"),
-        prefixNTValue("loadEventStart", "ls"),
-        prefixNTValue("loadEventEnd", "le"),
-        typeof startRender !== "undefined" ? "sr" + startRender : "",
-        typeof fcp !== "undefined" ? "fc" + fcp : "",
-        typeof lcp !== "undefined" ? "lc" + lcp : "",
+        loadEventStartStr,
+        loadEventEndStr,
+        typeof startRender !== "undefined" ? "sr" + clamp(startRender) : "",
+        typeof fcp !== "undefined" ? "fc" + clamp(fcp) : "",
+        typeof lcp !== "undefined" ? "lc" + clamp(lcp) : "",
       ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
@@ -1025,7 +1051,7 @@ LUX = (function () {
       const entry = paintEntries[i];
 
       if (entry.name === "first-contentful-paint") {
-        return floor(entry.startTime);
+        return floor(entry.startTime - getZeroTime());
       }
     }
 
@@ -1039,7 +1065,7 @@ LUX = (function () {
     if (lcpEntries.length) {
       const lastEntry = lcpEntries[lcpEntries.length - 1];
       logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
-      return floor(lastEntry.startTime);
+      return floor(lastEntry.startTime - getZeroTime());
     }
 
     return undefined;
@@ -1056,7 +1082,7 @@ LUX = (function () {
         // If the Paint Timing API is supported, use the value of the first paint event
         const paintValues = paintEntries.map((entry) => entry.startTime);
 
-        return floor(Math.min.apply(null, paintValues));
+        return floor(Math.min.apply(null, paintValues) - getZeroTime());
       }
     }
 
@@ -1329,6 +1355,11 @@ LUX = (function () {
 
   // Beacon back the LUX data.
   function _sendLux(): void {
+    if (!isVisible() && !globalConfig.trackHiddenPages) {
+      logger.logEvent(LogEvent.SendCancelledPageHidden);
+      return;
+    }
+
     clearMaxMeasureTimeout();
 
     const customerid = getCustomerId();
@@ -1814,13 +1845,41 @@ LUX = (function () {
       }
     };
 
-    if (globalConfig.autoWhenHidden) {
-      // The autoWhenHidden config forces the beacon to be sent even when the page is not visible.
+    if (globalConfig.trackHiddenPages) {
+      // The trackHiddenPages config forces the beacon to be sent even when the page is not visible.
       sendBeaconAfterMinimumMeasureTime();
     } else {
       // Otherwise we only send the beacon when the page is visible.
       onVisible(sendBeaconAfterMinimumMeasureTime);
     }
+  }
+
+  // When newBeaconOnPageShow = true, we initiate a new page view whenever a page is restored from
+  // bfcache. Since we have no "onload" event to hook into after a bfcache restore, we rely on the
+  // unload and maxMeasureTime handlers to send the beacon.
+  if (globalConfig.newBeaconOnPageShow) {
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) {
+        // Record the timestamp of the bfcache restore
+        pageRestoreTime = event.timeStamp;
+
+        // In Chromium, document.visibilityState is still "hidden" when pageshow fires after a bfcache
+        // restore. Wrapping this in a setTimeout ensures the browser has enough time to update the
+        // visibility.
+        // See https://bugs.chromium.org/p/chromium/issues/detail?id=1133363
+        setTimeout(() => {
+          if (gbLuxSent) {
+            // If the beacon was already sent for this page, we start a new page view and mark the
+            // load time as the time it took to restore the page.
+            _init(pageRestoreTime);
+            _markLoadTime();
+          }
+
+          // Flag the current page as a bfcache restore
+          gFlags = addFlag(gFlags, Flags.PageWasBfCacheRestored);
+        }, 0);
+      }
+    });
   }
 
   // Add the unload handlers when sendBeaconOnPageHidden is enabled

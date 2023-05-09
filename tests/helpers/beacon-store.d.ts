@@ -1,4 +1,5 @@
 export default class BeaconStore {
+  id: string;
   static open(): Promise<BeaconStore>;
   put(
     timestamp: number,
@@ -7,10 +8,11 @@ export default class BeaconStore {
     pagelabel: string,
     pathname: string
   ): Promise<void>;
+  countAll(): Promise<number>;
   findAll(): Promise<Beacon[]>;
   findByUrl(url: string): Promise<Beacon[]>;
   findByPathname(pathname: string): Promise<Beacon[]>;
-  deleteByPathname(pathname: string): Promise<void>;
+  deleteAll(): Promise<void>;
   dropTable(): Promise<void>;
   createTable(): Promise<void>;
 }

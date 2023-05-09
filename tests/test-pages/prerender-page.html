@@ -62,6 +62,7 @@
         addEventListener("visibilitychange", logVisibilityState);
 
         document.addEventListener("prerenderingchange", () => {
+            log("prerenderingchange");
             clearInterval(prerenderInterval);
             logPrerenderingState();
         });

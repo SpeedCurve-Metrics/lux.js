@@ -14,6 +14,7 @@ export const LogEvent: Record<string, number> = {
   UnloadHandlerTriggered: 10,
   OnloadHandlerTriggered: 11,
   MarkLoadTimeCalled: 12,
+  SendCancelledPageHidden: 13,
 
   // Data collection events
   SessionIsSampled: 21,

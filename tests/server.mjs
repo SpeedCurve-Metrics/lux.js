@@ -60,6 +60,7 @@ BeaconStore.open().then(async (store) => {
         const referrerUrl = url.parse(req.headers.referer, true);
 
         if ("useBeaconStore" in referrerUrl.query) {
+          store.id = referrerUrl.query.useBeaconStore;
           store.put(
             reqTime.getTime(),
             req.headers["user-agent"],
