@@ -62,20 +62,19 @@ test.describe("LUX prerender support", () => {
     const IMAGE_DELAY_TIME = 1000;
     const SEND_LUX_DELAY = CLICK_WAIT_TIME + IMAGE_DELAY_TIME + 100;
 
-    // These setTimeout hacks are to get around a bug in Playwright where it's not possible to
-    // interact with a prerendered page. See https://github.com/microsoft/playwright/issues/22733
-    const injectScript = [
-      "LUX.auto=false",
-      `setTimeout(() => document.getElementById('next-page-link')?.click(), ${CLICK_WAIT_TIME})`,
-      `setTimeout(LUX.send, ${SEND_LUX_DELAY})`,
-    ].join(";");
-
     await page.goto(
       [
         "/prerender-index.html?useBeaconStore",
         `imageDelay=${IMAGE_DELAY_TIME}`,
-        `injectScript=${injectScript}`,
+        `injectScript=LUX.auto=false;setTimeout(LUX.send, ${SEND_LUX_DELAY})`,
       ].join("&")
+    );
+
+    // This setTimeout hack is to get around a bug in Playwright where it's not possible to interact
+    // with a prerendered page. See https://github.com/microsoft/playwright/issues/22733
+    await page.evaluate(
+      (timeout) => setTimeout(() => document.getElementById("next-page-link")!.click(), timeout),
+      CLICK_WAIT_TIME
     );
 
     await expect
@@ -86,6 +85,8 @@ test.describe("LUX prerender support", () => {
 
     const beacon = new URL((await store.findByPathname("/prerender-page.html"))[0].url);
     const activationStart = getNavTiming(beacon, "as")!;
+
+    expect(hasFlag(beacon, Flags.PageWasPrerendered)).toBe(true);
 
     // Navigation timing - activationStart should be roughly equal to when the click happened.
     // Everything else should be zero, because the user's experience of these metrics is that
