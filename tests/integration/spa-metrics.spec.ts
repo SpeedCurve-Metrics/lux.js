@@ -24,7 +24,7 @@ test.describe("LUX SPA", () => {
     browserName,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;");
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(0)!;
@@ -51,7 +51,7 @@ test.describe("LUX SPA", () => {
 
   test("calling LUX.init before LUX.send does not lose data", async ({ page, browserName }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;");
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await page.evaluate(() => LUX.init());
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
