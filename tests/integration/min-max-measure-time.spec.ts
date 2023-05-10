@@ -22,10 +22,7 @@ test.describe("LUX minimum and maximum measure times", () => {
 
   test("LUX.minMeasureTime is ignored when LUX.send() is called", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto(
-      "/default.html?injectScript=LUX.minMeasureTime=300;setTimeout(LUX.send, 100);",
-      { waitUntil: "networkidle" }
-    );
+    await page.goto("/default.html?injectScript=LUX.minMeasureTime=300;setTimeout(LUX.send, 100);");
     await luxRequests.waitForMatchingRequest();
 
     const getBeaconResourceTiming = () =>
@@ -46,9 +43,7 @@ test.describe("LUX minimum and maximum measure times", () => {
 
   test("the beacon will be sent after LUX.maxMeasureTime in a SPA", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;LUX.maxMeasureTime=200;", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/default.html?injectScript=LUX.auto=false;LUX.maxMeasureTime=200;");
     await luxRequests.waitForMatchingRequest();
 
     const secondBeaconStartTime = await getElapsedMs(page);

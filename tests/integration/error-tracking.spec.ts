@@ -29,9 +29,9 @@ test.describe("LUX JavaScript error tracking", () => {
   test("error reporting in a SPA", async ({ page, browserName }) => {
     const errorRequests = new RequestInterceptor(page).createRequestMatcher("/error/");
 
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => (LUX.label = "SPA Label"));
-    await page.addScriptTag({ content: "foo.bar()" });
+    await errorRequests.waitForMatchingRequest(() => page.addScriptTag({ content: "foo.bar()" }));
 
     const errorBeacon = errorRequests.getUrl(0)!;
 
@@ -46,11 +46,12 @@ test.describe("LUX JavaScript error tracking", () => {
   test("errors can be limited", async ({ page }) => {
     const errorRequests = new RequestInterceptor(page).createRequestMatcher("/error/");
 
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => (LUX.maxErrors = 2));
     await page.addScriptTag({ content: "bar()" });
     await page.addScriptTag({ content: "baz()" });
     await page.addScriptTag({ content: "bam()" });
+    await page.waitForLoadState("networkidle");
 
     expect(errorRequests.count()).toEqual(2);
   });
@@ -58,14 +59,19 @@ test.describe("LUX JavaScript error tracking", () => {
   test("max errors are reset for each page view", async ({ page }) => {
     const errorRequests = new RequestInterceptor(page).createRequestMatcher("/error/");
 
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => (LUX.maxErrors = 2));
     await page.evaluate(() => LUX.send());
+    await page.waitForLoadState("networkidle");
+
     await page.addScriptTag({ content: "bar()" });
     await page.addScriptTag({ content: "baz()" });
     await page.addScriptTag({ content: "bam()" });
+    await page.waitForLoadState("networkidle");
+
     await page.evaluate(() => LUX.init());
     await page.addScriptTag({ content: "bam()" });
+    await page.waitForLoadState("networkidle");
 
     expect(errorRequests.count()).toEqual(3);
   });
@@ -73,14 +79,15 @@ test.describe("LUX JavaScript error tracking", () => {
   test("error reporting can be disabled", async ({ page, browserName }) => {
     const errorRequests = new RequestInterceptor(page).createRequestMatcher("/error/");
 
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => (LUX.trackErrors = false));
     await page.addScriptTag({ content: "foo.bar()" });
+    await page.waitForLoadState("networkidle");
 
     expect(errorRequests.count()).toEqual(0);
 
     await page.evaluate(() => (LUX.trackErrors = true));
-    await page.addScriptTag({ content: "bing.bong()" });
+    await errorRequests.waitForMatchingRequest(() => page.addScriptTag({ content: "bing.bong()" }));
 
     expect(errorRequests.count()).toEqual(1);
 

@@ -10,9 +10,7 @@ test.describe("LUX element timing", () => {
 
   test("element timing is collected in auto mode", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/element-timing.html?injectScript=LUX.minMeasureTime=1000;", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/element-timing.html?injectScript=LUX.minMeasureTime=1000;");
     await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
     const ET = parseUserTiming(getSearchParam(beacon, "ET"));
@@ -26,15 +24,15 @@ test.describe("LUX element timing", () => {
   test("element timing is collected in a SPA", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     const imageRequests = new RequestInterceptor(page).createRequestMatcher("eve.jpg");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
-    await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => {
-        LUX.send();
-        LUX.init();
-      })
-    );
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
+    // Force a delay and record the timestamp so we can assert the image time was recorded relative
+    // to the next LUX.init call
+    await page.waitForTimeout(100);
     const timeBeforeImage = await getElapsedMs(page);
+    page.evaluate(() => LUX.init());
+
     await page.waitForTimeout(30);
     await page.evaluate(() => {
       const img = document.createElement("img");

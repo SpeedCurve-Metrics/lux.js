@@ -10,7 +10,8 @@ test.describe("LUX CPU timing", () => {
 
   test("detect and report long tasks on the page", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/long-tasks.html", { waitUntil: "networkidle" });
+    await page.goto("/long-tasks.html");
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
 
     const longTaskCount = getCpuStat(beacon, "n");
@@ -30,7 +31,8 @@ test.describe("LUX CPU timing", () => {
 
   test("detect and report long tasks that occured before the lux.js script", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/long-tasks.html?noInlineSnippet", { waitUntil: "networkidle" });
+    await page.goto("/long-tasks.html?noInlineSnippet");
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
 
     const longTaskCount = getCpuStat(beacon, "n");

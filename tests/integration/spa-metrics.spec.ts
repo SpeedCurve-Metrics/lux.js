@@ -24,7 +24,7 @@ test.describe("LUX SPA", () => {
     browserName,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(0)!;
@@ -51,7 +51,7 @@ test.describe("LUX SPA", () => {
 
   test("calling LUX.init before LUX.send does not lose data", async ({ page, browserName }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => LUX.init());
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
@@ -71,7 +71,7 @@ test.describe("LUX SPA", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const beacon = luxRequests.getUrl(0)!;
     const luxLoadEventStart = getNavTiming(beacon, "ls");
@@ -87,7 +87,7 @@ test.describe("LUX SPA", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const timeBeforeInit = await page.evaluate(() => {
@@ -118,7 +118,7 @@ test.describe("LUX SPA", () => {
 
   test("load time can be marked before the beacon is sent", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     await page.evaluate(() => LUX.init());

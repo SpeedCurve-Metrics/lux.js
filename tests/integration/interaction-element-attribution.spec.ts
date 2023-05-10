@@ -5,7 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX interaction element attribution", () => {
   test("button with ID should use its own ID", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator("#button-with-id").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -15,7 +15,7 @@ test.describe("LUX interaction element attribution", () => {
 
   test("button without ID should use the button text if it has some", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator(".button-no-id").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -27,7 +27,7 @@ test.describe("LUX interaction element attribution", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator(".button-no-text").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -37,7 +37,7 @@ test.describe("LUX interaction element attribution", () => {
 
   test("span inside a button should use the button text", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator(".span-in-button").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -47,7 +47,7 @@ test.describe("LUX interaction element attribution", () => {
 
   test("link with ID should use its own ID", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator("#link-with-id").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -57,7 +57,7 @@ test.describe("LUX interaction element attribution", () => {
 
   test("link without ID should use the link text if it has some", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator(".link-no-id").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -67,7 +67,7 @@ test.describe("LUX interaction element attribution", () => {
 
   test("span with ID should use its own ID", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator("#span-with-id").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -77,7 +77,7 @@ test.describe("LUX interaction element attribution", () => {
 
   test("span without ID should use the nearest ancestor ID", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator(".span-no-id").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -87,7 +87,7 @@ test.describe("LUX interaction element attribution", () => {
 
   test("element with data-sctrack and ID should use data-sctrack", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator(".nav-link-sctrack").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -99,7 +99,7 @@ test.describe("LUX interaction element attribution", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator("#nav-link-with-id").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -111,7 +111,7 @@ test.describe("LUX interaction element attribution", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator(".nav-link-no-text-or-id").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;
@@ -123,7 +123,7 @@ test.describe("LUX interaction element attribution", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
     await page.locator(".footer-span").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const ixBeacon = luxRequests.getUrl(0)!;

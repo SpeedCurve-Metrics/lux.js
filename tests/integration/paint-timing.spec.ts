@@ -5,7 +5,8 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX paint timing", () => {
   test("paint times are recorded", async ({ page, browserName }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/images.html", { waitUntil: "networkidle" });
+    await page.goto("/images.html");
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
     let startRender = 0;
 

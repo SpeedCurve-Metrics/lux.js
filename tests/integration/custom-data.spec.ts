@@ -5,7 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX custom data", () => {
   test("only valid customer data is sent", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.addData("stringVar", "hello");
@@ -35,7 +35,7 @@ test.describe("LUX custom data", () => {
 
   test("reserved characters are removed from keys and value", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.addData("var1", "|special,characters|");
@@ -55,7 +55,7 @@ test.describe("LUX custom data", () => {
 
   test("custom data set before LUX.send is sent with the main beacon", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.addData("var1", "hello");
@@ -71,7 +71,7 @@ test.describe("LUX custom data", () => {
 
   test("custom data can be removed", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.addData("var1", "hello");
@@ -113,7 +113,7 @@ test.describe("LUX custom data", () => {
 
   test("supplementary custom data beacons only contain data that has changed", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
 
     // Main beacon 1
     await luxRequests.waitForMatchingRequest(() =>
@@ -184,7 +184,7 @@ test.describe("LUX custom data", () => {
 
   test("custom data is retained between SPA pages", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.addData("var1", "hello");
@@ -210,17 +210,15 @@ test.describe("LUX custom data", () => {
 
   test("custom data is not retained between full page navigations", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.addData('var1', 'hello');", {
-      waitUntil: "networkidle",
-    });
-
+    await page.goto("/default.html?injectScript=LUX.addData('var1', 'hello')");
+    await luxRequests.waitForMatchingRequest();
     let beacon = luxRequests.getUrl(0)!;
     const customData = parseNestedPairs(getSearchParam(beacon, "CD"));
 
     expect(customData["var1"]).toEqual("hello");
 
-    await page.goto("/default.html", { waitUntil: "networkidle" });
-
+    await page.goto("/default.html");
+    await luxRequests.waitForMatchingRequest(2);
     beacon = luxRequests.getUrl(1)!;
 
     expect(beacon.searchParams.get("CD")).toBeNull();

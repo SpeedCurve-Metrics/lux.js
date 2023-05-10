@@ -5,9 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX user timing polyfills", () => {
   test("LUX.mark(name)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;performance.mark=undefined;", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/default.html?injectScript=LUX.auto=false;performance.mark=undefined;");
     const timeBeforeMark = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
@@ -32,9 +30,7 @@ test.describe("LUX user timing polyfills", () => {
 
   test("LUX.mark(name, options)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;performance.mark=undefined;", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/default.html?injectScript=LUX.auto=false;performance.mark=undefined;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.mark("test-mark", { startTime: 10 });
@@ -52,9 +48,7 @@ test.describe("LUX user timing polyfills", () => {
 
   test("LUX.measure(name)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;performance.measure=undefined;", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/default.html?injectScript=LUX.auto=false;performance.measure=undefined;");
     const timeBeforeMeasure = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
@@ -75,8 +69,7 @@ test.describe("LUX user timing polyfills", () => {
   test("LUX.measure(name, startMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
     );
     const timeBeforeStartMark = await getElapsedMs(page);
     await page.evaluate(() => LUX.mark("start-mark"));
@@ -96,8 +89,7 @@ test.describe("LUX user timing polyfills", () => {
   test("LUX.measure(name, startMark, endMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
     );
     await page.evaluate(() => LUX.mark("start-mark"));
     await page.waitForTimeout(20);
@@ -121,8 +113,7 @@ test.describe("LUX user timing polyfills", () => {
   test("LUX.measure(name, undefined, endMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
     );
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
@@ -142,8 +133,7 @@ test.describe("LUX user timing polyfills", () => {
   test("LUX.measure(name, options)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
     );
 
     const timeBeforeStartMark = await getElapsedMs(page);

@@ -6,7 +6,8 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX page labels in auto mode", () => {
   test("no custom label set", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html", { waitUntil: "networkidle" });
+    await page.goto("/default.html");
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
@@ -18,9 +19,8 @@ test.describe("LUX page labels in auto mode", () => {
 
   test("using a custom label", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.label='Custom Label';", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/default.html?injectScript=LUX.label='Custom Label';");
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.searchParams.get("l")).toEqual("Custom Label");
@@ -32,7 +32,8 @@ test.describe("LUX page labels in auto mode", () => {
 
   test("custom label is null", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.label=null;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.label=null;");
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.searchParams.get("l")).toEqual("LUX default test page");
@@ -45,9 +46,9 @@ test.describe("LUX page labels in auto mode", () => {
   test("using a pagegroup label", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.label=null;LUX.pagegroups={'Pagegroup':['localhost/default.html']};",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=LUX.label=null;LUX.pagegroups={'Pagegroup':['localhost/default.html']};"
     );
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.searchParams.get("l")).toEqual("Pagegroup");
@@ -60,9 +61,9 @@ test.describe("LUX page labels in auto mode", () => {
   test("LUX.label takes priority over pagegroup label", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.pagegroups={'Pagegroup':['localhost/default.html']};LUX.label='custom label';",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=LUX.pagegroups={'Pagegroup':['localhost/default.html']};LUX.label='custom label';"
     );
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.searchParams.get("l")).toEqual("custom label");
@@ -77,8 +78,7 @@ test.describe("LUX page labels in a SPA", () => {
   test("page label can be changed between SPA page loads", async ({ page }) => {
     let beacon;
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.label = "First Label";
@@ -105,7 +105,7 @@ test.describe("LUX page labels in a SPA", () => {
     let beacon;
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
 
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     beacon = luxRequests.getUrl(0)!;
@@ -130,8 +130,7 @@ test.describe("LUX JS page label", () => {
   test.beforeEach(async ({ page }) => {
     luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';"
     );
 
     await page.evaluate(() => {
