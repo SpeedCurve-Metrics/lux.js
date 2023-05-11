@@ -56,16 +56,18 @@ BeaconStore.open().then(async (store) => {
 
       sendResponse(200, headers(contentType), preamble + contents);
     } else if (pathname == "/beacon/" || pathname == "/error/") {
-      const referrerUrl = url.parse(req.headers.referer, true);
+      if (req.headers.referer) {
+        const referrerUrl = url.parse(req.headers.referer, true);
 
-      if ("useBeaconStore" in referrerUrl.query) {
-        store.put(
-          reqTime.getTime(),
-          req.headers["user-agent"],
-          new URL(req.url, `http://${req.headers.host}`).href,
-          parsedUrl.query.l,
-          decodeURIComponent(parsedUrl.query.PN)
-        );
+        if ("useBeaconStore" in referrerUrl.query) {
+          store.put(
+            reqTime.getTime(),
+            req.headers["user-agent"],
+            new URL(req.url, `http://${req.headers.host}`).href,
+            parsedUrl.query.l,
+            decodeURIComponent(parsedUrl.query.PN)
+          );
+        }
       }
 
       sendResponse(200, headers("image/webp"));

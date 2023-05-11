@@ -14,9 +14,9 @@ test.describe("Conversion event URL patterns", () => {
   test("custom data is created for each pattern that matches the current URL", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      `/default.html?injectScript=LUX.conversions=${JSON.stringify(conversionUrlPatterns)}`,
-      { waitUntil: "networkidle" }
+      `/default.html?injectScript=LUX.conversions=${JSON.stringify(conversionUrlPatterns)}`
     );
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
     const customData = parseNestedPairs(getSearchParam(beacon, "CD"));
 
@@ -29,9 +29,9 @@ test.describe("Conversion event URL patterns", () => {
   test("partial matches work as expected", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      `/prerender-page.html?injectScript=LUX.conversions=${JSON.stringify(conversionUrlPatterns)}`,
-      { waitUntil: "networkidle" }
+      `/prerender-page.html?injectScript=LUX.conversions=${JSON.stringify(conversionUrlPatterns)}`
     );
+    await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
     const customData = parseNestedPairs(getSearchParam(beacon, "CD"));
 

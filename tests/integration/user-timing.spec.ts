@@ -5,7 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX user timing", () => {
   test("user timing marks and measures are collected in auto mode", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/user-timing.html", { waitUntil: "networkidle" });
+    await page.goto("/user-timing.html");
     await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
@@ -19,7 +19,7 @@ test.describe("LUX user timing", () => {
 
   test("user timing marks and measures are collected in a SPA", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
 
     const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate(() => performance.mark("test-mark"));
@@ -45,7 +45,7 @@ test.describe("LUX user timing", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
 
     await page.evaluate(() => performance.mark("test-mark"));
     await page.waitForTimeout(30);
@@ -65,7 +65,7 @@ test.describe("LUX user timing", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
 
     await page.evaluate(() => LUX.send());
     await page.evaluate(() => LUX.init());
@@ -82,7 +82,7 @@ test.describe("LUX user timing", () => {
   });
 
   test("global state is not affected by LUX", async ({ page }) => {
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
 
     await page.evaluate(() => {
       performance.mark("my-mark");
@@ -100,7 +100,7 @@ test.describe("LUX user timing", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         performance.mark("first-test-mark");

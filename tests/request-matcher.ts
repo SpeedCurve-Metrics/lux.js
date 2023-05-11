@@ -1,9 +1,8 @@
-import { Request, Response } from "playwright";
+import { Request } from "playwright";
 
 export default class RequestMatcher {
   searchString: string;
   requests: Request[] = [];
-  responses: Response[] = [];
 
   constructor(searchString: string) {
     this.searchString = searchString;
@@ -12,12 +11,6 @@ export default class RequestMatcher {
   addRequest(request: Request) {
     if (this.requestMatches(request.url())) {
       this.requests.push(request);
-    }
-  }
-
-  addResponse(response: Response) {
-    if (this.requestMatches(response.url())) {
-      this.responses.push(response);
     }
   }
 
@@ -34,28 +27,19 @@ export default class RequestMatcher {
   async waitForMatchingRequest(
     afterCb?: () => Promise<unknown>,
     requestCount?: number
-  ): Promise<void> {
-    return this.waitForChange(this.requests, requestCount, afterCb);
-  }
+  ): Promise<void>;
+  async waitForMatchingRequest(requestCount?: number): Promise<void>;
+  async waitForMatchingRequest(...args): Promise<void> {
+    let afterCb: (() => Promise<unknown>) | undefined;
+    let requestCount: number | undefined;
 
-  async waitForMatchingResponse(
-    afterCb?: () => Promise<unknown>,
-    responseCount?: number
-  ): Promise<void> {
-    return this.waitForChange(this.responses, responseCount, afterCb);
-  }
-
-  async waitForChange(
-    watch: Array<unknown>,
-    watchCount?: number,
-    afterCb?: () => Promise<unknown>
-  ): Promise<void> {
-    let requestThreshold: number;
-
-    if (typeof watchCount !== "undefined") {
-      requestThreshold = watchCount;
+    if (typeof args[0] === "function") {
+      afterCb = args[0];
+      requestCount = args[1] || this.requests.length + 1;
+    } else if (typeof args[0] === "number") {
+      requestCount = args[0];
     } else {
-      requestThreshold = afterCb ? watch.length + 1 : 1;
+      requestCount = 1;
     }
 
     if (afterCb) {
@@ -63,11 +47,11 @@ export default class RequestMatcher {
     }
 
     return new Promise((resolve) => {
-      if (watch.length >= requestThreshold) {
+      if (this.requests.length >= requestCount!) {
         resolve();
       } else {
         const interval = setInterval(() => {
-          if (watch.length >= requestThreshold) {
+          if (this.requests.length >= requestCount!) {
             clearInterval(interval);
             resolve();
           }

@@ -12,7 +12,7 @@ test.describe("LUX SPA CPU metrics", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/long-tasks.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/long-tasks.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     let beacon = luxRequests.getUrl(0)!;

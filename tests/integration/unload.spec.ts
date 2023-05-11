@@ -54,8 +54,7 @@ test.describe("LUX unload behaviour", () => {
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;LUX.minMeasureTime=60000",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;LUX.minMeasureTime=60000"
     );
 
     await luxRequests.waitForMatchingRequest(() =>

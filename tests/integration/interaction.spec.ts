@@ -5,7 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX interaction", () => {
   test("click interaction metrics are gathered", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html");
     await luxRequests.waitForMatchingRequest();
     const timeBeforeClick = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-id").click());
@@ -29,7 +29,6 @@ test.describe("LUX interaction", () => {
   test("keypress interaction metrics are gathered", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html", { waitUntil: "networkidle" });
-    await luxRequests.waitForMatchingRequest();
     const timeBeforeKeyPress = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-id").press("Enter"));
 
@@ -58,13 +57,13 @@ test.describe("LUX interaction", () => {
 
   test("FID and INP are gathered for clicks", async ({ page, browserName }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?blockFor=100", { waitUntil: "networkidle" });
+    await page.goto("/interaction.html?blockFor=100");
 
     // Wait for the main beacon
     await luxRequests.waitForMatchingRequest();
 
     // Then wait for the interaction beacon after clicking
-    await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-js").click());
+    await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-js").click(), 2);
 
     const mainBeacon = luxRequests.getUrl(0)!;
     const ixBeacon = luxRequests.getUrl(1)!;
@@ -103,9 +102,7 @@ test.describe("LUX interaction", () => {
 
   test("gather IX metrics in a SPA", async ({ page, browserName }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/interaction.html?blockFor=20&injectScript=LUX.auto=false;", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/interaction.html?blockFor=20&injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     await page.waitForTimeout(100);
 

@@ -14,9 +14,9 @@ test.describe("LUX inline snippet", () => {
     const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
 
     await page.goto(
-      "/default.html?injectScript=window.loadTime=performance.now();LUX.markLoadTime();",
-      { waitUntil: "networkidle" }
+      "/default.html?injectScript=window.loadTime=performance.now();LUX.markLoadTime();"
     );
+    await beaconRequests.waitForMatchingRequest();
 
     const beacon = beaconRequests.getUrl(0)!;
     const loadEventStart = getNavTiming(beacon, "le") || 0;
@@ -50,9 +50,9 @@ test.describe("LUX inline snippet", () => {
         "window.markTime = performance.now()",
         "LUX.mark('mark-1')",
         "LUX.mark('mark-2', { startTime: 200 })",
-      ].join(";")}`,
-      { waitUntil: "networkidle" }
+      ].join(";")}`
     );
+    await beaconRequests.waitForMatchingRequest();
 
     const beacon = beaconRequests.getUrl(0)!;
     const markTime = (await page.evaluate(() => window.markTime)) as number;
@@ -78,9 +78,9 @@ test.describe("LUX inline snippet", () => {
         "window.beforeMeasureTime = performance.now()",
         "LUX.measure('measure-5', { start: 5 })",
         "LUX.measure('measure-6', { start: 100, duration: 200 })",
-      ].join(";")}`,
-      { waitUntil: "networkidle" }
+      ].join(";")}`
     );
+    await beaconRequests.waitForMatchingRequest();
 
     const beacon = beaconRequests.getUrl(0)!;
     const beforeMeasureTime = await page.evaluate(() => window.beforeMeasureTime as number);
@@ -111,7 +111,8 @@ test.describe("LUX inline snippet", () => {
     browserName,
   }) => {
     const errorRequests = new RequestInterceptor(page).createRequestMatcher("/error/");
-    await page.goto("/default.html?injectScript=snippet();", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=snippet();");
+    await errorRequests.waitForMatchingRequest();
 
     expect(getSearchParam(errorRequests.getUrl(0)!, "msg")).toContain(
       referenceErrorMessage(browserName, "snippet")

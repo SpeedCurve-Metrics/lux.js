@@ -5,8 +5,8 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX beacon request", () => {
   test("beacon is sent with a GET request", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-
-    await page.goto("/default.html", { waitUntil: "networkidle" });
+    await page.goto("/default.html");
+    await luxRequests.waitForMatchingRequest();
 
     expect(luxRequests.count()).toEqual(1);
     expect(luxRequests.get(0)!.method()).toEqual("GET");
@@ -16,7 +16,7 @@ test.describe("LUX beacon request", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => {
       new Array(30).fill(null).forEach((_, i) => {
         performance.mark(`ut-mark-${i}`);
@@ -45,7 +45,7 @@ test.describe("LUX beacon request", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(
       () =>
         page.evaluate(() => {
@@ -81,12 +81,11 @@ test.describe("LUX beacon request", () => {
 
   test("beacon is split into multiple requests when the URL is too long", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    page.on("console", (msg) => console.log("PAGE LOG:", msg.text()));
 
     // The URL length limit is about 8KB. We create multiple long UT marks to go over the limit
     const longString = new Array(3500).fill("A").join("");
 
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate((longString) => {
       performance.mark(`${longString}-1`, { startTime: performance.now() - 20 });
       performance.mark(`${longString}-2`, { startTime: performance.now() - 15 });
@@ -129,7 +128,7 @@ test.describe("LUX beacon request", () => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     const longString = new Array(9000).fill("A").join("");
 
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(`performance.mark("${longString}")`);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 

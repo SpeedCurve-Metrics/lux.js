@@ -5,7 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX.mark() behaves the same as performance.mark()", () => {
   test("LUX.mark(name)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.mark("lux-mark");
@@ -25,7 +25,7 @@ test.describe("LUX.mark() behaves the same as performance.mark()", () => {
 
   test("LUX.mark(name, options)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.mark("lux-mark", { startTime: 10 });
@@ -45,7 +45,7 @@ test.describe("LUX.mark() behaves the same as performance.mark()", () => {
 test.describe("LUX.measure() behaves the same as performance.measure()", () => {
   test("LUX.measure(name)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.measure("lux-measure");
@@ -63,7 +63,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
 
   test("LUX.measure(name, startMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => performance.mark("start-mark"));
     await page.waitForTimeout(30);
     await luxRequests.waitForMatchingRequest(() =>
@@ -85,7 +85,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
 
   test("LUX.measure(name, startMark, endMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     await page.evaluate(() => performance.mark("start-mark"));
     await page.waitForTimeout(30);
     await page.evaluate(() => performance.mark("end-mark"));
@@ -107,7 +107,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
 
   test("LUX.measure(name, undefined, endMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
     const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate(() => performance.mark("end-mark"));
     const timeAfterMark = await getElapsedMs(page);
@@ -134,7 +134,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
 
     // Send the first beacon and call LUX.init() so we have a known "zero" point
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
@@ -172,15 +172,17 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
   });
 
   test("LUX.measure(name, options)", async ({ page }) => {
+    const IDLE_TIME = 100;
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
+    await page.waitForTimeout(IDLE_TIME);
     await page.evaluate(() => performance.mark("start-mark"));
     await page.waitForTimeout(30);
     const timeBeforeMark = await getElapsedMs(page);
     await page.evaluate(() => performance.mark("end-mark"));
 
     await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => {
+      page.evaluate((IDLE_TIME) => {
         // Equivalent of mark(name, startMark)
         LUX.measure("lux-measure-1", { start: "start-mark" });
         performance.measure("perf-measure-1", { start: "start-mark" });
@@ -202,19 +204,19 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
         performance.measure("perf-measure-5", { end: "end-mark", duration: 500 });
 
         // Specifying a start timestamp
-        LUX.measure("lux-measure-6", { start: 100 });
-        performance.measure("perf-measure-6", { start: 100 });
+        LUX.measure("lux-measure-6", { start: IDLE_TIME });
+        performance.measure("perf-measure-6", { start: IDLE_TIME });
 
         // Specifying an end timestamp
         LUX.measure("lux-measure-7", { end: 500 });
         performance.measure("perf-measure-7", { end: 500 });
 
         // Specifying a start and end timestamp
-        LUX.measure("lux-measure-8", { start: 100, end: 500 });
-        performance.measure("perf-measure-8", { start: 100, end: 500 });
+        LUX.measure("lux-measure-8", { start: IDLE_TIME, end: 500 });
+        performance.measure("perf-measure-8", { start: IDLE_TIME, end: 500 });
 
         LUX.send();
-      })
+      }, IDLE_TIME)
     );
 
     const beacon = luxRequests.getUrl(0)!;

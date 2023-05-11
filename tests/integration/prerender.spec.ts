@@ -1,8 +1,8 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect, Page, Browser } from "@playwright/test";
 import { chromium } from "playwright";
 import Flags from "../../src/flags.js";
 import BeaconStore from "../helpers/beacon-store.js";
-import { getNavTiming, getSearchParam, hasFlag, parseUserTiming } from "../helpers/lux.js";
+import { getNavTiming, hasFlag } from "../helpers/lux.js";
 
 test.describe("LUX prerender support", () => {
   test.skip(
@@ -15,14 +15,18 @@ test.describe("LUX prerender support", () => {
   // requests from each test do not interfere with each other, we run these tests in serial.
   test.describe.configure({ mode: "serial" });
 
-  let page: Page, store: BeaconStore;
+  let browser: Browser, page: Page, store: BeaconStore;
 
   test.beforeAll(async () => {
-    const browser = await chromium.launch({
+    browser = await chromium.launch({
       args: ["--headless=new"],
     });
     page = await browser.newPage();
     store = await BeaconStore.open();
+  });
+
+  test.afterAll(async () => {
+    await browser.close();
   });
 
   test.beforeEach(async () => {
@@ -39,9 +43,7 @@ test.describe("LUX prerender support", () => {
   });
 
   test("LUX.autoWhenHidden=true sends the beacon on prerendered pages", async () => {
-    await page.goto("/prerender-index.html?useBeaconStore&injectScript=LUX.autoWhenHidden=true", {
-      waitUntil: "networkidle",
-    });
+    await page.goto("/prerender-index.html?useBeaconStore&injectScript=LUX.autoWhenHidden=true");
 
     // Wait for up to 5 seconds for there to be 2 beacons in the beacon store
     await expect.poll(async () => (await store.findAll()).length, { timeout: 5000 }).toEqual(2);

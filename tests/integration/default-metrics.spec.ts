@@ -17,11 +17,14 @@ for (const pageName in testPages) {
   const testPage = testPages[pageName];
 
   test.describe(pageName, () => {
-    let luxRequests, beacon;
+    let luxRequests, beacon, beforeNav, afterNav;
 
     test.beforeEach(async ({ page }) => {
       luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-      await page.goto(testPage, { waitUntil: "networkidle" });
+      beforeNav = new Date().getTime();
+      await page.goto(testPage);
+      afterNav = new Date().getTime();
+      await luxRequests.waitForMatchingRequest();
       beacon = luxRequests.getUrl(0)!;
     });
 
@@ -144,9 +147,13 @@ for (const pageName in testPages) {
     });
 
     test("navigation timing", async ({ browserName }) => {
+      // navigationStart should be a timestamp
+      expect(parseInt(beacon.searchParams.get("NT"))).toBeGreaterThanOrEqual(beforeNav);
+      expect(parseInt(beacon.searchParams.get("NT"))).toBeLessThan(afterNav);
+
       // There should be no redirects for this test page
-      expect(beacon.searchParams.get("rs")).toBeNull();
-      expect(beacon.searchParams.get("re")).toBeNull();
+      expect(getNavTiming(beacon, "rs")).toEqual(0);
+      expect(getNavTiming(beacon, "re")).toEqual(0);
 
       // Fetch, connect, and DNS times are probably zero for localhost
       expect(getNavTiming(beacon, "fs")).toBeGreaterThanOrEqual(0);
