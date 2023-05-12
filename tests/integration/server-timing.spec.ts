@@ -1,8 +1,9 @@
+import { test, expect } from "@playwright/test";
 import * as ST from "../../src/server-timing";
-import { parseNestedPairs } from "../helpers/lux";
+import { getSearchParam, parseNestedPairs } from "../helpers/lux";
+import RequestInterceptor from "../request-interceptor";
 
-describe("Server timing", () => {
-  const luxRequests = requestInterceptor.createRequestMatcher("/beacon/");
+test.describe("Server timing", () => {
   const defaultServerTimingMetrics = [
     'cache;dur=0;desc="Cache lookup time"',
     "cacheMiss",
@@ -13,19 +14,16 @@ describe("Server timing", () => {
     "render;dur=43.5",
   ].join(",");
 
-  beforeEach(() => {
-    luxRequests.reset();
-  });
-
-  test("no server timing is collected by default", async () => {
-    await navigateTo(`/default.html?serverTiming=${defaultServerTimingMetrics}`);
-
-    const beacon = luxRequests.getUrl(0);
+  test("no server timing is collected by default", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(`/default.html?serverTiming=${defaultServerTimingMetrics}`);
+    await luxRequests.waitForMatchingRequest();
+    const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.searchParams.get("CD")).toBeNull();
   });
 
-  test("server timing metrics configured in LUX.serverTiming are collected", async () => {
+  test("server timing metrics configured in LUX.serverTiming are collected", async ({ page }) => {
     const serverTimingConfig = {
       cache: ST.TYPE_DURATION,
       cacheMiss: ST.TYPE_DESCRIPTION,
@@ -33,14 +31,15 @@ describe("Server timing", () => {
       render: ST.TYPE_DURATION,
     };
 
-    await navigateTo(
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
       `/default.html?serverTiming=${defaultServerTimingMetrics}&injectScript=LUX.serverTiming=${JSON.stringify(
         serverTimingConfig
       )}`
     );
-
-    const beacon = luxRequests.getUrl(0);
-    const customData = parseNestedPairs(beacon.searchParams.get("CD"));
+    await luxRequests.waitForMatchingRequest();
+    const beacon = luxRequests.getUrl(0)!;
+    const customData = parseNestedPairs(getSearchParam(beacon, "CD"));
 
     expect(customData["cacheMiss"]).toEqual("true");
     expect(customData["cache"]).toEqual("0");

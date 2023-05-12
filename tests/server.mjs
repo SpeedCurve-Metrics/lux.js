@@ -9,11 +9,6 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const testPagesDir = path.join(__dirname, "test-pages");
 const distDir = path.join(__dirname, "..", "dist");
 
-const headers = (contentType) => ({
-  "content-type": contentType,
-  connection: "close",
-});
-
 BeaconStore.open().then(async (store) => {
   await store.dropTable();
   await store.createTable();
@@ -23,6 +18,12 @@ BeaconStore.open().then(async (store) => {
     const inlineSnippet = await readFile(path.join(distDir, "lux-snippet.js"));
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
+
+    const headers = (contentType) => ({
+      "content-type": contentType,
+      "server-timing": parsedUrl.query.serverTiming || "",
+      connection: "close",
+    });
 
     const sendResponse = async (status, headers, body) => {
       console.log(
