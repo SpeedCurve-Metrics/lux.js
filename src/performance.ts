@@ -65,7 +65,7 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
   if (__ENABLE_POLYFILLS) {
     for (const key in timing) {
       if (typeof timing[key as PerfTimingKey] === "number" && key !== "navigationStart") {
-        entry[key] = Math.max(0, timing[key as PerfTimingKey] - timing.navigationStart);
+        entry[key] = floor(timing[key as PerfTimingKey] - timing.navigationStart);
       }
     }
   }

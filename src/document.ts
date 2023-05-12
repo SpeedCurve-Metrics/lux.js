@@ -10,26 +10,28 @@ export function isVisible(): boolean {
 }
 
 export function onVisible(cb: () => void): void {
-  if (isVisible()) {
-    cb();
-  } else {
-    const onVisibleCallback = () => {
-      if (isVisible()) {
-        cb();
-        removeEventListener("visibilitychange", onVisibleCallback);
-      }
-    };
+  afterPrerender(() => {
+    if (isVisible()) {
+      cb();
+    } else {
+      const onVisibleCallback = () => {
+        if (isVisible()) {
+          cb();
+          removeEventListener("visibilitychange", onVisibleCallback);
+        }
+      };
 
-    addEventListener("visibilitychange", onVisibleCallback, true);
-  }
+      addEventListener("visibilitychange", onVisibleCallback, true);
+    }
+  });
 }
 
 export function afterPrerender(cb: () => void): void {
   if (document.prerendering) {
     document.addEventListener("prerenderingchange", cb, true);
+  } else {
+    cb();
   }
-
-  cb();
 }
 
 export function wasPrerendered(): boolean {

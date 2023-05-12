@@ -1,3 +1,4 @@
+const { randomUUID } = require("crypto");
 const path = require("path");
 const sqlite = require("sqlite");
 const sqlite3 = require("sqlite3");
@@ -5,7 +6,8 @@ const sqlite3 = require("sqlite3");
 const TABLE_NAME = "beacons";
 
 module.exports = class BeaconStore {
-  static connection;
+  connection;
+  id = "";
 
   static async open() {
     return sqlite
@@ -18,11 +20,13 @@ module.exports = class BeaconStore {
 
   constructor(connection) {
     this.connection = connection;
+    this.id = randomUUID();
   }
 
   async put(timestamp, useragent, url, pagelabel, pathname) {
     return this.connection.run(
-      `INSERT INTO ${TABLE_NAME} (timestamp, useragent, url, pagelabel, pathname) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO ${TABLE_NAME} (prefix, timestamp, useragent, url, pagelabel, pathname) VALUES (?, ?, ?, ?, ?, ?)`,
+      this.id,
       timestamp,
       useragent,
       url,
@@ -31,26 +35,35 @@ module.exports = class BeaconStore {
     );
   }
 
+  async countAll() {
+    return (await this.findAll()).length;
+  }
+
   async findAll() {
-    return this.connection.all(`SELECT * FROM ${TABLE_NAME} ORDER BY timestamp`);
+    return this.connection.all(
+      `SELECT * FROM ${TABLE_NAME} WHERE prefix = ? ORDER BY timestamp`,
+      this.id
+    );
   }
 
   async findByUrl(url) {
     return this.connection.all(
-      `SELECT * FROM ${TABLE_NAME} WHERE url LIKE ? ORDER BY timestamp`,
+      `SELECT * FROM ${TABLE_NAME} WHERE prefix = ? AND url LIKE ? ORDER BY timestamp`,
+      this.id,
       url
     );
   }
 
   async findByPathname(pathname) {
     return this.connection.all(
-      `SELECT * FROM ${TABLE_NAME} WHERE pathname LIKE ? ORDER BY timestamp`,
+      `SELECT * FROM ${TABLE_NAME} WHERE prefix = ? AND pathname LIKE ? ORDER BY timestamp`,
+      this.id,
       pathname
     );
   }
 
-  async deleteByPathname(pathname) {
-    return this.connection.run(`DELETE FROM ${TABLE_NAME} WHERE pathname LIKE ?`, pathname);
+  async deleteAll() {
+    return this.connection.run(`DELETE FROM ${TABLE_NAME} WHERE prefix = ?`, this.id);
   }
 
   async dropTable() {
@@ -60,6 +73,7 @@ module.exports = class BeaconStore {
   async createTable() {
     return this.connection.exec(`CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      prefix STRING NOT NULL,
       timestamp INTEGER NOT NULL,
       useragent TEXT NOT NULL,
       url TEXT NOT NULL,

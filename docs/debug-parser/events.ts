@@ -63,6 +63,9 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
     case LogEvent.SendCalled:
       return "LUX.send()";
 
+    case LogEvent.SendCancelledPageHidden:
+      return "This beacon was not sent because the page visibility was hidden.";
+
     case LogEvent.ForceSampleCalled:
       return "LUX.forceSample()";
 

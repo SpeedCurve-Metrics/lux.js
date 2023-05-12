@@ -2,7 +2,6 @@ import { UrlPatternMapping } from "./url-matcher";
 
 export interface ConfigObject {
   auto: boolean;
-  autoWhenHidden: boolean;
   beaconUrl: string;
   conversions?: UrlPatternMapping;
   customerid?: string;
@@ -14,9 +13,11 @@ export interface ConfigObject {
   maxErrors: number;
   maxMeasureTime: number;
   minMeasureTime: number;
+  newBeaconOnPageShow: boolean;
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   trackErrors: boolean;
+  trackHiddenPages: boolean;
   pagegroups?: UrlPatternMapping;
 }
 
@@ -27,7 +28,6 @@ export function fromObject(obj: UserConfig): ConfigObject {
 
   return {
     auto: autoMode,
-    autoWhenHidden: getProperty(obj, "autoWhenHidden", false),
     beaconUrl: getProperty(obj, "beaconUrl", "https://lux.speedcurve.com/lux/"),
     conversions: getProperty(obj, "conversions", undefined),
     customerid: getProperty(obj, "customerid", undefined),
@@ -39,9 +39,11 @@ export function fromObject(obj: UserConfig): ConfigObject {
     maxErrors: getProperty(obj, "maxErrors", 5),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
     minMeasureTime: getProperty(obj, "minMeasureTime", 0),
+    newBeaconOnPageShow: getProperty(obj, "newBeaconOnPageShow", false),
     samplerate: getProperty(obj, "samplerate", 100),
     sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
     trackErrors: getProperty(obj, "trackErrors", true),
+    trackHiddenPages: getProperty(obj, "trackHiddenPages", false),
     pagegroups: getProperty(obj, "pagegroups", undefined),
   };
 }
