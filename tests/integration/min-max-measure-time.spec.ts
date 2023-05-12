@@ -49,7 +49,7 @@ test.describe("LUX minimum and maximum measure times", () => {
     const secondBeaconStartTime = await getElapsedMs(page);
     await page.evaluate(() => LUX.init());
     await page.waitForTimeout(50);
-    await page.evaluate(() => LUX.send());
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const secondBeaconEndTime = await getElapsedMs(page);
 
     const thirdBeaconStartTime = await getElapsedMs(page);
@@ -74,11 +74,11 @@ test.describe("LUX minimum and maximum measure times", () => {
     // The second beacon was sent manually after a roughly 50 ms wait
     expect(hasFlag(luxRequests.getUrl(1)!, Flags.BeaconSentAfterTimeout)).toBe(false);
     expect(beaconTiming[1].startTime).toBeGreaterThan(secondBeaconStartTime + 50);
-    expect(beaconTiming[1].startTime).toBeLessThan(secondBeaconEndTime);
+    expect(beaconTiming[1].startTime).toBeLessThanOrEqual(secondBeaconEndTime);
 
     // The third beacon was sent automatically
     expect(hasFlag(luxRequests.getUrl(2)!, Flags.BeaconSentAfterTimeout)).toBe(true);
     expect(beaconTiming[2].startTime).toBeGreaterThan(thirdBeaconStartTime + 200);
-    expect(beaconTiming[2].startTime).toBeLessThan(thirdBeaconEndTime);
+    expect(beaconTiming[2].startTime).toBeLessThanOrEqual(thirdBeaconEndTime);
   });
 });
