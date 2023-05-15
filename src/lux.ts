@@ -124,18 +124,6 @@ LUX = (function () {
     // Right now we have to count every event to get the total interaction count so that we can
     // estimate a high percentile value for INP.
     PO.observe("event", INP.addEntry);
-
-    if (globalConfig.serverTiming) {
-      PO.observe("navigation", (entry) => {
-        if (entry.serverTiming) {
-          const stPairs = ST.getKeyValuePairs(globalConfig.serverTiming!, entry.serverTiming);
-
-          for (const name in stPairs) {
-            _addData(name, stPairs[name]);
-          }
-        }
-      });
-    }
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
@@ -1422,6 +1410,16 @@ LUX = (function () {
 
     if (wasPrerendered()) {
       gFlags = addFlag(gFlags, Flags.PageWasPrerendered);
+    }
+
+    if (globalConfig.serverTiming) {
+      if (navEntry.serverTiming) {
+        const stPairs = ST.getKeyValuePairs(globalConfig.serverTiming!, navEntry.serverTiming);
+
+        for (const name in stPairs) {
+          _addData(name, stPairs[name]);
+        }
+      }
     }
 
     if (LUX.conversions) {
