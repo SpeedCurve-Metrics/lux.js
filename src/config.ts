@@ -1,5 +1,5 @@
-import { UrlPatternMapping } from "./url-matcher";
 import { ServerTimingConfig } from "./server-timing";
+import { UrlPatternMapping } from "./url-matcher";
 
 export interface ConfigObject {
   auto: boolean;
