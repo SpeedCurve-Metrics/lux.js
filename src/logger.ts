@@ -23,6 +23,7 @@ export const LogEvent: Record<string, number> = {
   UserTimingBeaconSent: 24,
   InteractionBeaconSent: 25,
   CustomDataBeaconSent: 26,
+  LateUserTimingBeaconSent: 27,
 
   // Metric information
   NavigationStart: 41,

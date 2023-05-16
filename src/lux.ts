@@ -124,6 +124,22 @@ LUX = (function () {
     // Right now we have to count every event to get the total interaction count so that we can
     // estimate a high percentile value for INP.
     PO.observe("event", INP.addEntry);
+
+    if (Array.isArray(globalConfig.lateUserTiming)) {
+      let lateUserTimingTimeout: number | undefined;
+      const processLateUserTiming = () => {
+        if (gbLuxSent) {
+          if (lateUserTimingTimeout) {
+            window.clearTimeout(lateUserTimingTimeout);
+          }
+
+          lateUserTimingTimeout = window.setTimeout(_sendLateUserTiming, 100);
+        }
+      };
+
+      PO.observe("mark", processLateUserTiming);
+      PO.observe("measure", processLateUserTiming);
+    }
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
@@ -144,6 +160,7 @@ LUX = (function () {
   let gCustomerDataTimeout: number | undefined; // setTimeout timer for sending a Customer Data beacon after onload
   let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
   let pageRestoreTime: number | undefined; // ms since navigationStart representing when the page was restored from the bfcache
+  let lastUserTimingTime = 0; // startTime of the last user timing mark or measure to be sent
   const navEntry = getNavigationEntry();
 
   /**
@@ -482,6 +499,14 @@ LUX = (function () {
         return;
       }
 
+      if (
+        lastUserTimingTime &&
+        (mark.startTime < lastUserTimingTime || !_lateUserTimingAllowed(mark.name))
+      ) {
+        // Don't include late marks that are not allowed by the config
+        return;
+      }
+
       const startTime = floor(mark.startTime - tZero);
 
       if (startTime < 0) {
@@ -500,6 +525,15 @@ LUX = (function () {
     _getMeasures().forEach((measure) => {
       if (startMark && measure.startTime < startMark.startTime) {
         // Exclude measures that were taken before the current SPA page view
+        return;
+      }
+
+      if (
+        lastUserTimingTime &&
+        (measure.startTime + measure.duration < lastUserTimingTime ||
+          !_lateUserTimingAllowed(measure.name))
+      ) {
+        // Don't include late measures that are not allowed by the config
         return;
       }
 
@@ -1363,9 +1397,8 @@ LUX = (function () {
 
     clearMaxMeasureTimeout();
 
-    const customerid = getCustomerId();
     if (
-      !customerid ||
+      !getCustomerId() ||
       !gSyncId ||
       !_sample() || // OUTSIDE the sampled range
       gbLuxSent // LUX data already sent
@@ -1515,6 +1548,8 @@ LUX = (function () {
       logger.logEvent(LogEvent.UserTimingBeaconSent, [utBeaconUrl]);
       _sendBeacon(utBeaconUrl);
     }
+
+    _updateLastUserTimingTime();
   }
 
   let ixTimerId: number;
@@ -1526,9 +1561,8 @@ LUX = (function () {
 
   // Beacon back the IX data separately (need to sync with LUX beacon on the backend).
   function _sendIx(): void {
-    const customerid = getCustomerId();
     if (
-      !customerid ||
+      !getCustomerId() ||
       !gSyncId ||
       !_sample() || // OUTSIDE the sampled range
       gbIxSent || // IX data already sent
@@ -1557,9 +1591,8 @@ LUX = (function () {
   // Beacon back customer data that is recorded _after_ the main beacon was sent
   // (i.e., customer data after window.onload).
   function _sendCustomerData(): void {
-    const customerid = getCustomerId();
     if (
-      !customerid ||
+      !getCustomerId() ||
       !gSyncId ||
       !_sample() || // OUTSIDE the sampled range
       !gbLuxSent // LUX has NOT been sent yet, so wait to include it there
@@ -1574,6 +1607,57 @@ LUX = (function () {
       logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
     }
+  }
+
+  /**
+   * Send late user timing marks & measures
+   */
+  function _sendLateUserTiming(): void {
+    if (
+      !getCustomerId() ||
+      !gSyncId ||
+      !_sample() || // OUTSIDE the sampled range
+      !gbLuxSent // LUX has NOT been sent yet, so wait to include it there
+    ) {
+      return;
+    }
+
+    const userTiming = userTimingValues();
+
+    if (userTiming) {
+      const beaconUrl = _getBeaconUrl({}) + "&UT=" + userTiming;
+      logger.logEvent(LogEvent.LateUserTimingBeaconSent, [beaconUrl]);
+      _sendBeacon(beaconUrl);
+      _updateLastUserTimingTime();
+    }
+  }
+
+  function _lateUserTimingAllowed(utName: string): boolean {
+    if (Array.isArray(globalConfig.lateUserTiming)) {
+      for (const i in globalConfig.lateUserTiming) {
+        const match = globalConfig.lateUserTiming[i];
+
+        if (typeof match === "string" && utName === match) {
+          return true;
+        } else if (match instanceof RegExp && match.test(utName)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    return true;
+  }
+
+  function _updateLastUserTimingTime(): void {
+    _getMarks()
+      .concat(_getMeasures())
+      .forEach((m) => {
+        if (m.startTime > lastUserTimingTime) {
+          lastUserTimingTime = m.startTime;
+        }
+      });
   }
 
   function _sendBeacon(url: string) {
