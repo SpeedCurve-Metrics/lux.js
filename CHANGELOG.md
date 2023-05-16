@@ -6,13 +6,19 @@
 
 - Pages that are [prerendered](https://web.dev/speculative-prerendering/) are now flagged as such.
 - Pages that are restored from the [back-forward cache (bfcache)](https://web.dev/bfcache/) can now be tracked by setting `LUX.newBeaconOnPageShow = true`. [Read the documentation](https://support.speedcurve.com/docs/rum-js-api#luxnewbeacononpageshow) for more information on how this works.
+- Server timing metrics are now extracted from the main page response. Metrics must be configured in your SpeedCurve settings before they are collected.
 
 ### Improvements
 
 - The beacon will no longer be sent automatically if the page visibility is hidden. This can be overridden by setting `LUX.trackHiddenPages = true`.
+- All metrics on prerendered pages are now relative to `activationStart`.
 - Navigation timing values with a value of zero are now reported, rather than ignored.
 - The legacy `domLoading` metric is no longer collected.
 - The first paint event of any type will be considered for start render, rather than just first-paint events.
+
+### Bug fixes
+
+- Timing values are now rounded down to the nearest unit to prevent values from being rounded into the future.
 
 ## 2023-04-03: v307
 
