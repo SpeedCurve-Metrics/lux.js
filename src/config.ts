@@ -1,4 +1,5 @@
 import { UrlPatternMapping } from "./url-matcher";
+import { ServerTimingConfig } from "./server-timing";
 
 export interface ConfigObject {
   auto: boolean;
@@ -16,6 +17,7 @@ export interface ConfigObject {
   newBeaconOnPageShow: boolean;
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
+  serverTiming?: ServerTimingConfig;
   trackErrors: boolean;
   trackHiddenPages: boolean;
   pagegroups?: UrlPatternMapping;
@@ -42,6 +44,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     newBeaconOnPageShow: getProperty(obj, "newBeaconOnPageShow", false),
     samplerate: getProperty(obj, "samplerate", 100),
     sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
+    serverTiming: getProperty(obj, "serverTiming", undefined),
     trackErrors: getProperty(obj, "trackErrors", true),
     trackHiddenPages: getProperty(obj, "trackHiddenPages", false),
     pagegroups: getProperty(obj, "pagegroups", undefined),

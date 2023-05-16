@@ -21,6 +21,7 @@ import {
   getNavigationEntry,
 } from "./performance";
 import * as PO from "./performance-observer";
+import * as ST from "./server-timing";
 import scriptStartTime from "./start-marker";
 import { getMatchesFromPatternMap } from "./url-matcher";
 
@@ -1409,6 +1410,16 @@ LUX = (function () {
 
     if (wasPrerendered()) {
       gFlags = addFlag(gFlags, Flags.PageWasPrerendered);
+    }
+
+    if (globalConfig.serverTiming) {
+      if (navEntry.serverTiming) {
+        const stPairs = ST.getKeyValuePairs(globalConfig.serverTiming!, navEntry.serverTiming);
+
+        for (const name in stPairs) {
+          _addData(name, stPairs[name]);
+        }
+      }
     }
 
     if (LUX.conversions) {
