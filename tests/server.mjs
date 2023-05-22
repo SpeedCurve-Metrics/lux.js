@@ -49,7 +49,12 @@ BeaconStore.open().then(async (store) => {
         break;
     }
 
-    if (pathname === "/") {
+    if (parsedUrl.query.redirectTo) {
+      // Send the redirect after a short delay so that the redirectStart time is measurable
+      setTimeout(() => {
+        sendResponse(302, { location: parsedUrl.query.redirectTo }, "");
+      }, parsedUrl.query.redirectDelay || 0);
+    } else if (pathname === "/") {
       sendResponse(200, headers("text/plain"), "OK");
     } else if (pathname === "/js/lux.js") {
       const contents = await readFile(path.join(distDir, "lux.min.js"));

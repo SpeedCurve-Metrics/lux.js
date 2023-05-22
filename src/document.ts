@@ -1,4 +1,4 @@
-import { getNavigationEntry } from "./performance";
+import { getNavigationEntry, timing } from "./performance";
 
 export function isVisible(): boolean {
   if (document.visibilityState) {
@@ -36,4 +36,8 @@ export function afterPrerender(cb: () => void): void {
 
 export function wasPrerendered(): boolean {
   return document.prerendering || getNavigationEntry().activationStart > 0;
+}
+
+export function wasRedirected(): boolean {
+  return getNavigationEntry().redirectCount! > 0 || timing.redirectEnd > 0;
 }
