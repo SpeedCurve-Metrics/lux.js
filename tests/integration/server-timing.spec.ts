@@ -5,14 +5,16 @@ import RequestInterceptor from "../request-interceptor";
 
 test.describe("Server timing", () => {
   const serverTimingMetrics = [
-    'cache;dur=0;desc="Cache lookup time"',
+    "cache;dur=0;desc='Cache lookup time'",
     "cacheMiss",
-    'db;dur=320;desc="Query duration"',
+    "db;dur=320;desc='Query duration'",
     "fastly-pop;desc=AMS",
     "hit-state;desc=PASS",
-    'loggedIn;desc="User is logged in"',
-    "render;dur=43.5",
-    "phpMemory;dur=92.4;desc=MB",
+    "invalidNumericDescription;desc=not-123-numeric",
+    "loggedIn;desc='User is logged in'",
+    "phpMemory;desc=92.4MB",
+    "render;dur=0.0435;desc='Render time in seconds'",
+    "responseSize;desc=10492",
   ].join(",");
 
   test("no server timing is collected by default", async ({ page }) => {
@@ -29,8 +31,10 @@ test.describe("Server timing", () => {
       cache: [ST.TYPE_DURATION],
       cacheMiss: [ST.TYPE_DESCRIPTION],
       "hit-state": [ST.TYPE_DESCRIPTION],
-      render: [ST.TYPE_DURATION],
-      phpMemory: [ST.TYPE_DURATION, 1024 * 1024],
+      invalidNumericDescription: [ST.TYPE_DESCRIPTION, 1000],
+      phpMemory: [ST.TYPE_DESCRIPTION, 1024 * 1024],
+      render: [ST.TYPE_DURATION, 1000],
+      responseSize: [ST.TYPE_DESCRIPTION],
     };
 
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
@@ -43,13 +47,15 @@ test.describe("Server timing", () => {
     const beacon = luxRequests.getUrl(0)!;
     const customData = parseNestedPairs(getSearchParam(beacon, "CD"));
 
-    expect(customData["cacheMiss"]).toEqual("true");
     expect(customData["cache"]).toEqual("0");
+    expect(customData["cacheMiss"]).toEqual("true");
     expect(customData["db"]).toBeUndefined();
     expect(customData["fastly-pop"]).toBeUndefined();
     expect(customData["hit-state"]).toEqual("PASS");
+    expect(customData["invalidNumericDescription"]).toBeUndefined();
     expect(customData["loggedIn"]).toBeUndefined();
     expect(customData["phpMemory"]).toEqual("96888422.4");
     expect(customData["render"]).toEqual("43.5");
+    expect(customData["responseSize"]).toEqual("10492");
   });
 });
