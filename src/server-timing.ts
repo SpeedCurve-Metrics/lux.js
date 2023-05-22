@@ -1,8 +1,6 @@
 export type ServerTimingConfig = Record<string, ServerTimingMetricSpec>;
-
-type ServerTimingMetricSpec = DurationMetricSpec | DescriptionMetricSpec;
-type DurationMetricSpec = [typeof TYPE_DURATION] | [typeof TYPE_DURATION, DurationMetricMultiplier];
-type DescriptionMetricSpec = [typeof TYPE_DESCRIPTION];
+type ServerTimingMetricSpec = [ServerTimingType] | [ServerTimingType, DurationMetricMultiplier];
+type ServerTimingType = typeof TYPE_DURATION | typeof TYPE_DESCRIPTION;
 
 /**
  * A server timing metric that has its value set to the duration field
@@ -34,15 +32,22 @@ export function getKeyValuePairs(
 
   serverTiming.forEach((stEntry) => {
     const name = stEntry.name;
+    const description = stEntry.description;
 
     if (name in config) {
       const spec = config[name];
+      const multiplier = spec[1];
 
       if (spec[0] === TYPE_DURATION) {
-        const multiplier = spec[1] || 1;
-        pairs[name] = stEntry.duration * multiplier;
+        pairs[name] = stEntry.duration * (multiplier || 1);
+      } else if (description && multiplier) {
+        const numericValue = parseFloat(description);
+
+        if (!isNaN(numericValue)) {
+          pairs[name] = numericValue * multiplier;
+        }
       } else {
-        pairs[name] = stEntry.description || BOOLEAN_TRUE_VALUE;
+        pairs[name] = description || BOOLEAN_TRUE_VALUE;
       }
     }
   });
