@@ -2,7 +2,7 @@ import { fitUserTimingEntries } from "./beacon";
 import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
 import * as CustomData from "./custom-data";
-import { onVisible, isVisible, wasPrerendered } from "./document";
+import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
@@ -1003,11 +1003,13 @@ LUX = (function () {
         loadEventEndStr = "le" + loadTime;
       }
 
+      const redirect = wasRedirected();
+
       s = [
         ns,
         prefixNTValue("activationStart", "as"),
-        prefixNTValue("redirectStart", "rs"),
-        prefixNTValue("redirectEnd", "re"),
+        redirect ? prefixNTValue("redirectStart", "rs") : "",
+        redirect ? prefixNTValue("redirectEnd", "re") : "",
         prefixNTValue("fetchStart", "fs"),
         prefixNTValue("domainLookupStart", "ds"),
         prefixNTValue("domainLookupEnd", "de"),
