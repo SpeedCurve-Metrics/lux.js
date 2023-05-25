@@ -24,7 +24,7 @@ export function observe<K extends keyof PerformanceEntryMap>(
       list.getEntries().forEach((entry) => callback(entry as PerformanceEntryMap[K]));
     });
 
-    po.observe({ type, buffered: true, ...options });
+    po.observe(Object.assign({ type, buffered: true }, { options }));
 
     return po;
   }

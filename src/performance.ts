@@ -43,12 +43,14 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
   const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
 
   if (navEntries.length) {
-    const entry = navEntries[0] as PartialPerformanceNavigationTiming;
+    const nativeEntry = navEntries[0] as PartialPerformanceNavigationTiming;
+    const entry = {
+      navigationStart: 0,
+      activationStart: 0,
+    } as PartialPerformanceNavigationTiming;
 
-    entry.navigationStart = 0;
-
-    if (typeof entry.activationStart === "undefined") {
-      entry.activationStart = 0;
+    for (const key in nativeEntry) {
+      entry[key] = nativeEntry[key];
     }
 
     return entry;

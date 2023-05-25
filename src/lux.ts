@@ -10,7 +10,6 @@ import Logger, { LogEvent } from "./logger";
 import { clamp, floor } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
-import { getNavTimingValue } from "./metric/navigation-timing";
 import now from "./now";
 import {
   msSinceNavigationStart,
@@ -144,14 +143,13 @@ LUX = (function () {
   let gCustomerDataTimeout: number | undefined; // setTimeout timer for sending a Customer Data beacon after onload
   let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
   let pageRestoreTime: number | undefined; // ms since navigationStart representing when the page was restored from the bfcache
-  const navEntry = getNavigationEntry();
 
   /**
    * To measure the way a user experienced a metric, we measure metrics relative to the time the user
    * started viewing the page. On prerendered pages, this is activationStart. On bfcache restores, this
    * is the page restore time. On all other pages this value will be zero.
    */
-  const getZeroTime = () => pageRestoreTime || navEntry.activationStart;
+  const getZeroTime = () => pageRestoreTime || getNavigationEntry().activationStart;
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -356,6 +354,7 @@ LUX = (function () {
 
     // ...Otherwise provide a polyfill
     if (__ENABLE_POLYFILLS) {
+      const navEntry = getNavigationEntry();
       let startTime = typeof startMarkName === "number" ? startMarkName : 0;
       let endTime = typeof endMarkName === "number" ? endMarkName : _now();
       const throwError = (missingMark: string) => {
@@ -977,6 +976,7 @@ LUX = (function () {
         "";
     } else if (performance.timing) {
       // Return the real Nav Timing metrics because this is the "main" page view (not a SPA)
+      const navEntry = getNavigationEntry();
       const startRender = getStartRender();
       const fcp = getFcp();
       const lcp = getLcp();
@@ -984,13 +984,14 @@ LUX = (function () {
       const prefixNTValue = (key: keyof PerformanceNavigationTiming, prefix: string): string => {
         // activationStart is always absolute. Other values are relative to activationStart.
         const zero = key === "activationStart" ? 0 : getZeroTime();
-        const value = getNavTimingValue(key, zero);
 
-        if (typeof value === "undefined") {
-          return "";
+        if (typeof navEntry[key] === "number") {
+          const value = clamp(floor((navEntry[key] as number) - zero));
+
+          return prefix + value;
         }
 
-        return prefix + value;
+        return "";
       };
 
       let loadEventStartStr = prefixNTValue("loadEventStart", "ls");
@@ -1197,7 +1198,7 @@ LUX = (function () {
 
   // Return the main HTML document transfer size (in bytes).
   function docSize(): number {
-    return navEntry.encodedBodySize || 0;
+    return getNavigationEntry().encodedBodySize || 0;
   }
 
   // Return the connection type based on Network Information API.
@@ -1415,6 +1416,8 @@ LUX = (function () {
     }
 
     if (globalConfig.serverTiming) {
+      const navEntry = getNavigationEntry();
+
       if (navEntry.serverTiming) {
         const stPairs = ST.getKeyValuePairs(globalConfig.serverTiming!, navEntry.serverTiming);
 
