@@ -1,6 +1,6 @@
 # lux.js changelog
 
-## 2023-??-??: v308
+## 2023-05-09: v308
 
 ### New features
 
