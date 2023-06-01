@@ -1,3 +1,4 @@
+import { max } from "../math";
 import { performance } from "../performance";
 
 /**
@@ -35,7 +36,7 @@ export function addEntry(entry: PerformanceEventTiming): void {
     const existingEntry = slowestEntriesMap[interactionId!];
 
     if (existingEntry) {
-      existingEntry.duration = Math.max(duration, existingEntry.duration);
+      existingEntry.duration = max(duration, existingEntry.duration);
     } else {
       interactionCountEstimate++;
       slowestEntriesMap[interactionId!] = { duration, interactionId, startTime };

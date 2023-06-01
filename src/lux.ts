@@ -7,7 +7,7 @@ import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
-import { clamp, floor } from "./math";
+import { clamp, floor, max } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import now from "./now";
@@ -491,7 +491,7 @@ LUX = (function () {
       if (typeof hUT[name] === "undefined") {
         hUT[name] = { startTime };
       } else {
-        hUT[name].startTime = Math.max(startTime, hUT[name].startTime);
+        hUT[name].startTime = max(startTime, hUT[name].startTime);
       }
     });
 
@@ -1173,7 +1173,7 @@ LUX = (function () {
   function docHeight(doc: Document) {
     const body = doc.body,
       docelem = doc.documentElement;
-    const height = Math.max(
+    const height = max(
       body ? body.scrollHeight : 0,
       body ? body.offsetHeight : 0,
       docelem ? docelem.clientHeight : 0,
@@ -1186,7 +1186,7 @@ LUX = (function () {
   function docWidth(doc: Document) {
     const body = doc.body,
       docelem = doc.documentElement;
-    const width = Math.max(
+    const width = max(
       body ? body.scrollWidth : 0,
       body ? body.offsetWidth : 0,
       docelem ? docelem.clientWidth : 0,
