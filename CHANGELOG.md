@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2023-06-06: v309
+
+### Bug fixes
+
+- Use the maximum session value for CLS, not the latest session value.
+
 ## 2023-05-25: v308
 
 ### New features

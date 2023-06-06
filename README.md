@@ -5,7 +5,7 @@ This repository contains the source code for lux.js, SpeedCurve's real user moni
 ## Local development
 
 - Compile the lux.js script with `npm run build` or `npm run watch`
-- Run the tests with `npm run jest` or `npm run jest-watch`
+- Run the tests with `npm run test`
 - Check for linting errors with `npm run lint` and automatically fix them (where possible) with `npm run lint-fix`
 
 ## Release process
@@ -13,9 +13,10 @@ This repository contains the source code for lux.js, SpeedCurve's real user moni
 1. Propose changes in a pull request
 2. Once approved, merge changes to the `main` branch
 3. Increment the `SCRIPT_VERSION` constant on the `main` branch
-4. Create a new release in GitHub, following the naming convention and documentation process of previous releases
-5. Run `npm run build` to generate the lux.js bundles.
-6. Follow the [rum-backend release process]() to deploy the updated lux.js bundles.
+4. Add release information into CHANGELOG.md in this repo
+5. Create a new release in GitHub, following the naming convention and documentation process of previous releases
+6. Run `npm run build` to generate the lux.js bundles.
+7. Follow the [rum-backend release process]() to deploy the updated lux.js bundles.
 
 ## Publishing in GitHub Packages
 
