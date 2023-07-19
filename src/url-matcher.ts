@@ -27,7 +27,7 @@ export function getMatchesFromPatternMap(
       for (const i in patterns) {
         const pattern = patterns[i];
 
-        if (patternMatchesUrl(pattern, hostname, pathname)) {
+        if (typeof pattern === "string" && patternMatchesUrl(pattern, hostname, pathname)) {
           if (firstOnly) {
             return key;
           }
