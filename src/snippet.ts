@@ -12,23 +12,19 @@ declare var LUX: LuxGlobal;
 
 LUX = {
   ac: [],
-  addData: (name, value) => cmd(["addData", name, value]),
+  addData: (name, value) => LUX.cmd(["addData", name, value]),
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  cmd: cmd,
+  cmd: (cmd: Command) => LUX.ac!.push(cmd),
   getDebug: () => [[scriptStartTime, 0, []]],
-  init: () => cmd(["init"]),
+  init: () => LUX.cmd(["init"]),
   mark: _mark,
-  markLoadTime: () => cmd(["markLoadTime", msSinceNavigationStart()]),
+  markLoadTime: () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]),
   measure: _measure,
-  send: () => cmd(["send"]),
+  send: () => LUX.cmd(["send"]),
   ns: scriptStartTime,
 };
 
 export default LUX;
-
-function cmd(cmd: Command) {
-  LUX.ac!.push(cmd);
-}
 
 function _mark(...args: Parameters<LuxGlobal["mark"]>): ReturnType<LuxGlobal["mark"]> {
   if (performance.mark) {
@@ -45,7 +41,7 @@ function _mark(...args: Parameters<LuxGlobal["mark"]>): ReturnType<LuxGlobal["ma
     options.startTime = msSinceNavigationStart();
   }
 
-  cmd(["mark", name, options]);
+  LUX.cmd(["mark", name, options]);
 }
 
 function _measure(...args: Parameters<LuxGlobal["measure"]>): ReturnType<LuxGlobal["measure"]> {
@@ -75,7 +71,7 @@ function _measure(...args: Parameters<LuxGlobal["measure"]>): ReturnType<LuxGlob
     options.end = msSinceNavigationStart();
   }
 
-  cmd(["measure", name, options]);
+  LUX.cmd(["measure", name, options]);
 }
 
 // error handler
