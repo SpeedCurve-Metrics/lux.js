@@ -27,6 +27,9 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
   }
 
   switch (event[1]) {
+    case 0:
+      return "The lux.js script was not loaded on this page.";
+
     case LogEvent.EvaluationStart:
       return `lux.js v${args[0]} is initialising.`;
 

@@ -15,6 +15,7 @@ LUX = {
   addData: (name, value) => LUX.cmd(["addData", name, value]),
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   cmd: (cmd: Command) => LUX.ac!.push(cmd),
+  getDebug: () => [[scriptStartTime, 0, []]],
   init: () => LUX.cmd(["init"]),
   mark: _mark,
   markLoadTime: () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]),
