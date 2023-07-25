@@ -7,16 +7,20 @@
     <script src="/js/lux.js?id=10001" async crossorigin="anonymous"></script>
 </head>
 <body>
-    <h1>LUX user timing test page</h1>
+    <h1>LUX element timing test page</h1>
     <img src="eve.jpg" elementtiming="eve-image">
     <script>
         const qs = new URLSearchParams(location.search);
-        const img = document.createElement("img");
-        img.src = "eve.jpg?delayed";
-        img.elementTiming = "eve-image-delayed";
-        img.width = 400;
 
-        setTimeout(() => document.body.appendChild(img), qs.get("imageDelay") || 200);
+        setTimeout(() => {
+            const img = document.createElement("img");
+            img.src = "eve.jpg?delayed";
+            img.elementTiming = "eve-image-delayed";
+            img.width = 400;
+
+            document.body.appendChild(img);
+        }, qs.get("imageDelay") || 200);
     </script>
+    <p>This text will be between two images.</p>
 </body>
 </html>

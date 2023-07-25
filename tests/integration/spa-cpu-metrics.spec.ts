@@ -44,11 +44,13 @@ test.describe("LUX SPA CPU metrics", () => {
 
     // Initiate a third page view with long tasks
     await page.evaluate(() => LUX.init());
+    await page.locator("#long-task-duration").fill("100");
     await page.locator("#create-long-task").click();
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     beacon = luxRequests.getUrl(2)!;
 
     expect(getCpuStat(beacon, "n")).toEqual(1);
+    expect(getCpuStat(beacon, "s")).toBeGreaterThanOrEqual(100);
   });
 });

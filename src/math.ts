@@ -10,3 +10,7 @@ export const max = Math.max;
 export function clamp(x: number): number {
   return max(0, x);
 }
+
+export function sortNumeric(a: number, b: number): number {
+  return a - b;
+}

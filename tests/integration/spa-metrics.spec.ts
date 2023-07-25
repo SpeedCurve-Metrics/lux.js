@@ -1,12 +1,7 @@
 import { test, expect } from "@playwright/test";
 import Flags, { hasFlag } from "../../src/flags";
-import {
-  getElapsedMs,
-  getNavTiming,
-  getPageStat,
-  getNavigationTimingMs,
-  getSearchParam,
-} from "../helpers/lux";
+import { getElapsedMs, getNavTiming, getNavigationTimingMs, getSearchParam } from "../helpers/lux";
+import * as Shared from "../helpers/shared-tests";
 import RequestInterceptor from "../request-interceptor";
 
 test.describe("LUX SPA", () => {
@@ -19,34 +14,62 @@ test.describe("LUX SPA", () => {
     expect(luxRequests.count()).toEqual(1);
   });
 
-  test("regular page metrics are sent for the first SPA page view", async ({
+  test("regular page metrics are sent for the initial document load in a SPA", async ({
     page,
     browserName,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
-
     const beacon = luxRequests.getUrl(0)!;
 
-    // Paint metrics
-    expect(getNavTiming(beacon, "fc")).toBeGreaterThan(0);
+    Shared.testPageStats({ page, browserName, beacon });
+    Shared.testNavigationTiming({ page, browserName, beacon });
+  });
 
-    if (browserName === "chromium") {
-      expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
-      expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(0);
-    } else {
-      expect(beacon.searchParams.get("lc")).toBeNull();
-    }
+  test("regular page metrics are sent for subsequent page views in a SPA", async ({
+    page,
+    browserName,
+  }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.send();
+        LUX.init();
+      }),
+    );
+    await page.waitForTimeout(50);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    const beacon = luxRequests.getUrl(1)!;
 
-    // Page stats
-    expect(getPageStat(beacon, "ns")).toEqual(1);
-    expect(getPageStat(beacon, "ss")).toEqual(0);
+    Shared.testPageStats({ page, browserName, beacon });
 
-    // Viewport stats
-    const viewport = page.viewportSize()!;
-    expect(getPageStat(beacon, "vh")).toEqual(viewport.height);
-    expect(getPageStat(beacon, "vw")).toEqual(viewport.width);
+    const NT = getNavTiming(beacon);
+
+    // fetchStart and activationStart will always be zero
+    expect(NT.fetchStart).toEqual(0);
+    expect(NT.activationStart).toEqual(0);
+
+    // Load times will be non-zero
+    expect(NT.loadEventStart, "loadEventStart should be >0").toBeGreaterThan(0);
+    expect(NT.loadEventEnd, "loadEventEnd should be >0").toBeGreaterThan(0);
+
+    // Other metrics should be null in a SPA
+    expect(NT.domainLookupStart).toBeUndefined();
+    expect(NT.domainLookupEnd).toBeUndefined();
+    expect(NT.connectStart).toBeUndefined();
+    expect(NT.connectEnd).toBeUndefined();
+    expect(NT.requestStart).toBeUndefined();
+    expect(NT.responseStart).toBeUndefined();
+    expect(NT.responseEnd).toBeUndefined();
+    expect(NT.domInteractive).toBeUndefined();
+    expect(NT.domContentLoadedEventStart).toBeUndefined();
+    expect(NT.domContentLoadedEventEnd).toBeUndefined();
+    expect(NT.domComplete).toBeUndefined();
+    expect(NT.startRender).toBeUndefined();
+    expect(NT.firstContentfulPaint).toBeUndefined();
+    expect(NT.largestContentfulPaint).toBeUndefined();
   });
 
   test("calling LUX.init before LUX.send does not lose data", async ({ page, browserName }) => {
@@ -56,14 +79,15 @@ test.describe("LUX SPA", () => {
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(0)!;
+    const NT = getNavTiming(beacon);
 
-    expect(getNavTiming(beacon, "fc")).toBeGreaterThan(0);
+    expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
     if (browserName === "chromium") {
-      expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
-      expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(0);
+      expect(NT.startRender).toBeGreaterThan(0);
+      expect(NT.largestContentfulPaint).toBeGreaterThanOrEqual(0);
     } else {
-      expect(beacon.searchParams.get("lc")).toBeNull();
+      expect(NT.largestContentfulPaint).toBeUndefined();
     }
   });
 

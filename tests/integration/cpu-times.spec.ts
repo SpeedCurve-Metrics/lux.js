@@ -20,7 +20,7 @@ test.describe("LUX CPU timing", () => {
     const longTaskMax = getCpuStat(beacon, "x");
 
     expect(longTaskCount).toEqual(1);
-    expect(longTaskTotal).toBeGreaterThan(49);
+    expect(longTaskTotal).toBeGreaterThanOrEqual(50);
 
     // The test page should have one long task, so the median should equal the total
     expect(longTaskMedian).toEqual(longTaskTotal);
@@ -29,9 +29,18 @@ test.describe("LUX CPU timing", () => {
     expect(longTaskMax).toEqual(longTaskTotal);
   });
 
-  test("detect and report long tasks that occured before the lux.js script", async ({ page }) => {
+  test("detect and report early long tasks", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/long-tasks.html?noInlineSnippet");
+    await page.goto("/long-tasks.html?injectBeforeSnippet=createLongTask(100);");
+    await luxRequests.waitForMatchingRequest();
+    const beacon = luxRequests.getUrl(0)!;
+
+    expect(getCpuStat(beacon, "s")).toBeGreaterThanOrEqual(150);
+  });
+
+  test("detect and report early long tasks with no snippet", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/long-tasks.html?noInlineSnippet&injectBeforeSnippet=createLongTask();");
     await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
 
@@ -40,13 +49,9 @@ test.describe("LUX CPU timing", () => {
     const longTaskMedian = getCpuStat(beacon, "d");
     const longTaskMax = getCpuStat(beacon, "x");
 
-    expect(longTaskCount).toEqual(1);
-    expect(longTaskTotal).toBeGreaterThan(49);
-
-    // The test page should have one long task, so the median should equal the total
-    expect(longTaskMedian).toEqual(longTaskTotal);
-
-    // And the max should equal the total
-    expect(longTaskMax).toEqual(longTaskTotal);
+    expect(longTaskCount).toEqual(2);
+    expect(longTaskTotal).toBeGreaterThanOrEqual(100);
+    expect(longTaskMedian).toBeGreaterThanOrEqual(50);
+    expect(longTaskMax).toBeGreaterThanOrEqual(50);
   });
 });

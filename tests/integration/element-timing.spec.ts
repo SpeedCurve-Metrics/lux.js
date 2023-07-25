@@ -23,9 +23,20 @@ test.describe("LUX element timing", () => {
 
   test("element timing is collected in a SPA", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    const imageRequests = new RequestInterceptor(page).createRequestMatcher("eve.jpg");
-    await page.goto("/default.html?injectScript=LUX.auto=false;");
-    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    const imageRequests = new RequestInterceptor(page).createRequestMatcher("eve.jpg\\?delayed");
+    await page.goto("/element-timing.html?injectScript=LUX.auto=false;");
+
+    // Wait for the delayed image to load before sending the first beacon
+    await imageRequests.waitForMatchingRequest();
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        // Delay calling LUX.send() so the element timing has a chance to register
+        setTimeout(LUX.send, 50);
+      }),
+    );
+
+    // Create another RequestInterceptor to wait for the SPA image
+    const spaImageRequests = new RequestInterceptor(page).createRequestMatcher("charlie.jpg");
 
     // Force a delay and record the timestamp so we can assert the image time was recorded relative
     // to the next LUX.init call
@@ -36,22 +47,29 @@ test.describe("LUX element timing", () => {
     await page.waitForTimeout(30);
     await page.evaluate(() => {
       const img = document.createElement("img");
-      img.src = "eve.jpg";
+      img.src = "charlie.jpg";
       img.elementTiming = "spa-image";
       document.body.appendChild(img);
     });
-    await imageRequests.waitForMatchingRequest();
+    await spaImageRequests.waitForMatchingRequest();
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         // Delay calling LUX.send() so the element timing has a chance to register
         setTimeout(LUX.send, 50);
       }),
     );
-    const beacon = luxRequests.getUrl(1)!;
-    const ET = parseUserTiming(getSearchParam(beacon, "ET"));
 
-    expect(Object.keys(ET).length).toEqual(1);
-    expect(ET["spa-image"].startTime).toBeLessThan(timeBeforeImage);
-    expect(ET["spa-image"].startTime).toBeGreaterThan(30);
+    const firstBeacon = luxRequests.getUrl(0)!;
+    const secondBeacon = luxRequests.getUrl(1)!;
+    const firstET = parseUserTiming(getSearchParam(firstBeacon, "ET"));
+    const secondET = parseUserTiming(getSearchParam(secondBeacon, "ET"));
+
+    expect(Object.keys(firstET).length).toEqual(2);
+    expect(firstET["eve-image"].startTime).toBeGreaterThan(0);
+    expect(firstET["eve-image-delayed"].startTime).toBeGreaterThan(firstET["eve-image"].startTime);
+
+    expect(Object.keys(secondET).length).toEqual(1);
+    expect(secondET["spa-image"].startTime).toBeLessThan(timeBeforeImage);
+    expect(secondET["spa-image"].startTime).toBeGreaterThan(30);
   });
 });

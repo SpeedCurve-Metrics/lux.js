@@ -1,5 +1,29 @@
 import * as Flags from "../../src/flags";
 
+const navigationTimingKeys = {
+  as: "activationStart",
+  rs: "redirectStart",
+  re: "redirectEnd",
+  fs: "fetchStart",
+  ds: "domainLookupStart",
+  de: "domainLookupEnd",
+  cs: "connectStart",
+  sc: "secureConnectionStart",
+  ce: "connectEnd",
+  qs: "requestStart",
+  bs: "responseStart",
+  be: "responseEnd",
+  oi: "domInteractive",
+  os: "domContentLoadedEventStart",
+  oe: "domContentLoadedEventEnd",
+  oc: "domComplete",
+  ls: "loadEventStart",
+  le: "loadEventEnd",
+  sr: "startRender",
+  fc: "firstContentfulPaint",
+  lc: "largestContentfulPaint",
+} as const;
+
 export function getCpuStat(beacon: URL, key: string): number | null {
   const cpu = parseNestedPairs(getSearchParam(beacon, "CPU"));
 
@@ -14,8 +38,29 @@ export function getPageStat(beacon: URL, key: string): number | null {
   return extractCondensedValue(getSearchParam(beacon, "PS"), key);
 }
 
-export function getNavTiming(beacon: URL, key: string): number | null {
-  return extractCondensedValue(getSearchParam(beacon, "NT"), key);
+type NavigationTimingKey = (typeof navigationTimingKeys)[keyof typeof navigationTimingKeys];
+
+export function getNavTiming(beacon: URL, key: string): number | null;
+export function getNavTiming(beacon: URL): Record<NavigationTimingKey, number>;
+export function getNavTiming(
+  beacon: URL,
+  key?: string,
+): number | null | Record<NavigationTimingKey, number> {
+  if (key) {
+    return extractCondensedValue(getSearchParam(beacon, "NT"), key);
+  }
+
+  const matches = getSearchParam(beacon, "NT").match(/[a-z]+[0-9]+/g);
+
+  return Object.fromEntries(
+    matches!.map((str) => {
+      const key = str.match(/[a-z]+/)![0];
+      const name = navigationTimingKeys[key];
+      const val = parseFloat(str.match(/\d+/)![0]);
+
+      return [name, val];
+    }),
+  );
 }
 
 export function hasFlag(beacon: URL, flag: number): boolean {
