@@ -14,8 +14,23 @@ export function getPageStat(beacon: URL, key: string): number | null {
   return extractCondensedValue(getSearchParam(beacon, "PS"), key);
 }
 
-export function getNavTiming(beacon: URL, key: string): number | null {
-  return extractCondensedValue(getSearchParam(beacon, "NT"), key);
+export function getNavTiming(beacon: URL, key: string): number | null;
+export function getNavTiming(beacon: URL): Record<string, number>;
+export function getNavTiming(beacon: URL, key?: string): number | null | Record<string, number> {
+  if (key) {
+    return extractCondensedValue(getSearchParam(beacon, "NT"), key);
+  }
+
+  const matches = getSearchParam(beacon, "NT").match(/[a-z]+[0-9]+/g);
+
+  return Object.fromEntries(
+    matches!.map((str) => {
+      const key = str.match(/[a-z]+/)![0];
+      const val = parseFloat(str.match(/\d+/)![0]);
+
+      return [key, val];
+    })
+  );
 }
 
 export function hasFlag(beacon: URL, flag: number): boolean {

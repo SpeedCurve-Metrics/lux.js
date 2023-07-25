@@ -967,8 +967,11 @@ LUX = (function () {
       const end = floor(endMark.startTime) - start; // delta from start mark
       s =
         ns +
+        // fetchStart and activationStart are the same as navigationStart for a SPA
+        "as" +
+        0 +
         "fs" +
-        0 + // fetchStart is the same as navigationStart for a SPA
+        0 +
         "ls" +
         end +
         "le" +
@@ -980,22 +983,26 @@ LUX = (function () {
       const startRender = getStartRender();
       const fcp = getFcp();
       const lcp = getLcp();
+      const zero = getZeroTime();
 
-      const prefixNTValue = (key: keyof PerformanceNavigationTiming, prefix: string): string => {
-        // activationStart is always absolute. Other values are relative to activationStart.
-        const zero = key === "activationStart" ? 0 : getZeroTime();
-
+      const prefixNTValue = (
+        key: keyof PerformanceNavigationTiming,
+        prefix: string,
+        ignoreZero?: boolean
+      ): string => {
         if (typeof navEntry[key] === "number") {
-          const value = clamp(floor((navEntry[key] as number) - zero));
+          if (navEntry[key] || !ignoreZero) {
+            const value = clamp(floor((navEntry[key] as number) - zero));
 
-          return prefix + value;
+            return prefix + value;
+          }
         }
 
         return "";
       };
 
-      let loadEventStartStr = prefixNTValue("loadEventStart", "ls");
-      let loadEventEndStr = prefixNTValue("loadEventEnd", "le");
+      let loadEventStartStr = prefixNTValue("loadEventStart", "ls", true);
+      let loadEventEndStr = prefixNTValue("loadEventEnd", "le", true);
 
       if (pageRestoreTime && startMark && endMark) {
         // For bfcache restores, we set the load time to the time it took for the page to be restored.
@@ -1008,27 +1015,27 @@ LUX = (function () {
 
       s = [
         ns,
-        prefixNTValue("activationStart", "as"),
+        "as" + clamp(navEntry.activationStart),
         redirect ? prefixNTValue("redirectStart", "rs") : "",
         redirect ? prefixNTValue("redirectEnd", "re") : "",
         prefixNTValue("fetchStart", "fs"),
         prefixNTValue("domainLookupStart", "ds"),
         prefixNTValue("domainLookupEnd", "de"),
         prefixNTValue("connectStart", "cs"),
-        prefixNTValue("secureConnectionStart", "sc"),
+        prefixNTValue("secureConnectionStart", "sc", true),
         prefixNTValue("connectEnd", "ce"),
         prefixNTValue("requestStart", "qs"),
         prefixNTValue("responseStart", "bs"),
         prefixNTValue("responseEnd", "be"),
-        prefixNTValue("domInteractive", "oi"),
-        prefixNTValue("domContentLoadedEventStart", "os"),
-        prefixNTValue("domContentLoadedEventEnd", "oe"),
-        prefixNTValue("domComplete", "oc"),
+        prefixNTValue("domInteractive", "oi", true),
+        prefixNTValue("domContentLoadedEventStart", "os", true),
+        prefixNTValue("domContentLoadedEventEnd", "oe", true),
+        prefixNTValue("domComplete", "oc", true),
         loadEventStartStr,
         loadEventEndStr,
-        typeof startRender !== "undefined" ? "sr" + clamp(startRender) : "",
-        typeof fcp !== "undefined" ? "fc" + clamp(fcp) : "",
-        typeof lcp !== "undefined" ? "lc" + clamp(lcp) : "",
+        startRender ? "sr" + clamp(startRender) : "",
+        fcp ? "fc" + clamp(fcp) : "",
+        lcp ? "lc" + clamp(lcp) : "",
       ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.

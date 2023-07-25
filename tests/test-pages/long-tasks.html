@@ -12,11 +12,14 @@
     <button id="create-long-task">Create another long task</button>
 
     <script>
+        const qs = new URLSearchParams(location.search);
+        const blockFor = Number(qs.get("blockFor")) || 50;
+
         document.getElementById("create-long-task").addEventListener("click", () => {
-            createLongTask()
+            createLongTask(blockFor)
         });
 
-        createLongTask();
+        createLongTask(blockFor);
     </script>
 </body>
 </html>

@@ -32,7 +32,7 @@ test.describe("BF cache integration", () => {
 
   test("a beacon is sent on BF cache restore when LUX.newBeaconOnPageShow=true", async () => {
     const MAX_MEASURE_TIME = 1200;
-    const IMAGE_DELAY = MAX_MEASURE_TIME;
+    const IMAGE_DELAY = 1200;
 
     const injectScript = [
       "LUX.newBeaconOnPageShow=true",
@@ -54,47 +54,43 @@ test.describe("BF cache integration", () => {
     // We have to forcefully close the page after this test (see above)
     await page.close();
 
-    const [firstBeacon, bcfBeacon] = (await store.findAll()).map((beacon) => new URL(beacon.url));
+    const [firstBeacon, bfcBeacon] = (await store.findAll()).map((beacon) => new URL(beacon.url));
 
     // The first beacon and bfcache beacon should have different page IDs but the same session ID
-    expect(getSearchParam(firstBeacon, "sid")).not.toEqual(getSearchParam(bcfBeacon, "sid"));
-    expect(getSearchParam(firstBeacon, "uid")).toEqual(getSearchParam(bcfBeacon, "uid"));
+    expect(getSearchParam(firstBeacon, "sid")).not.toEqual(getSearchParam(bfcBeacon, "sid"));
+    expect(getSearchParam(firstBeacon, "uid")).toEqual(getSearchParam(bfcBeacon, "uid"));
 
     expect(hasFlag(firstBeacon, Flags.PageWasBfCacheRestored)).toBe(false);
-    expect(hasFlag(bcfBeacon, Flags.PageWasBfCacheRestored)).toBe(true);
+    expect(hasFlag(bfcBeacon, Flags.PageWasBfCacheRestored)).toBe(true);
 
-    // Navigation timing should all be zero, as the page loaded instantly
-    expect(getNavTiming(bcfBeacon, "as")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "fs")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "ds")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "de")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "cs")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "ce")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "qs")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "bs")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "be")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "oi")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "os")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "oe")).toEqual(0);
-    expect(getNavTiming(bcfBeacon, "oc")).toEqual(0);
+    const bfcNT = getNavTiming(bfcBeacon);
+
+    Object.keys(bfcNT).forEach((key) => {
+      // All navigation timing except for load times should all be zero, as the page loaded instantly
+      if (["ls", "le"].includes(key)) {
+        return;
+      }
+
+      expect(bfcNT[key]).toEqual(0);
+    });
 
     // The bfcache beacon should still have a measurable load time, which will be the time it took
     // for the page to be restored from cache.
-    expect(getNavTiming(bcfBeacon, "le")).toBeGreaterThan(0);
-    expect(getNavTiming(bcfBeacon, "le")).toBeLessThan(timeAfterBeacon);
-    expect(getNavTiming(bcfBeacon, "ls")).toEqual(getNavTiming(bcfBeacon, "le"));
+    expect(bfcNT.le).toBeGreaterThan(0);
+    expect(bfcNT.le).toBeLessThan(timeAfterBeacon);
+    expect(bfcNT.ls).toEqual(bfcNT.le);
 
     const firstET = parseUserTiming(getSearchParam(firstBeacon, "ET"));
-    const bcfET = parseUserTiming(getSearchParam(bcfBeacon, "ET"));
+    const bfcET = parseUserTiming(getSearchParam(bfcBeacon, "ET"));
 
     expect(firstET["eve-image"].startTime).toBeGreaterThanOrEqual(getNavTiming(firstBeacon, "le")!);
     expect(firstET["eve-image-delayed"]).toBeUndefined();
 
-    expect(bcfET["eve-image"]).toBeUndefined();
-    expect(bcfET["eve-image-delayed"].startTime).toBeGreaterThanOrEqual(
-      getNavTiming(bcfBeacon, "le")!,
+    expect(bfcET["eve-image"]).toBeUndefined();
+    expect(bfcET["eve-image-delayed"].startTime).toBeGreaterThanOrEqual(
+      getNavTiming(bfcBeacon, "le")!,
     );
-    expect(bcfET["eve-image-delayed"].startTime).toBeLessThan(timeAfterBeacon);
+    expect(bfcET["eve-image-delayed"].startTime).toBeLessThan(timeAfterBeacon);
   });
 
   test("a beacon is not sent on BF cache restore by default", async () => {

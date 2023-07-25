@@ -20,6 +20,7 @@ BeaconStore.open().then(async (store) => {
     const pathname = parsedUrl.pathname;
 
     const headers = (contentType) => ({
+      "cache-control": `max-age=${parsedUrl.query.maxAge || 0}`,
       "content-type": contentType,
       "server-timing": parsedUrl.query.serverTiming || "",
       connection: "close",
@@ -92,6 +93,10 @@ BeaconStore.open().then(async (store) => {
               }
           };
         `;
+
+          if (parsedUrl.query.injectBeforeSnippet) {
+            injectScript += parsedUrl.query.injectBeforeSnippet;
+          }
 
           if (!parsedUrl.query.noInlineSnippet) {
             injectScript += inlineSnippet;
