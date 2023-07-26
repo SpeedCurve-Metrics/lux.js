@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2023-??-??: v310
+
+### Improvements
+
+- Pressing a modifier key on its own will no longer be tracked as a user interaction.
+
 ## 2023-06-06: v309
 
 ### Bug fixes

@@ -42,6 +42,22 @@ test.describe("LUX interaction", () => {
     expect(ixMetrics.ki).toEqual("button-with-id");
   });
 
+  test("modifier keys are ignored for keypress interactions", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/interaction.html", { waitUntil: "networkidle" });
+    await page.locator("#button-with-id").press("Alt");
+    await page.waitForTimeout(50);
+    const timeBeforeKeyPress = await getElapsedMs(page);
+    await luxRequests.waitForMatchingRequest(() =>
+      page.locator("#button-with-id").press("Shift+Enter"),
+    );
+
+    const ixBeacon = luxRequests.getUrl(1)!;
+    const ixMetrics = parseNestedPairs(getSearchParam(ixBeacon, "IX"));
+
+    expect(parseInt(ixMetrics.k)).toBeGreaterThanOrEqual(timeBeforeKeyPress);
+  });
+
   test("only high level metrics are sent in the interaction beacon", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html", { waitUntil: "networkidle" });
@@ -146,7 +162,7 @@ test.describe("LUX interaction", () => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => window.dispatchEvent(new MouseEvent("mousedown")))
+      page.evaluate(() => window.dispatchEvent(new MouseEvent("mousedown"))),
     );
     const ixBeacon = luxRequests.getUrl(1)!;
     const ixMetrics = parseNestedPairs(getSearchParam(ixBeacon, "IX"));
@@ -160,7 +176,7 @@ test.describe("LUX interaction", () => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => window.dispatchEvent(new MouseEvent("keydown")))
+      page.evaluate(() => window.dispatchEvent(new MouseEvent("keydown"))),
     );
     const ixBeacon = luxRequests.getUrl(1)!;
     const ixMetrics = parseNestedPairs(getSearchParam(ixBeacon, "IX"));

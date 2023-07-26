@@ -1603,7 +1603,23 @@ LUX = (function () {
   }
 
   function _keyHandler(e: KeyboardEvent) {
+    const { keyCode } = e;
+
+    /**
+     * Ignore modifier keys
+     *
+     * 16 = Shift
+     * 17 = Control
+     * 18 = Alt
+     * 20 = Caps Lock
+     * 224 = Meta/Command
+     */
+    if (keyCode === 16 || keyCode === 17 || keyCode === 18 || keyCode === 20 || keyCode === 224) {
+      return;
+    }
+
     _removeIxHandlers();
+
     if (typeof ghIx["k"] === "undefined") {
       ghIx["k"] = _now();
 
