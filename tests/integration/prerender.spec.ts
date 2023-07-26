@@ -1,5 +1,4 @@
-import { test, expect, Page, Browser } from "@playwright/test";
-import { chromium } from "playwright";
+import { chromium, test, expect, Page, Browser } from "@playwright/test";
 import Flags from "../../src/flags.js";
 import BeaconStore from "../helpers/beacon-store.js";
 import {

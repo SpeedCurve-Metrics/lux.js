@@ -1,4 +1,4 @@
-import { Page, Request } from "playwright";
+import { Page, Request } from "@playwright/test";
 import RequestMatcher from "./request-matcher";
 
 export default class RequestInterceptor {
