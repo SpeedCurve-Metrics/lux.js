@@ -49,13 +49,9 @@ test.describe("LUX CPU timing", () => {
     const longTaskMedian = getCpuStat(beacon, "d");
     const longTaskMax = getCpuStat(beacon, "x");
 
-    expect(longTaskCount).toEqual(1);
-    expect(longTaskTotal).toBeGreaterThanOrEqual(50);
-
-    // The test page should have one long task, so the median should equal the total
-    expect(longTaskMedian).toEqual(longTaskTotal);
-
-    // And the max should equal the total
-    expect(longTaskMax).toEqual(longTaskTotal);
+    expect(longTaskCount).toEqual(2);
+    expect(longTaskTotal).toBeGreaterThanOrEqual(100);
+    expect(longTaskMedian).toBeGreaterThanOrEqual(50);
+    expect(longTaskMax).toBeGreaterThanOrEqual(50);
   });
 });
