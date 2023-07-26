@@ -72,6 +72,7 @@ test.describe("BF cache integration", () => {
     // Test the metrics look correct for the BF cache beacon
     const bfcNT = getNavTiming(bfcBeacon);
 
+    expect(bfcNT.secureConnectionStart).toBeUndefined();
     expect(bfcNT.activationStart).toEqual(0);
     expect(bfcNT.fetchStart).toEqual(0);
     expect(bfcNT.domainLookupStart).toEqual(0);
@@ -121,5 +122,35 @@ test.describe("BF cache integration", () => {
     await page.close();
 
     expect(await store.countAll()).toEqual(1);
+  });
+
+  test("redirect time is not counted for BF cache restores", async () => {
+    const MAX_MEASURE_TIME = 1200;
+    const IMAGE_DELAY = 1200;
+
+    const injectScript = [
+      "LUX.newBeaconOnPageShow=true",
+      `LUX.maxMeasureTime=${MAX_MEASURE_TIME}`,
+    ].join(";");
+
+    // Open up the first page with a redirect
+    const redirectTo = encodeURIComponent(
+      `/element-timing.html?useBeaconStore=${store.id}&imageDelay=${IMAGE_DELAY}&injectScript=${injectScript}`,
+    );
+    await page.goto(`/default.html?redirectTo=${redirectTo}&redirectDelay=50`, {
+      waitUntil: "networkidle",
+    });
+
+    // Navigate to another page and triggers the browser's back function after onload. Note we do
+    // this instead of using page.goBack() because of https://github.com/microsoft/playwright/issues/22733
+    await page.goto("/default.html?injectScript=LUX.auto=false;window.onload=()=>history.back();");
+    await expect.poll(() => store.countAll(), { timeout: 5000 }).toEqual(2);
+    await page.close();
+    const [, bfcBeacon] = (await store.findAll()).map((beacon) => new URL(beacon.url));
+
+    const bfcNT = getNavTiming(bfcBeacon);
+
+    expect(bfcNT.redirectStart).toBeUndefined();
+    expect(bfcNT.redirectEnd).toBeUndefined();
   });
 });
