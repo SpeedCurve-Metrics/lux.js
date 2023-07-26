@@ -57,7 +57,7 @@ test.describe("LUX beacon request", () => {
 
           LUX.send();
         }),
-      3
+      3,
     );
 
     expect(luxRequests.count()).toEqual(3);
@@ -73,7 +73,7 @@ test.describe("LUX beacon request", () => {
         });
 
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.count()).toEqual(1);

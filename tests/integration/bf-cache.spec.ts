@@ -12,7 +12,7 @@ import {
 test.describe("BF cache integration", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "bfcache tests only work reliably in Chromium"
+    "bfcache tests only work reliably in Chromium",
   );
 
   let browser: Browser, page: Page, store: BeaconStore;
@@ -42,7 +42,7 @@ test.describe("BF cache integration", () => {
     // Open the first page and wait for the beacon to be sent
     await page.goto(
       `/element-timing.html?useBeaconStore=${store.id}&imageDelay=${IMAGE_DELAY}&injectScript=${injectScript}`,
-      { waitUntil: "networkidle" }
+      { waitUntil: "networkidle" },
     );
 
     // Navigate to another page and triggers the browser's back function after onload. Note we do
@@ -92,7 +92,7 @@ test.describe("BF cache integration", () => {
 
     expect(bcfET["eve-image"]).toBeUndefined();
     expect(bcfET["eve-image-delayed"].startTime).toBeGreaterThanOrEqual(
-      getNavTiming(bcfBeacon, "le")!
+      getNavTiming(bcfBeacon, "le")!,
     );
     expect(bcfET["eve-image-delayed"].startTime).toBeLessThan(timeAfterBeacon);
   });
@@ -103,7 +103,7 @@ test.describe("BF cache integration", () => {
       `/element-timing.html?useBeaconStore=${store.id}&injectScript=LUX.maxMeasureTime=${MAX_MEASURE_TIME}`,
       {
         waitUntil: "networkidle",
-      }
+      },
     );
     await page.goto("/default.html?injectScript=LUX.auto=false;window.onload=()=>history.back();");
     await page.waitForTimeout(MAX_MEASURE_TIME + 100);

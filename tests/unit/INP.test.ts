@@ -120,7 +120,7 @@ describe("INP", () => {
 function makeEntry(
   interactionId: number,
   duration: number,
-  entryType = "event"
+  entryType = "event",
 ): PerformanceEventTiming {
   return {
     interactionId,

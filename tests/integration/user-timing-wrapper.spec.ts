@@ -11,7 +11,7 @@ test.describe("LUX.mark() behaves the same as performance.mark()", () => {
         LUX.mark("lux-mark");
         performance.mark("perf-mark");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -31,7 +31,7 @@ test.describe("LUX.mark() behaves the same as performance.mark()", () => {
         LUX.mark("lux-mark", { startTime: 10 });
         performance.mark("perf-mark", { startTime: 10 });
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -51,7 +51,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
         LUX.measure("lux-measure");
         performance.measure("perf-measure");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -71,7 +71,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
         LUX.measure("lux-measure", "start-mark");
         performance.measure("perf-measure", "start-mark");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -94,7 +94,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
         LUX.measure("lux-measure", "start-mark", "end-mark");
         performance.measure("perf-measure", "start-mark", "end-mark");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -116,7 +116,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
         LUX.measure("lux-measure", undefined, "end-mark");
         performance.measure("perf-measure", undefined, "end-mark");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -216,7 +216,7 @@ test.describe("LUX.measure() behaves the same as performance.measure()", () => {
         performance.measure("perf-measure-8", { start: IDLE_TIME, end: 500 });
 
         LUX.send();
-      }, IDLE_TIME)
+      }, IDLE_TIME),
     );
 
     const beacon = luxRequests.getUrl(0)!;

@@ -5,7 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX layout shifts", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Layout shifts are only supported in Chromium"
+    "Layout shifts are only supported in Chromium",
   );
 
   test("CLS is measured", async ({ page }) => {

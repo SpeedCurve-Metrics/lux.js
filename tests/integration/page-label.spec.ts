@@ -46,7 +46,7 @@ test.describe("LUX page labels in auto mode", () => {
   test("using a pagegroup label", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.label=null;LUX.pagegroups={'Pagegroup':['localhost/default.html']};"
+      "/default.html?injectScript=LUX.label=null;LUX.pagegroups={'Pagegroup':['localhost/default.html']};",
     );
     await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
@@ -61,7 +61,7 @@ test.describe("LUX page labels in auto mode", () => {
   test("LUX.label takes priority over pagegroup label", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.pagegroups={'Pagegroup':['localhost/default.html']};LUX.label='custom label';"
+      "/default.html?injectScript=LUX.pagegroups={'Pagegroup':['localhost/default.html']};LUX.label='custom label';",
     );
     await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
@@ -83,7 +83,7 @@ test.describe("LUX page labels in a SPA", () => {
       page.evaluate(() => {
         LUX.label = "First Label";
         LUX.send();
-      })
+      }),
     );
 
     beacon = luxRequests.getUrl(0)!;
@@ -94,7 +94,7 @@ test.describe("LUX page labels in a SPA", () => {
         LUX.init();
         LUX.label = "Second Label";
         LUX.send();
-      })
+      }),
     );
 
     beacon = luxRequests.getUrl(1)!;
@@ -116,7 +116,7 @@ test.describe("LUX page labels in a SPA", () => {
         LUX.init();
         document.title = "New Document Title";
         LUX.send();
-      })
+      }),
     );
 
     beacon = luxRequests.getUrl(1)!;
@@ -130,7 +130,7 @@ test.describe("LUX JS page label", () => {
   test.beforeEach(async ({ page }) => {
     luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';"
+      "/default.html?injectScript=LUX.auto=false;LUX.jspagelabel='config.page[0].name';",
     );
 
     await page.evaluate(() => {
@@ -150,7 +150,7 @@ test.describe("LUX JS page label", () => {
         LUX.init();
         window.config.page[0].name = "JS Label";
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -164,7 +164,7 @@ test.describe("LUX JS page label", () => {
         LUX.init();
         window.config.page[0].name = "Another JS Label";
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("Another JS Label");
@@ -176,7 +176,7 @@ test.describe("LUX JS page label", () => {
         LUX.init();
         window.config.page[0].name = "First JS Label";
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("First JS Label");
@@ -187,7 +187,7 @@ test.describe("LUX JS page label", () => {
         LUX.jspagelabel = "window.config.page[0].label";
         window.config.page[0].label = "Different Variable Label";
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("Different Variable Label");
@@ -202,7 +202,7 @@ test.describe("LUX JS page label", () => {
         LUX.init();
         LUX.label = "custom label";
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("custom label");
@@ -213,7 +213,7 @@ test.describe("LUX JS page label", () => {
         delete LUX.label;
         window.config.page[0].name = "JS Label";
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("JS Label");
@@ -225,7 +225,7 @@ test.describe("LUX JS page label", () => {
         LUX.init();
         LUX.pagegroups = { Pagegroup: ["localhost/default.html"] };
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("Pagegroup");
@@ -236,7 +236,7 @@ test.describe("LUX JS page label", () => {
         delete LUX.pagegroups;
         window.config.page[0].name = "JS Label";
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("JS Label");
@@ -249,7 +249,7 @@ test.describe("LUX JS page label", () => {
         window.config.page[0].name = "JS Label";
         LUX.pagegroups = { Pagegroup: ["/not-this-page/*"] };
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("JS Label");
@@ -261,7 +261,7 @@ test.describe("LUX JS page label", () => {
         LUX.init();
         window.config = {};
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");
@@ -275,7 +275,7 @@ test.describe("LUX JS page label", () => {
         LUX.init();
         window.config.page[0].name = "";
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");
@@ -287,7 +287,7 @@ test.describe("LUX JS page label", () => {
         LUX.init();
         LUX.jspagelabel = "_getPageLabel.toString()";
         LUX.send();
-      })
+      }),
     );
 
     expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");

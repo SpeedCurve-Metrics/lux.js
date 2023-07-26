@@ -12,7 +12,7 @@ import {
 test.describe("LUX prerender support", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Prerendering is only supported in Chromium"
+    "Prerendering is only supported in Chromium",
   );
 
   let browser: Browser, page: Page, store: BeaconStore;
@@ -45,7 +45,7 @@ test.describe("LUX prerender support", () => {
 
   test("LUX.trackHiddenPages=true sends the beacon on prerendered pages", async () => {
     await page.goto(
-      `/prerender-index.html?useBeaconStore=${store.id}&injectScript=LUX.trackHiddenPages=true`
+      `/prerender-index.html?useBeaconStore=${store.id}&injectScript=LUX.trackHiddenPages=true`,
     );
 
     // Wait for up to 5 seconds for there to be 2 beacons in the beacon store
@@ -75,14 +75,14 @@ test.describe("LUX prerender support", () => {
           `LUX.minMeasureTime=${IMAGE_DELAY_TIME + CLICK_WAIT_TIME}`,
           `if (location.pathname === "/prerender-page.html") { createLongTask(${LONG_TASK_TIME}); }`,
         ].join(";")}`,
-      ].join("&")
+      ].join("&"),
     );
 
     // This setTimeout hack is to get around a bug in Playwright where it's not possible to interact
     // with a prerendered page. See https://github.com/microsoft/playwright/issues/22733
     await page.evaluate(
       (timeout) => setTimeout(() => document.getElementById("next-page-link")!.click(), timeout),
-      CLICK_WAIT_TIME
+      CLICK_WAIT_TIME,
     );
 
     await expect
@@ -124,7 +124,7 @@ test.describe("LUX prerender support", () => {
     // The second image was delayed and should have loaded after IMAGE_DELAY TIME, but relative
     // to activationStart.
     expect(ET["charlie-image"].startTime).toBeGreaterThanOrEqual(
-      IMAGE_DELAY_TIME - activationStart
+      IMAGE_DELAY_TIME - activationStart,
     );
 
     // Paint metrics

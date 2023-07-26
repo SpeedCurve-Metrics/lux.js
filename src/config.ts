@@ -54,7 +54,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
 export function getProperty<T, K extends keyof T, D>(
   obj: T,
   key: K,
-  defaultValue: D
+  defaultValue: D,
 ): Exclude<T[K], undefined> | D {
   if (typeof obj[key] !== "undefined") {
     return obj[key] as Exclude<T[K], undefined>;

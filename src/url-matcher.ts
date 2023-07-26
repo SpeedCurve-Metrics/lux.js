@@ -5,19 +5,19 @@ export interface UrlPatternMapping {
 export function getMatchesFromPatternMap(
   patternMap: UrlPatternMapping,
   hostname: string,
-  pathname: string
+  pathname: string,
 ): string[];
 export function getMatchesFromPatternMap(
   patternMap: UrlPatternMapping,
   hostname: string,
   pathname: string,
-  firstOnly: boolean
+  firstOnly: boolean,
 ): string | undefined;
 export function getMatchesFromPatternMap(
   patternMap: UrlPatternMapping,
   hostname: string,
   pathname: string,
-  firstOnly?: boolean
+  firstOnly?: boolean,
 ): string[] | (string | undefined) {
   const matches = [];
 

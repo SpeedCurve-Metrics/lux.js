@@ -26,7 +26,7 @@ export default class RequestMatcher {
    */
   async waitForMatchingRequest(
     afterCb?: () => Promise<unknown>,
-    requestCount?: number
+    requestCount?: number,
   ): Promise<void>;
   async waitForMatchingRequest(requestCount?: number): Promise<void>;
   async waitForMatchingRequest(...args): Promise<void> {

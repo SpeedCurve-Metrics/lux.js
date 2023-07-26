@@ -5,7 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX CPU timing", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Long tasks are only supported in Chromium"
+    "Long tasks are only supported in Chromium",
   );
 
   test("detect and report long tasks on the page", async ({ page }) => {

@@ -26,7 +26,7 @@ const BOOLEAN_TRUE_VALUE = "true";
 
 export function getKeyValuePairs(
   config: ServerTimingConfig,
-  serverTiming: readonly PerformanceServerTiming[]
+  serverTiming: readonly PerformanceServerTiming[],
 ): Record<string, string | number> {
   const pairs: Record<string, string | number> = {};
 

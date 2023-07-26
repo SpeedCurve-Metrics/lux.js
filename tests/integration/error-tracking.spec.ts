@@ -36,7 +36,7 @@ test.describe("LUX JavaScript error tracking", () => {
     const errorBeacon = errorRequests.getUrl(0)!;
 
     expect(errorBeacon.searchParams.get("msg")).toContain(
-      referenceErrorMessage(browserName, "foo")
+      referenceErrorMessage(browserName, "foo"),
     );
     expect(errorBeacon.searchParams.get("l")).toEqual("SPA Label");
     expect(errorBeacon.searchParams.get("HN")).toEqual("localhost");
@@ -94,7 +94,7 @@ test.describe("LUX JavaScript error tracking", () => {
     const errorBeacon = errorRequests.getUrl(0)!;
 
     expect(errorBeacon.searchParams.get("msg")).toContain(
-      referenceErrorMessage(browserName, "bing")
+      referenceErrorMessage(browserName, "bing"),
     );
   });
 });

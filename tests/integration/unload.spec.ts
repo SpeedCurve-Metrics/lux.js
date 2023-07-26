@@ -43,7 +43,7 @@ test.describe("LUX unload behaviour", () => {
     expect(luxRequests.count()).toEqual(0);
 
     await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => document.dispatchEvent(new Event("pagehide")))
+      page.evaluate(() => document.dispatchEvent(new Event("pagehide"))),
     );
     expect(luxRequests.count()).toEqual(1);
     expect(hasFlag(luxRequests.getUrl(0)!, Flags.BeaconSentFromUnloadHandler))!.toBe(true);
@@ -54,11 +54,11 @@ test.describe("LUX unload behaviour", () => {
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;LUX.minMeasureTime=60000"
+      "/default.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;LUX.minMeasureTime=60000",
     );
 
     await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => document.dispatchEvent(new Event("pagehide")))
+      page.evaluate(() => document.dispatchEvent(new Event("pagehide"))),
     );
     expect(luxRequests.count()).toEqual(1);
     expect(hasFlag(luxRequests.getUrl(0)!, Flags.BeaconSentFromUnloadHandler))!.toBe(true);
@@ -75,7 +75,7 @@ test.describe("LUX unload behaviour", () => {
     expect(luxRequests.count()).toEqual(0);
 
     await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => document.dispatchEvent(new Event("beforeunload")))
+      page.evaluate(() => document.dispatchEvent(new Event("beforeunload"))),
     );
     expect(luxRequests.count()).toEqual(1);
     expect(hasFlag(luxRequests.getUrl(0)!, Flags.BeaconSentFromUnloadHandler))!.toBe(true);

@@ -48,7 +48,7 @@ export function parseNestedPairs(nestedPairString: string): Record<string, strin
       const parts = pair.split("|");
 
       return [parts[0], parts.slice(1).join("|")];
-    })
+    }),
   );
 }
 
@@ -85,7 +85,7 @@ export function parseUserTiming(userTimingString: string): Record<string, UserTi
 export async function getNavigationTimingMs(page, metric): Promise<number> {
   return page.evaluate(
     (metric) => Math.floor(performance.getEntriesByType("navigation")[0][metric]),
-    metric
+    metric,
   );
 }
 

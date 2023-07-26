@@ -6,7 +6,7 @@ export default class BeaconStore {
     useragent: string,
     url: string,
     pagelabel: string,
-    pathname: string
+    pathname: string,
   ): Promise<void>;
   countAll(): Promise<number>;
   findAll(): Promise<Beacon[]>;

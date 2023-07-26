@@ -17,7 +17,7 @@ test.describe("LUX custom data", () => {
         LUX.addData("objectVar", { key: "val" });
         LUX.addData("arrayVar", [1, 2, 3]);
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -42,7 +42,7 @@ test.describe("LUX custom data", () => {
         LUX.addData("var|2", "normal string");
         LUX.addData("var|,3", "special, string");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -60,7 +60,7 @@ test.describe("LUX custom data", () => {
       page.evaluate(() => {
         LUX.addData("var1", "hello");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -82,7 +82,7 @@ test.describe("LUX custom data", () => {
         LUX.addData("var3", undefined);
         LUX.addData("var4");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -98,7 +98,7 @@ test.describe("LUX custom data", () => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => LUX.addData("var1", "hello"))
+      page.evaluate(() => LUX.addData("var1", "hello")),
     );
 
     const mainBeacon = luxRequests.getUrl(0)!;
@@ -121,14 +121,14 @@ test.describe("LUX custom data", () => {
         LUX.addData("var1", "hello");
         LUX.addData("var2", "world");
         LUX.send();
-      })
+      }),
     );
 
     // Custom data baecon 1
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.addData("var2", "doggo");
-      })
+      }),
     );
 
     // Main beacon 2
@@ -137,14 +137,14 @@ test.describe("LUX custom data", () => {
         LUX.init();
         LUX.addData("var2", "everyone");
         LUX.send();
-      })
+      }),
     );
 
     // Custom data beacon 2
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.addData("var3", "foo");
-      })
+      }),
     );
 
     // Custom data beacon 3
@@ -152,7 +152,7 @@ test.describe("LUX custom data", () => {
       page.evaluate(() => {
         LUX.addData("var3", "foo");
         LUX.addData("var1", "greetings");
-      })
+      }),
     );
 
     const mainBeacon1Data = parseNestedPairs(getSearchParam(luxRequests.getUrl(0)!, "CD"));
@@ -190,7 +190,7 @@ test.describe("LUX custom data", () => {
         LUX.addData("var1", "hello");
         LUX.addData("var2", "world");
         LUX.send();
-      })
+      }),
     );
 
     await luxRequests.waitForMatchingRequest(() =>
@@ -198,7 +198,7 @@ test.describe("LUX custom data", () => {
         LUX.init();
         LUX.addData("var2", "doggo");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(1)!;

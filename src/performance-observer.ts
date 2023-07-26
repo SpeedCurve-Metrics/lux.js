@@ -14,7 +14,7 @@ export const ALL_ENTRIES: PerformanceEntry[] = [];
 export function observe<K extends keyof PerformanceEntryMap>(
   type: K,
   callback: (entry: PerformanceEntryMap[K]) => void,
-  options?: PerformanceObserverInit
+  options?: PerformanceObserverInit,
 ): PerformanceObserver | undefined {
   if (
     typeof PerformanceObserver === "function" &&
@@ -33,7 +33,7 @@ export function observe<K extends keyof PerformanceEntryMap>(
 }
 
 export function getEntries<K extends keyof PerformanceEntryMap>(
-  type: K
+  type: K,
 ): Array<PerformanceEntryMap[K]> {
   return ALL_ENTRIES.filter((entry) => entry.entryType === type) as Array<PerformanceEntryMap[K]>;
 }

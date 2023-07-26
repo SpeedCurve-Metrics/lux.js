@@ -5,7 +5,7 @@ import RequestInterceptor from "../request-interceptor";
 test.describe("LUX SPA CPU metrics", () => {
   test.skip(
     ({ browserName }) => browserName !== "chromium",
-    "Long tasks are only supported in Chromium"
+    "Long tasks are only supported in Chromium",
   );
 
   test("long tasks are only reported for the SPA page they were associated with", async ({
@@ -35,7 +35,7 @@ test.describe("LUX SPA CPU metrics", () => {
       page.evaluate(() => {
         LUX.init();
         LUX.send();
-      })
+      }),
     );
 
     beacon = luxRequests.getUrl(1)!;

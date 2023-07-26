@@ -40,8 +40,8 @@ test.describe("Server timing", () => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
       `/default.html?serverTiming=${serverTimingMetrics}&injectScript=LUX.serverTiming=${JSON.stringify(
-        serverTimingConfig
-      )}`
+        serverTimingConfig,
+      )}`,
     );
     await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;

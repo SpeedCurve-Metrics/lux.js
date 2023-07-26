@@ -135,7 +135,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
     case LogEvent.PerformanceEntryReceived:
       if (args[0].entryType === "layout-shift") {
         return `Received layout shift at ${args[0].startTime.toFixed()} ms with value of ${args[0].value.toFixed(
-          3
+          3,
         )}`;
       } else if (args[0].entryType === "longtask") {
         return `Received long task with duration of ${args[0].duration} ms`;

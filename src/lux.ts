@@ -361,7 +361,7 @@ LUX = (function () {
         throw new DOMException(
           "Failed to execute 'measure' on 'Performance': The mark '" +
             missingMark +
-            "' does not exist"
+            "' does not exist",
         );
       };
 
@@ -1178,7 +1178,7 @@ LUX = (function () {
       body ? body.offsetHeight : 0,
       docelem ? docelem.clientHeight : 0,
       docelem ? docelem.scrollHeight : 0,
-      docelem ? docelem.offsetHeight : 0
+      docelem ? docelem.offsetHeight : 0,
     );
     return height;
   }
@@ -1191,7 +1191,7 @@ LUX = (function () {
       body ? body.offsetWidth : 0,
       docelem ? docelem.clientWidth : 0,
       docelem ? docelem.scrollWidth : 0,
-      docelem ? docelem.offsetWidth : 0
+      docelem ? docelem.offsetWidth : 0,
     );
     return width;
   }
@@ -1431,7 +1431,7 @@ LUX = (function () {
       getMatchesFromPatternMap(LUX.conversions, location.hostname, location.pathname).forEach(
         (conversion) => {
           LUX.addData(conversion, BOOLEAN_TRUE);
-        }
+        },
       );
     }
 
@@ -1492,7 +1492,7 @@ LUX = (function () {
     let [beaconUtValues, remainingUtValues] = fitUserTimingEntries(
       utValues,
       globalConfig,
-      baseUrl + metricsQueryString
+      baseUrl + metricsQueryString,
     );
 
     // Send the MAIN LUX beacon.
@@ -1513,7 +1513,7 @@ LUX = (function () {
       [beaconUtValues, remainingUtValues] = fitUserTimingEntries(
         remainingUtValues,
         globalConfig,
-        baseUrl
+        baseUrl,
       );
 
       const utBeaconUrl = baseUrl + "&UT=" + beaconUtValues.join(",");
@@ -1708,7 +1708,7 @@ LUX = (function () {
           onunload();
         }
       },
-      true
+      true,
     );
   }
 
@@ -1784,7 +1784,7 @@ LUX = (function () {
         LUX.pagegroups,
         location.hostname,
         location.pathname,
-        true
+        true,
       );
 
       if (label) {

@@ -14,7 +14,7 @@ test.describe("LUX minimum and maximum measure times", () => {
         .getEntriesByType("resource")
         .filter((r) => r.name.search(/\/beacon\//) > -1)
         .map((r) => r.toJSON())
-        .pop()
+        .pop(),
     );
 
     expect(beaconTiming.startTime).toBeGreaterThan(300);
@@ -61,7 +61,7 @@ test.describe("LUX minimum and maximum measure times", () => {
       performance
         .getEntriesByType("resource")
         .filter((r) => r.name.search(/\/beacon\//) > -1)
-        .map((r) => r.toJSON())
+        .map((r) => r.toJSON()),
     );
 
     expect(beaconTiming.length).toEqual(3);

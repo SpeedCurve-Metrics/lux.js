@@ -11,7 +11,7 @@ test.describe("LUX user timing polyfills", () => {
       page.evaluate(() => {
         LUX.mark("test-mark");
         LUX.send();
-      })
+      }),
     );
     const timeAfterMark = await getElapsedMs(page);
 
@@ -35,7 +35,7 @@ test.describe("LUX user timing polyfills", () => {
       page.evaluate(() => {
         LUX.mark("test-mark", { startTime: 10 });
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -54,7 +54,7 @@ test.describe("LUX user timing polyfills", () => {
       page.evaluate(() => {
         LUX.measure("test-measure");
         LUX.send();
-      })
+      }),
     );
     const timeAfterMeasure = await getElapsedMs(page);
 
@@ -69,7 +69,7 @@ test.describe("LUX user timing polyfills", () => {
   test("LUX.measure(name, startMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
     );
     const timeBeforeStartMark = await getElapsedMs(page);
     await page.evaluate(() => LUX.mark("start-mark"));
@@ -89,7 +89,7 @@ test.describe("LUX user timing polyfills", () => {
   test("LUX.measure(name, startMark, endMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
     );
     await page.evaluate(() => LUX.mark("start-mark"));
     await page.waitForTimeout(20);
@@ -98,7 +98,7 @@ test.describe("LUX user timing polyfills", () => {
         LUX.mark("end-mark");
         LUX.measure("test-measure", "start-mark", "end-mark");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -106,21 +106,21 @@ test.describe("LUX user timing polyfills", () => {
 
     expect(UT["test-measure"].startTime).toEqual(UT["start-mark"].startTime);
     expect(UT["test-measure"].duration).toEqual(
-      UT["end-mark"].startTime - UT["start-mark"].startTime
+      UT["end-mark"].startTime - UT["start-mark"].startTime,
     );
   });
 
   test("LUX.measure(name, undefined, endMark)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
     );
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.mark("end-mark");
         LUX.measure("test-measure", undefined, "end-mark");
         LUX.send();
-      })
+      }),
     );
 
     const beacon = luxRequests.getUrl(0)!;
@@ -133,7 +133,7 @@ test.describe("LUX user timing polyfills", () => {
   test("LUX.measure(name, options)", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;"
+      "/default.html?injectScript=LUX.auto=false;performance.mark=undefined;performance.measure=undefined;",
     );
 
     const timeBeforeStartMark = await getElapsedMs(page);
@@ -172,7 +172,7 @@ test.describe("LUX user timing polyfills", () => {
     expect(UT["test-measure-1"].startTime).toEqual(startMarkTime);
     expect(UT["test-measure-1"].duration).toBeGreaterThanOrEqual(timeBeforeMeasure - startMarkTime);
     expect(UT["test-measure-1"].duration).toBeLessThanOrEqual(
-      timeAfterMeasure - timeBeforeStartMark
+      timeAfterMeasure - timeBeforeStartMark,
     );
 
     expect(UT["test-measure-2"].startTime).toEqual(startMarkTime);

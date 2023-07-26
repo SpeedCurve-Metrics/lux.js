@@ -37,7 +37,7 @@ test.describe("LUX user timing", () => {
     expect(UT["test-measure"].startTime).toEqual(UT["test-mark"].startTime);
     expect(UT["test-measure"].duration).toBeGreaterThanOrEqual(30);
     expect(UT["test-measure"].duration).toBeLessThanOrEqual(
-      timeAfterMeasure - UT["test-mark"].startTime
+      timeAfterMeasure - UT["test-mark"].startTime,
     );
   });
 
@@ -106,7 +106,7 @@ test.describe("LUX user timing", () => {
         performance.mark("first-test-mark");
         performance.measure("first-test-measure", "first-test-mark");
         LUX.send();
-      })
+      }),
     );
 
     // Have a small pause to ensure the marks from the first page view are not included in the
@@ -119,7 +119,7 @@ test.describe("LUX user timing", () => {
         performance.mark("second-test-mark");
         performance.measure("second-test-measure", "second-test-mark");
         LUX.send();
-      })
+      }),
     );
 
     const firstUT = parseUserTiming(getSearchParam(luxRequests.getUrl(0)!, "UT"));

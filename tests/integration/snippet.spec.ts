@@ -14,7 +14,7 @@ test.describe("LUX inline snippet", () => {
     const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
 
     await page.goto(
-      "/default.html?injectScript=window.loadTime=performance.now();LUX.markLoadTime();"
+      "/default.html?injectScript=window.loadTime=performance.now();LUX.markLoadTime();",
     );
     await beaconRequests.waitForMatchingRequest();
 
@@ -23,7 +23,7 @@ test.describe("LUX inline snippet", () => {
     const loadTime = await page.evaluate(() => window.loadTime as number);
     const loadTimeMark = await page.evaluate(
       (mark) => performance.getEntriesByName(mark)[0].startTime,
-      END_MARK
+      END_MARK,
     );
 
     expect(loadTime).toBeLessThan(loadEventStart);
@@ -50,7 +50,7 @@ test.describe("LUX inline snippet", () => {
         "window.markTime = performance.now()",
         "LUX.mark('mark-1')",
         "LUX.mark('mark-2', { startTime: 200 })",
-      ].join(";")}`
+      ].join(";")}`,
     );
     await beaconRequests.waitForMatchingRequest();
 
@@ -78,7 +78,7 @@ test.describe("LUX inline snippet", () => {
         "window.beforeMeasureTime = performance.now()",
         "LUX.measure('measure-5', { start: 5 })",
         "LUX.measure('measure-6', { start: 100, duration: 200 })",
-      ].join(";")}`
+      ].join(";")}`,
     );
     await beaconRequests.waitForMatchingRequest();
 
@@ -115,7 +115,7 @@ test.describe("LUX inline snippet", () => {
     await errorRequests.waitForMatchingRequest();
 
     expect(getSearchParam(errorRequests.getUrl(0)!, "msg")).toContain(
-      referenceErrorMessage(browserName, "snippet")
+      referenceErrorMessage(browserName, "snippet"),
     );
   });
 });
