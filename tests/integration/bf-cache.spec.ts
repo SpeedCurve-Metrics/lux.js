@@ -72,6 +72,10 @@ test.describe("BF cache integration", () => {
     // Test the metrics look correct for the BF cache beacon
     const bfcNT = getNavTiming(bfcBeacon);
 
+    // There should be no redirects for this test page
+    expect(bfcNT.redirectStart).toBeUndefined();
+    expect(bfcNT.redirectEnd).toBeUndefined();
+
     expect(bfcNT.secureConnectionStart).toBeUndefined();
     expect(bfcNT.activationStart).toEqual(0);
     expect(bfcNT.fetchStart).toEqual(0);
