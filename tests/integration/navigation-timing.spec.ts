@@ -31,27 +31,27 @@ test.describe("Navigation timing", () => {
     const NT = getNavTiming(beacon);
 
     // Most metric assertions should be the same as in Shared.testNavigationTiming
-    expect(NT.fs).toBeGreaterThanOrEqual(0);
-    expect(NT.ds).toBeGreaterThanOrEqual(0);
-    expect(NT.de).toBeGreaterThanOrEqual(0);
-    expect(NT.cs).toBeGreaterThanOrEqual(0);
-    expect(NT.ce).toBeGreaterThanOrEqual(0);
-    expect(NT.qs).toBeGreaterThanOrEqual(0);
-    expect(NT.oi).toBeGreaterThan(0);
-    expect(NT.os).toBeGreaterThan(0);
-    expect(NT.oe).toBeGreaterThan(0);
-    expect(NT.fc).toBeGreaterThan(0);
+    expect(NT.fetchStart).toBeGreaterThanOrEqual(0);
+    expect(NT.domainLookupStart).toBeGreaterThanOrEqual(0);
+    expect(NT.domainLookupEnd).toBeGreaterThanOrEqual(0);
+    expect(NT.connectStart).toBeGreaterThanOrEqual(0);
+    expect(NT.connectEnd).toBeGreaterThanOrEqual(0);
+    expect(NT.requestStart).toBeGreaterThanOrEqual(0);
+    expect(NT.domInteractive).toBeGreaterThan(0);
+    expect(NT.domContentLoadedEventStart).toBeGreaterThan(0);
+    expect(NT.domContentLoadedEventEnd).toBeGreaterThan(0);
+    expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
     // However some metrics will not be measured, since the beacon is sent before the DOM is loaded
-    expect(NT.oc).toBeUndefined();
-    expect(NT.ls).toBeUndefined();
-    expect(NT.le).toBeUndefined();
+    expect(NT.domComplete).toBeUndefined();
+    expect(NT.loadEventStart).toBeUndefined();
+    expect(NT.loadEventEnd).toBeUndefined();
   });
 
   test("when user navigation sends the beacon before onload", async ({ page, browserName }) => {
     test.skip(
       browserName === "webkit",
-      "webkit doesn't send beacons on unload unless onload has fired (?!)"
+      "webkit doesn't send beacons on unload unless onload has fired (?!)",
     );
 
     // The request interceptor will only catch the beacon for the final page view, since requests
@@ -59,31 +59,32 @@ test.describe("Navigation timing", () => {
     // the beacon for the first page view.
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto(
-      "/delayed-onload.html?injectScript=setTimeout(() => document.querySelector('a').click(), 200)"
+      "/delayed-onload.html?injectScript=setTimeout(() => document.querySelector('a').click(), 200)",
     );
     await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
     const NT = getNavTiming(beacon);
 
     // Most metric assertions should be the same as in Shared.testNavigationTiming
-    expect(NT.fs).toBeGreaterThanOrEqual(0);
-    expect(NT.ds).toBeGreaterThanOrEqual(0);
-    expect(NT.de).toBeGreaterThanOrEqual(0);
-    expect(NT.cs).toBeGreaterThanOrEqual(0);
-    expect(NT.ce).toBeGreaterThanOrEqual(0);
-    expect(NT.qs).toBeGreaterThanOrEqual(0);
-    expect(NT.oi).toBeGreaterThan(0);
-    expect(NT.os).toBeGreaterThan(0);
-    expect(NT.oe).toBeGreaterThan(0);
-    expect(NT.fc).toBeGreaterThan(0);
+    expect(NT.fetchStart).toBeGreaterThanOrEqual(0);
+    expect(NT.domainLookupStart).toBeGreaterThanOrEqual(0);
+    expect(NT.domainLookupEnd).toBeGreaterThanOrEqual(0);
+    expect(NT.connectStart).toBeGreaterThanOrEqual(0);
+    expect(NT.connectEnd).toBeGreaterThanOrEqual(0);
+    expect(NT.requestStart).toBeGreaterThanOrEqual(0);
+    expect(NT.domInteractive).toBeGreaterThan(0);
+    expect(NT.domContentLoadedEventStart).toBeGreaterThan(0);
+    expect(NT.domContentLoadedEventEnd).toBeGreaterThan(0);
+    expect(NT.domComplete).toBeGreaterThan(0);
+    expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
     // However some metrics will not be measured, since the beacon is sent before the DOM is loaded
-    expect(NT.ls).toBeUndefined();
-    expect(NT.le).toBeUndefined();
+    expect(NT.loadEventStart).toBeUndefined();
+    expect(NT.loadEventEnd).toBeUndefined();
 
     // The difference between this test and the one above using maxMeasureTime is that the browser
     // seems to use the unload time as the domComplete value
-    expect(NT.oc).toBeGreaterThanOrEqual(200);
+    expect(NT.domComplete).toBeGreaterThanOrEqual(200);
   });
 
   test("when viewing multiple pages without cache", async ({ page, browserName }) => {
@@ -98,10 +99,24 @@ test.describe("Navigation timing", () => {
 
   test("when viewing multiple pages with cache", async ({ page, browserName }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await luxRequests.waitForMatchingRequest(() => page.goto("/default.html?maxAge=30"));
-    await luxRequests.waitForMatchingRequest(() => page.goto("/default.html?maxAge=30"));
-    await luxRequests.waitForMatchingRequest(() => page.goto("/default.html?maxAge=30"));
+    await luxRequests.waitForMatchingRequest(() =>
+      page.goto("/default.html?maxAge=30&keepAlive=true"),
+    );
+    await luxRequests.waitForMatchingRequest(() =>
+      page.goto("/default.html?maxAge=30&keepAlive=true"),
+    );
+    await luxRequests.waitForMatchingRequest(() =>
+      page.goto("/default.html?maxAge=30&keepAlive=true"),
+    );
     const beacon = luxRequests.getUrl(2)!;
+    const NT = getNavTiming(beacon);
+
+    // Technically these should all be zero, but sometimes browsers report them as "nearly zero"
+    expect(NT.fetchStart).toBeLessThan(5);
+    expect(NT.domainLookupStart).toBeLessThan(5);
+    expect(NT.domainLookupEnd).toBeLessThan(5);
+    expect(NT.connectStart).toBeLessThan(5);
+    expect(NT.connectEnd).toBeLessThan(5);
 
     Shared.testNavigationTiming({ page, browserName, beacon });
   });
@@ -114,8 +129,24 @@ test.describe("Navigation timing", () => {
     const beacon = luxRequests.getUrl(0)!;
 
     const NT = getNavTiming(beacon);
-    console.log(NT.rs, NT.re);
-    expect(NT.rs).toBeGreaterThanOrEqual(0);
-    expect(NT.re).toBeGreaterThanOrEqual(redirectDelay);
+
+    expect(NT.redirectStart).toBeGreaterThanOrEqual(0);
+    expect(NT.redirectEnd).toBeGreaterThanOrEqual(redirectDelay);
+  });
+
+  test("when the connection is reused", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await luxRequests.waitForMatchingRequest(() => page.goto("/default.html?keepAlive=true"));
+    await luxRequests.waitForMatchingRequest(() => page.goto("/default.html?keepAlive=true"));
+    const beacon = luxRequests.getUrl(1)!;
+
+    const NT = getNavTiming(beacon);
+
+    // Technically these should all be zero, but sometimes browsers report them as "nearly zero"
+    expect(NT.fetchStart).toBeLessThan(5);
+    expect(NT.domainLookupStart).toBeLessThan(5);
+    expect(NT.domainLookupEnd).toBeLessThan(5);
+    expect(NT.connectStart).toBeLessThan(5);
+    expect(NT.connectEnd).toBeLessThan(5);
   });
 });

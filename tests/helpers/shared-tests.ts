@@ -7,7 +7,7 @@ type SharedTestArgs = {
   beacon: URL;
 };
 
-export function testPageStats({ page, browserName, beacon }: SharedTestArgs) {
+export function testPageStats({ page, browserName, beacon }: SharedTestArgs, hasImages = false) {
   // There is a single external script: lux.js.
   expect(getPageStat(beacon, "ns")).toEqual(1);
 
@@ -22,9 +22,13 @@ export function testPageStats({ page, browserName, beacon }: SharedTestArgs) {
   expect(getPageStat(beacon, "bc")).toEqual(0);
   expect(getPageStat(beacon, "ic")).toEqual(0);
 
-  // No images
-  expect(getPageStat(beacon, "ia")).toEqual(0);
-  expect(getPageStat(beacon, "it")).toEqual(0);
+  if (hasImages) {
+    expect(getPageStat(beacon, "ia")).toBeGreaterThan(0);
+    expect(getPageStat(beacon, "it")).toBeGreaterThan(0);
+  } else {
+    expect(getPageStat(beacon, "ia")).toEqual(0);
+    expect(getPageStat(beacon, "it")).toEqual(0);
+  }
 
   // DOM depth and number of DOM elements
   expect(getPageStat(beacon, "dd")).toBeGreaterThan(1);
@@ -69,43 +73,33 @@ export function testNavigationTiming({ browserName, beacon }: SharedTestArgs) {
   const NT = getNavTiming(beacon);
 
   // Secure connection time will be null because localhost is insecure
-  expect(NT["sc"]).toBeUndefined();
+  expect(NT.secureConnectionStart).toBeUndefined();
 
   // activationStart will be zero for pages that are not prerendered
-  expect(NT["as"], "activationStart should be 0").toEqual(0);
+  expect(NT.activationStart).toEqual(0);
 
   // Fetch, connect, and DNS times are probably zero for localhost
-  expect(NT["fs"], "fetchStart should be >=0").toBeGreaterThanOrEqual(0);
-  expect(NT["ds"], "domainLookupStart should be >=0").toBeGreaterThanOrEqual(0);
-  expect(NT["de"], "domainLookupEnd should be >=0").toBeGreaterThanOrEqual(0);
-  expect(NT["cs"], "connectStart should be >=0").toBeGreaterThanOrEqual(0);
-  expect(NT["ce"], "connectEnd should be >=0").toBeGreaterThanOrEqual(0);
-  expect(NT["qs"], "requestStart should be >=0").toBeGreaterThanOrEqual(0);
+  expect(NT.fetchStart).toBeGreaterThanOrEqual(0);
+  expect(NT.domainLookupStart).toBeGreaterThanOrEqual(0);
+  expect(NT.domainLookupEnd).toBeGreaterThanOrEqual(0);
+  expect(NT.connectStart).toBeGreaterThanOrEqual(0);
+  expect(NT.connectEnd).toBeGreaterThanOrEqual(0);
+  expect(NT.requestStart).toBeGreaterThanOrEqual(0);
+  expect(NT.responseStart).toBeGreaterThanOrEqual(0);
+  expect(NT.responseEnd).toBeGreaterThanOrEqual(0);
 
   // Other metrics will be non-zero for all pages
-  expect(NT["oi"], "domInteractive should be >0").toBeGreaterThan(0);
-  expect(NT["os"], "domContentLoadedEventStart should be >0").toBeGreaterThan(0);
-  expect(NT["oe"], "domContentLoadedEventEnd should be >0").toBeGreaterThan(0);
-  expect(NT["fc"], "FCP should be >0").toBeGreaterThan(0);
-  expect(NT["oc"], "domComplete should be >0").toBeGreaterThan(0);
-  expect(NT["ls"], "loadEventStart should be >0").toBeGreaterThan(0);
-  expect(NT["le"], "loadEventEnd should be >0").toBeGreaterThan(0);
+  expect(NT.domInteractive).toBeGreaterThan(0);
+  expect(NT.domContentLoadedEventStart).toBeGreaterThan(0);
+  expect(NT.domContentLoadedEventEnd).toBeGreaterThan(0);
+  expect(NT.domComplete).toBeGreaterThan(0);
+  expect(NT.loadEventStart).toBeGreaterThan(0);
+  expect(NT.loadEventEnd).toBeGreaterThan(0);
+  expect(NT.startRender).toBeGreaterThan(0);
+  expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
   if (browserName === "chromium") {
-    // Only Chromium records start render and LCP
-    expect(NT["sr"], "start render should be >0").toBeGreaterThan(0);
-    expect(NT["lc"], "LCP should be >0").toBeGreaterThan(0);
-  }
-
-  if (browserName === "firefox") {
-    // Firefox can record responseStart and responseEnd as zero
-    expect(NT["bs"], "responseStart should be >=0").toBeGreaterThanOrEqual(0);
-    expect(NT["be"], "responseEnd should be >=0").toBeGreaterThanOrEqual(0);
-  }
-
-  if (browserName !== "firefox") {
-    // All browsers but Firefox record responseStart and responseEnd as non-zero
-    expect(NT["bs"], "responseStart should be >=0").toBeGreaterThan(0);
-    expect(NT["be"], "responseEnd should be >=0").toBeGreaterThan(0);
+    // Only Chromium records LCP
+    expect(NT.largestContentfulPaint).toBeGreaterThan(0);
   }
 }

@@ -7,7 +7,7 @@ import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
-import { clamp, floor, max } from "./math";
+import { clamp, floor, max, sortNumeric } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import now from "./now";
@@ -109,10 +109,10 @@ LUX = (function () {
     });
 
     PO.observe("first-input", (entry) => {
-      const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+      const entryTime = (entry as PerformanceEventTiming).processingStart - entry.startTime;
 
-      if (!gFirstInputDelay || gFirstInputDelay < fid) {
-        gFirstInputDelay = floor(fid);
+      if (!gFirstInputDelay || gFirstInputDelay < entryTime) {
+        gFirstInputDelay = floor(entryTime);
       }
 
       // Allow first-input events to be considered for INP
@@ -149,7 +149,24 @@ LUX = (function () {
    * started viewing the page. On prerendered pages, this is activationStart. On bfcache restores, this
    * is the page restore time. On all other pages this value will be zero.
    */
-  const getZeroTime = () => pageRestoreTime || getNavigationEntry().activationStart;
+  const getZeroTime = () =>
+    Math.max(
+      pageRestoreTime || 0,
+      getNavigationEntry().activationStart,
+      _getMark(START_MARK)?.startTime || 0,
+    );
+
+  /**
+   * Most time-based metrics that LUX reports should be relative to the "zero" marker, rounded down
+   * to the nearest unit so as not to report times in the future, and clamped to zero.
+   */
+  const processTimeMetric = (value: number) => clamp(floor(value - getZeroTime()));
+
+  /**
+   * Some values should only be reported if they are non-zero. The exception to this is when the page
+   * was prerendered or restored from BF cache
+   */
+  const shouldReportValue = (value: number) => value > 0 || pageRestoreTime || wasPrerendered();
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -470,7 +487,7 @@ LUX = (function () {
 
     // For user timing values taken in a SPA page load, we need to adjust them
     // so that they're zeroed against the last LUX.init() call.
-    const tZero = startMark ? startMark.startTime : 0;
+    const tZero = getZeroTime();
 
     // marks
     _getMarks().forEach((mark) => {
@@ -532,13 +549,15 @@ LUX = (function () {
   // Return a string of Element Timing Metrics formatted for beacon querystring.
   function elementTimingValues(): string {
     const aET: string[] = [];
-    const startMark = _getMark(START_MARK);
-    const tZero = startMark ? startMark.startTime : getZeroTime();
 
     PO.getEntries("element").forEach((entry) => {
       if (entry.identifier && entry.startTime) {
-        logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
-        aET.push(entry.identifier + "|" + floor(entry.startTime - tZero));
+        const value = processTimeMetric(entry.startTime);
+
+        if (shouldReportValue(value)) {
+          logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
+          aET.push(entry.identifier + "|" + value);
+        }
       }
     });
 
@@ -559,23 +578,7 @@ LUX = (function () {
 
     // Add up totals for each "type" of long task
     if (longTaskEntries.length) {
-      // Long Task start times are relative to NavigationStart which is "0".
-      // But if it is a SPA then the relative start time is gStartMark.
-      const startMark = _getMark(START_MARK);
-      const tZero = startMark ? startMark.startTime : 0;
-
-      // Do not include Long Tasks that start after the page is done.
-      // For full page loads, "done" is loadEventEnd.
-      let tEnd = timing.loadEventEnd - timing.navigationStart;
-
-      if (startMark) {
-        // For SPA page loads (determined by the presence of a start mark), "done" is gEndMark.
-        const endMark = _getMark(END_MARK);
-
-        if (endMark) {
-          tEnd = endMark.startTime;
-        }
-      }
+      const tZero = getZeroTime();
 
       longTaskEntries.forEach((entry) => {
         let dur = floor(entry.duration);
@@ -583,23 +586,23 @@ LUX = (function () {
           // In a SPA it is possible that we were in the middle of a Long Task when
           // LUX.init() was called. If so, only include the duration after tZero.
           dur -= tZero - entry.startTime;
-        } else if (entry.startTime >= tEnd) {
-          // In a SPA it is possible that a Long Task started after loadEventEnd but before our
-          // callback from setTimeout(200) happened. Do not include anything that started after tEnd.
-          return;
         }
 
-        logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
+        // Only process entries that we calculated to have a valid duration
+        if (dur > 0) {
+          logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
 
-        const type = entry.attribution[0].name; // TODO - is there ever more than 1 attribution???
-        if (!hCPU[type]) {
-          // initialize this category
-          hCPU[type] = 0;
-          hCPUDetails[type] = "";
+          const type = entry.attribution[0].name;
+
+          if (!hCPU[type]) {
+            hCPU[type] = 0;
+            hCPUDetails[type] = "";
+          }
+
+          hCPU[type] += dur;
+          // Send back the raw startTime and duration, as well as the adjusted duration.
+          hCPUDetails[type] += "," + floor(entry.startTime) + "|" + dur;
         }
-        hCPU[type] += dur;
-        // Send back the raw startTime and duration, as well as the adjusted duration.
-        hCPUDetails[type] += "," + floor(entry.startTime) + "|" + dur;
       });
     }
 
@@ -614,12 +617,12 @@ LUX = (function () {
     const hStats = cpuStats(hCPUDetails[jsType]);
     const sStats =
       ",n|" +
-      hStats["count"] +
+      hStats.count +
       ",d|" +
-      hStats["median"] +
+      hStats.median +
       ",x|" +
-      hStats["max"] +
-      (0 === hStats["fci"] ? "" : ",i|" + hStats["fci"]); // only add FCI if it is non-zero
+      hStats.max +
+      (typeof hStats.fci === "undefined" ? "" : ",i|" + hStats.fci);
     sCPU += "s|" + hCPU[jsType] + sStats + hCPUDetails[jsType];
 
     return sCPU;
@@ -629,13 +632,15 @@ LUX = (function () {
   function cpuStats(sDetails: string) {
     // tuples of starttime|duration, eg: ,456|250,789|250,1012|250
     let max = 0;
-    let fci: number = getFcp() || 0; // FCI is beginning of 5 second window of no Long Tasks _after_ first contentful paint
-    // If FCP is 0 then that means FCP is not supported.
-    // If FCP is not supported then we can NOT calculate a valid FCI.
-    // Thus, leave FCI = 0 and exclude it from the beacon above.
-    let bFoundFci = 0 === fci ? true : false;
+
+    // FCI is beginning of 5 second window of no Long Tasks _after_ first contentful paint
+    let fci = getFcp();
+
+    // If FCP is not supported, we can't calculate a valid FCI.
+    let bFoundFci = typeof fci === "undefined";
     const aValues = [];
     const aTuples = sDetails.split(",");
+
     for (let i = 0; i < aTuples.length; i++) {
       const aTuple = aTuples[i].split("|");
       if (aTuple.length === 2) {
@@ -645,15 +650,19 @@ LUX = (function () {
         max = dur > max ? dur : max;
 
         // FCI
-        if (!bFoundFci && start > fci) {
+        if (!bFoundFci && start > (fci || 0)) {
           // should always be true (assumes Long Tasks are in chrono order)
-          if (start - fci > 5000) {
+          if (start - (fci || 0) > 5000) {
             // More than 5 seconds of inactivity!
             // FCI is the previous value we set (eg, FCI or the _end_ of the previous Long Task)
             bFoundFci = true;
           } else {
             // Less than 5 seconds of inactivity
-            fci = start + dur; // FCI is now the end of this Long Task
+            const val = processTimeMetric(start + dur);
+
+            if (shouldReportValue(val)) {
+              fci = val; // FCI is now the end of this Long Task
+            }
           }
         }
       }
@@ -682,9 +691,7 @@ LUX = (function () {
     }
 
     const half = floor(aValues.length / 2);
-    aValues.sort(function (a, b) {
-      return a - b;
-    });
+    aValues.sort(sortNumeric);
 
     if (aValues.length % 2) {
       // Return the middle value.
@@ -829,7 +836,6 @@ LUX = (function () {
     gbFirstPV = 0;
     gSyncId = createSyncId();
     gUid = refreshUniqueId(gSyncId);
-    PO.clearEntries();
     CLS.reset();
     INP.reset();
     nErrors = 0;
@@ -983,18 +989,20 @@ LUX = (function () {
       const startRender = getStartRender();
       const fcp = getFcp();
       const lcp = getLcp();
-      const zero = getZeroTime();
 
       const prefixNTValue = (
         key: keyof PerformanceNavigationTiming,
         prefix: string,
-        ignoreZero?: boolean
+        ignoreZero?: boolean,
       ): string => {
         if (typeof navEntry[key] === "number") {
-          if (navEntry[key] || !ignoreZero) {
-            const value = clamp(floor((navEntry[key] as number) - zero));
+          const value = navEntry[key] as number;
 
-            return prefix + value;
+          // We allow zero values for most navigation timing metrics, but for some metrics we want
+          // to ignore zeroes. The exceptions are that all metrics can be zero if the page was either
+          // prerendered or restored from the BF cache.
+          if (shouldReportValue(value) || !ignoreZero) {
+            return prefix + processTimeMetric(value);
           }
         }
 
@@ -1012,6 +1020,7 @@ LUX = (function () {
       }
 
       const redirect = wasRedirected();
+      const isSecure = document.location.protocol === "https:";
 
       s = [
         ns,
@@ -1022,7 +1031,7 @@ LUX = (function () {
         prefixNTValue("domainLookupStart", "ds"),
         prefixNTValue("domainLookupEnd", "de"),
         prefixNTValue("connectStart", "cs"),
-        prefixNTValue("secureConnectionStart", "sc", true),
+        isSecure ? prefixNTValue("secureConnectionStart", "sc") : "",
         prefixNTValue("connectEnd", "ce"),
         prefixNTValue("requestStart", "qs"),
         prefixNTValue("responseStart", "bs"),
@@ -1033,9 +1042,9 @@ LUX = (function () {
         prefixNTValue("domComplete", "oc", true),
         loadEventStartStr,
         loadEventEndStr,
-        startRender ? "sr" + clamp(startRender) : "",
-        fcp ? "fc" + clamp(fcp) : "",
-        lcp ? "lc" + clamp(lcp) : "",
+        typeof startRender !== "undefined" ? "sr" + startRender : "",
+        typeof fcp !== "undefined" ? "fc" + fcp : "",
+        typeof lcp !== "undefined" ? "lc" + lcp : "",
       ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
@@ -1062,7 +1071,11 @@ LUX = (function () {
       const entry = paintEntries[i];
 
       if (entry.name === "first-contentful-paint") {
-        return floor(entry.startTime - getZeroTime());
+        const value = processTimeMetric(entry.startTime);
+
+        if (shouldReportValue(value)) {
+          return value;
+        }
       }
     }
 
@@ -1075,8 +1088,12 @@ LUX = (function () {
 
     if (lcpEntries.length) {
       const lastEntry = lcpEntries[lcpEntries.length - 1];
-      logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
-      return floor(lastEntry.startTime - getZeroTime());
+      const value = processTimeMetric(lastEntry.startTime);
+
+      if (shouldReportValue(value)) {
+        logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
+        return value;
+      }
     }
 
     return undefined;
@@ -1091,9 +1108,16 @@ LUX = (function () {
 
       if (paintEntries.length) {
         // If the Paint Timing API is supported, use the value of the first paint event
-        const paintValues = paintEntries.map((entry) => entry.startTime);
+        const paintValues = paintEntries.map((entry) => entry.startTime).sort(sortNumeric);
 
-        return floor(Math.min.apply(null, paintValues) - getZeroTime());
+        // Iterate through the paint values in reverse
+        for (let i = paintValues.length - 1; i >= 0; i--) {
+          const value = processTimeMetric(paintValues[i]);
+
+          if (shouldReportValue(value)) {
+            return value;
+          }
+        }
       }
     }
 

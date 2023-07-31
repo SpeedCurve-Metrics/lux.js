@@ -9,16 +9,19 @@
 <body>
     <h1>LUX long tasks test page</h1>
 
+    <input type="number" id="long-task-duration">
     <button id="create-long-task">Create another long task</button>
 
     <script>
         const qs = new URLSearchParams(location.search);
         const blockFor = Number(qs.get("blockFor")) || 50;
+        const durationInput = document.getElementById("long-task-duration");
 
         document.getElementById("create-long-task").addEventListener("click", () => {
-            createLongTask(blockFor)
+            createLongTask(durationInput.valueAsNumber);
         });
 
+        durationInput.value = blockFor;
         createLongTask(blockFor);
     </script>
 </body>

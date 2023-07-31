@@ -37,7 +37,7 @@ test.describe("LUX SPA", () => {
       page.evaluate(() => {
         LUX.send();
         LUX.init();
-      })
+      }),
     );
     await page.waitForTimeout(50);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
@@ -48,26 +48,28 @@ test.describe("LUX SPA", () => {
     const NT = getNavTiming(beacon);
 
     // fetchStart and activationStart will always be zero
-    expect(NT.fs).toEqual(0);
-    expect(NT.as).toEqual(0);
+    expect(NT.fetchStart).toEqual(0);
+    expect(NT.activationStart).toEqual(0);
 
     // Load times will be non-zero
-    expect(NT.ls, "loadEventStart should be >0").toBeGreaterThan(0);
-    expect(NT.le, "loadEventEnd should be >0").toBeGreaterThan(0);
+    expect(NT.loadEventStart, "loadEventStart should be >0").toBeGreaterThan(0);
+    expect(NT.loadEventEnd, "loadEventEnd should be >0").toBeGreaterThan(0);
 
     // Other metrics should be null in a SPA
-    expect(NT.ds, "domainLookupStart should be null").toBeUndefined();
-    expect(NT.de, "domainLookupEnd should be null").toBeUndefined();
-    expect(NT.cs, "connectStart should be null").toBeUndefined();
-    expect(NT.ce, "connectEnd should be null").toBeUndefined();
-    expect(NT.qs, "requestStart should be null").toBeUndefined();
-    expect(NT.bs, "responseStart should be null").toBeUndefined();
-    expect(NT.be, "responseEnd should be null").toBeUndefined();
-    expect(NT.oi, "domInteractive should be null").toBeUndefined();
-    expect(NT.os, "domContentLoadedEventStart should be null").toBeUndefined();
-    expect(NT.oe, "domContentLoadedEventEnd should be null").toBeUndefined();
-    expect(NT.oc, "domComplete should be null").toBeUndefined();
-    expect(NT.fc, "FCP should be null").toBeUndefined();
+    expect(NT.domainLookupStart).toBeUndefined();
+    expect(NT.domainLookupEnd).toBeUndefined();
+    expect(NT.connectStart).toBeUndefined();
+    expect(NT.connectEnd).toBeUndefined();
+    expect(NT.requestStart).toBeUndefined();
+    expect(NT.responseStart).toBeUndefined();
+    expect(NT.responseEnd).toBeUndefined();
+    expect(NT.domInteractive).toBeUndefined();
+    expect(NT.domContentLoadedEventStart).toBeUndefined();
+    expect(NT.domContentLoadedEventEnd).toBeUndefined();
+    expect(NT.domComplete).toBeUndefined();
+    expect(NT.startRender).toBeUndefined();
+    expect(NT.firstContentfulPaint).toBeUndefined();
+    expect(NT.largestContentfulPaint).toBeUndefined();
   });
 
   test("calling LUX.init before LUX.send does not lose data", async ({ page, browserName }) => {
@@ -77,14 +79,15 @@ test.describe("LUX SPA", () => {
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(0)!;
+    const NT = getNavTiming(beacon);
 
-    expect(getNavTiming(beacon, "fc")).toBeGreaterThan(0);
+    expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
     if (browserName === "chromium") {
-      expect(getNavTiming(beacon, "sr")).toBeGreaterThan(0);
-      expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(0);
+      expect(NT.startRender).toBeGreaterThan(0);
+      expect(NT.largestContentfulPaint).toBeGreaterThanOrEqual(0);
     } else {
-      expect(beacon.searchParams.get("lc")).toBeNull();
+      expect(NT.largestContentfulPaint).toBeUndefined();
     }
   });
 

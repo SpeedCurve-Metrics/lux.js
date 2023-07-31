@@ -80,7 +80,7 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
  * legacy browsers, and work around edge cases where undefined is returned instead
  * of an empty PerformanceEntryList.
  */
-export function getEntriesByType(type: string): PerformanceEntryList {
+export function getEntriesByType(type: string) {
   if (typeof performance.getEntriesByType === "function") {
     const entries = performance.getEntriesByType(type);
 
