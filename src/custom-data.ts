@@ -1,3 +1,5 @@
+import { T_UNDEFINED } from "./utils";
+
 export type CustomDataDict = Record<string, unknown>;
 
 const customDataValues: CustomDataDict = {};
@@ -16,7 +18,7 @@ export function addCustomDataValue(name: string, value: unknown): void {
     customDataValues[name] = value;
   }
 
-  if (typeV === "undefined" || value === null) {
+  if (typeV === T_UNDEFINED || value === null) {
     delete customDataValues[name];
   }
 }

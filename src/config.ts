@@ -1,5 +1,6 @@
 import { ServerTimingConfig } from "./server-timing";
 import { UrlPatternMapping } from "./url-matcher";
+import { T_UNDEFINED } from "./utils";
 
 export interface ConfigObject {
   auto: boolean;
@@ -56,7 +57,7 @@ export function getProperty<T, K extends keyof T, D>(
   key: K,
   defaultValue: D,
 ): Exclude<T[K], undefined> | D {
-  if (typeof obj[key] !== "undefined") {
+  if (typeof obj[key] !== T_UNDEFINED) {
     return obj[key] as Exclude<T[K], undefined>;
   }
 

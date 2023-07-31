@@ -1,6 +1,7 @@
 import { floor } from "./math";
 import now from "./now";
 import scriptStartTime from "./start-marker";
+import { T_UNDEFINED } from "./utils";
 
 // If the various performance APIs aren't available, we export an empty object to
 // prevent having to make regular typeof checks.
@@ -24,7 +25,7 @@ export function msSinceNavigationStart(): number {
 }
 
 export function navigationType() {
-  if (performance.navigation && typeof performance.navigation.type !== "undefined") {
+  if (performance.navigation && typeof performance.navigation.type !== T_UNDEFINED) {
     return performance.navigation.type;
   }
 

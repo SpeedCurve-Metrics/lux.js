@@ -23,6 +23,7 @@ import * as PO from "./performance-observer";
 import * as ST from "./server-timing";
 import scriptStartTime from "./start-marker";
 import { getMatchesFromPatternMap } from "./url-matcher";
+import { T_UNDEFINED } from "./utils";
 
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
@@ -43,7 +44,7 @@ LUX = (function () {
 
     nErrors++;
 
-    if (e && typeof e.filename !== "undefined" && typeof e.message !== "undefined") {
+    if (e && typeof e.filename !== T_UNDEFINED && typeof e.message !== T_UNDEFINED) {
       // Always send LUX errors
       const isLuxError = e.filename.indexOf("/lux.js?") > -1 || e.message.indexOf("LUX") > -1;
 
@@ -322,7 +323,7 @@ LUX = (function () {
       endMarkName = options.end as string | number;
     }
 
-    if (typeof startMarkName === "undefined") {
+    if (typeof startMarkName === T_UNDEFINED) {
       // Without a start mark specified, performance.measure defaults to using navigationStart
       if (_getMark(START_MARK)) {
         // For SPAs that have already called LUX.init(), we use our internal start mark instead of
@@ -488,7 +489,7 @@ LUX = (function () {
         return;
       }
 
-      if (typeof hUT[name] === "undefined") {
+      if (typeof hUT[name] === T_UNDEFINED) {
         hUT[name] = { startTime };
       } else {
         hUT[name].startTime = max(startTime, hUT[name].startTime);
@@ -506,7 +507,7 @@ LUX = (function () {
       const startTime = floor(measure.startTime - tZero);
       const duration = floor(measure.duration);
 
-      if (typeof hUT[name] === "undefined" || startTime > hUT[name].startTime) {
+      if (typeof hUT[name] === T_UNDEFINED || startTime > hUT[name].startTime) {
         hUT[name] = { startTime, duration };
       }
     });
@@ -519,7 +520,7 @@ LUX = (function () {
       const { startTime, duration } = hUT[utName];
       const utParts = [utName, startTime];
 
-      if (typeof duration !== "undefined") {
+      if (typeof duration !== T_UNDEFINED) {
         utParts.push(duration);
       }
 
@@ -604,8 +605,8 @@ LUX = (function () {
     }
 
     // TODO - Add more types if/when they become available.
-    const jsType = typeof hCPU["script"] !== "undefined" ? "script" : "unknown"; // spec changed from "script" to "unknown" Nov 2018
-    if (typeof hCPU[jsType] === "undefined") {
+    const jsType = typeof hCPU["script"] !== T_UNDEFINED ? "script" : "unknown"; // spec changed from "script" to "unknown" Nov 2018
+    if (typeof hCPU[jsType] === T_UNDEFINED) {
       // Initialize default values for pages that have *no Long Tasks*.
       hCPU[jsType] = 0;
       hCPUDetails[jsType] = "";
@@ -783,7 +784,7 @@ LUX = (function () {
   // _sample()
   // Return true if beacons for this page should be sampled.
   function _sample() {
-    if (typeof gUid === "undefined" || typeof globalConfig.samplerate === "undefined") {
+    if (typeof gUid === T_UNDEFINED || typeof globalConfig.samplerate === T_UNDEFINED) {
       return false; // bail
     }
 
@@ -1026,9 +1027,9 @@ LUX = (function () {
         prefixNTValue("domComplete", "oc"),
         loadEventStartStr,
         loadEventEndStr,
-        typeof startRender !== "undefined" ? "sr" + clamp(startRender) : "",
-        typeof fcp !== "undefined" ? "fc" + clamp(fcp) : "",
-        typeof lcp !== "undefined" ? "lc" + clamp(lcp) : "",
+        typeof startRender !== T_UNDEFINED ? "sr" + clamp(startRender) : "",
+        typeof fcp !== T_UNDEFINED ? "fc" + clamp(fcp) : "",
+        typeof lcp !== T_UNDEFINED ? "lc" + clamp(lcp) : "",
       ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
@@ -1109,7 +1110,7 @@ LUX = (function () {
   }
 
   function getCustomerId() {
-    if (typeof LUX.customerid === "undefined") {
+    if (typeof LUX.customerid === T_UNDEFINED) {
       // Extract the id of the lux.js script element.
       const luxScript = getScriptElement("/js/lux.js");
       if (luxScript) {
@@ -1481,11 +1482,11 @@ LUX = (function () {
       navigationType() +
       (navigator.deviceMemory ? "dm" + Math.round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
-      (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
+      (typeof gFirstInputDelay !== T_UNDEFINED ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
-      (typeof CLS !== "undefined" ? "&CLS=" + CLS : "") +
-      (typeof INP !== "undefined" ? "&INP=" + INP : "");
+      (typeof CLS !== T_UNDEFINED ? "&CLS=" + CLS : "") +
+      (typeof INP !== T_UNDEFINED ? "&INP=" + INP : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();
@@ -1550,8 +1551,8 @@ LUX = (function () {
         _getBeaconUrl(CustomData.getUpdatedCustomData()) +
         "&IX=" +
         sIx +
-        (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
-        (typeof INP !== "undefined" ? "&INP=" + INP : "");
+        (typeof gFirstInputDelay !== T_UNDEFINED ? "&FID=" + gFirstInputDelay : "") +
+        (typeof INP !== T_UNDEFINED ? "&INP=" + INP : "");
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 
@@ -1597,7 +1598,7 @@ LUX = (function () {
   function _scrollHandler() {
     // Note for scroll input we don't remove the handlers or send the IX beacon because we want to
     // capture click and key events as well, since these are typically more important than scrolls.
-    if (typeof ghIx["s"] === "undefined") {
+    if (typeof ghIx["s"] === T_UNDEFINED) {
       ghIx["s"] = _now();
     }
   }
@@ -1620,7 +1621,7 @@ LUX = (function () {
 
     _removeIxHandlers();
 
-    if (typeof ghIx["k"] === "undefined") {
+    if (typeof ghIx["k"] === T_UNDEFINED) {
       ghIx["k"] = _now();
 
       if (e && e.target instanceof Element) {
@@ -1635,7 +1636,7 @@ LUX = (function () {
 
   function _clickHandler(e: MouseEvent) {
     _removeIxHandlers();
-    if (typeof ghIx["c"] === "undefined") {
+    if (typeof ghIx["c"] === T_UNDEFINED) {
       ghIx["c"] = _now();
 
       let target: Element | undefined;
@@ -1779,7 +1780,7 @@ LUX = (function () {
       return LUX.label;
     }
 
-    if (typeof LUX.pagegroups !== "undefined") {
+    if (typeof LUX.pagegroups !== T_UNDEFINED) {
       const label = getMatchesFromPatternMap(
         LUX.pagegroups,
         location.hostname,
@@ -1793,7 +1794,7 @@ LUX = (function () {
       }
     }
 
-    if (typeof LUX.jspagelabel !== "undefined") {
+    if (typeof LUX.jspagelabel !== T_UNDEFINED) {
       const evaluateJsPageLabel = Function('"use strict"; return ' + LUX.jspagelabel);
 
       try {
@@ -1971,7 +1972,7 @@ LUX = (function () {
   }
 
   // process the error events that happened before lux.js got loaded
-  if (typeof window.LUX_ae !== "undefined") {
+  if (typeof window.LUX_ae !== T_UNDEFINED) {
     window.LUX_ae.forEach(errorHandler);
   }
 
