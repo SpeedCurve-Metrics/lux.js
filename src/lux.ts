@@ -1107,11 +1107,10 @@ LUX = (function () {
       const paintEntries = getEntriesByType("paint");
 
       if (paintEntries.length) {
-        // If the Paint Timing API is supported, use the value of the first paint event
         const paintValues = paintEntries.map((entry) => entry.startTime).sort(sortNumeric);
 
-        // Iterate through the paint values in reverse
-        for (let i = paintValues.length - 1; i >= 0; i--) {
+        // Use the earliest valid paint entry as the start render time.
+        for (let i = 0; i < paintValues.length; i++) {
           const value = processTimeMetric(paintValues[i]);
 
           if (shouldReportValue(value)) {
