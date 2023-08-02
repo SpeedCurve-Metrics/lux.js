@@ -1788,7 +1788,7 @@ LUX = (function () {
       );
 
       if (label) {
-        gFlags = addFlag(gFlags, Flags.PageLabelFromPagegroup);
+        gFlags = addFlag(gFlags, Flags.PageLabelFromUrlPattern);
         return label;
       }
     }

@@ -8,7 +8,7 @@ const Flags = {
   PageLabelFromDocumentTitle: 1 << 6,
   PageLabelFromLabelProp: 1 << 7,
   PageLabelFromGlobalVariable: 1 << 8,
-  PageLabelFromPagegroup: 1 << 9,
+  PageLabelFromUrlPattern: 1 << 9,
   PageWasPrerendered: 1 << 10,
   PageWasBfCacheRestored: 1 << 11,
 };

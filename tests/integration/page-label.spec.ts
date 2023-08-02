@@ -14,7 +14,7 @@ test.describe("LUX page labels in auto mode", () => {
     expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(true);
     expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
     expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
-    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromUrlPattern)).toBe(false);
   });
 
   test("using a custom label", async ({ page }) => {
@@ -27,7 +27,7 @@ test.describe("LUX page labels in auto mode", () => {
     expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(true);
     expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
     expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
-    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromUrlPattern)).toBe(false);
   });
 
   test("custom label is null", async ({ page }) => {
@@ -40,7 +40,7 @@ test.describe("LUX page labels in auto mode", () => {
     expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(true);
     expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
     expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
-    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromUrlPattern)).toBe(false);
   });
 
   test("using a pagegroup label", async ({ page }) => {
@@ -52,7 +52,7 @@ test.describe("LUX page labels in auto mode", () => {
     const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.searchParams.get("l")).toEqual("Pagegroup");
-    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(true);
+    expect(hasFlag(beacon, Flags.PageLabelFromUrlPattern)).toBe(true);
     expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(false);
     expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
     expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
@@ -67,7 +67,7 @@ test.describe("LUX page labels in auto mode", () => {
     const beacon = luxRequests.getUrl(0)!;
 
     expect(beacon.searchParams.get("l")).toEqual("custom label");
-    expect(hasFlag(beacon, Flags.PageLabelFromPagegroup)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromUrlPattern)).toBe(false);
     expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(true);
     expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
     expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
