@@ -5,6 +5,11 @@
 ### Improvements
 
 - Pressing a modifier key on its own will no longer be tracked as a user interaction.
+- Smarter handling of navigation timing metrics with a value of zero. Some metrics will now only be reported as zero on cached and prerendered pages.
+
+### Bug fixes
+
+- Redirect time is no longer reported for pages restored from the back-forward cache.
 
 ## 2023-06-06: v309
 
@@ -24,7 +29,7 @@
 
 - The beacon will no longer be sent automatically if the page visibility is hidden. This can be overridden by setting `LUX.trackHiddenPages = true`.
 - All metrics on prerendered pages are now relative to `activationStart`.
-- Navigation timing values with a value of zero are now reported, rather than ignored.
+- Navigation timing metrics with a value of zero are now reported, rather than ignored.
 - The legacy `domLoading` metric is no longer collected.
 - The first paint event of any type will be considered for start render, rather than just first-paint events.
 
