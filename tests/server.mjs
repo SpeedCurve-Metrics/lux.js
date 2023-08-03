@@ -65,7 +65,7 @@ BeaconStore.open().then(async (store) => {
     } else if (pathname === "/") {
       sendResponse(200, headers("text/plain"), "OK");
     } else if (pathname === "/js/lux.js") {
-      const contents = await readFile(path.join(distDir, "lux.js"));
+      const contents = await readFile(path.join(distDir, "lux.min.js"));
       let preamble = [
         "LUX=window.LUX||{}",
         `LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/'`,
