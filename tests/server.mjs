@@ -60,7 +60,7 @@ BeaconStore.open().then(async (store) => {
     if (parsedUrl.query.redirectTo) {
       // Send the redirect after a short delay so that the redirectStart time is measurable
       setTimeout(() => {
-        sendResponse(302, { location: parsedUrl.query.redirectTo }, "");
+        sendResponse(302, { location: decodeURIComponent(parsedUrl.query.redirectTo) }, "");
       }, parsedUrl.query.redirectDelay || 0);
     } else if (pathname === "/") {
       sendResponse(200, headers("text/plain"), "OK");

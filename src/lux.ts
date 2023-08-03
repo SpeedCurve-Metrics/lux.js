@@ -1026,8 +1026,8 @@ LUX = (function () {
       s = [
         ns,
         "as" + clamp(navEntry.activationStart),
-        redirect ? prefixNTValue("redirectStart", "rs") : "",
-        redirect ? prefixNTValue("redirectEnd", "re") : "",
+        redirect && !pageRestoreTime ? prefixNTValue("redirectStart", "rs") : "",
+        redirect && !pageRestoreTime ? prefixNTValue("redirectEnd", "re") : "",
         prefixNTValue("fetchStart", "fs"),
         prefixNTValue("domainLookupStart", "ds"),
         prefixNTValue("domainLookupEnd", "de"),
