@@ -65,10 +65,14 @@ BeaconStore.open().then(async (store) => {
     } else if (pathname === "/") {
       sendResponse(200, headers("text/plain"), "OK");
     } else if (pathname === "/js/lux.js") {
-      const contents = await readFile(path.join(distDir, "lux.min.js"));
-      let preamble = `LUX=window.LUX||{};LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/';LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/';`;
+      const contents = await readFile(path.join(distDir, "lux.js"));
+      let preamble = [
+        "LUX=window.LUX||{}",
+        `LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/'`,
+        `LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/'`,
+      ].join(";");
 
-      sendResponse(200, headers(contentType), preamble + contents);
+      sendResponse(200, headers(contentType), `${preamble};${contents}`);
     } else if (pathname == "/beacon/" || pathname == "/error/") {
       if (req.headers.referer) {
         const referrerUrl = url.parse(req.headers.referer, true);

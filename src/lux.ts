@@ -34,6 +34,15 @@ LUX = (function () {
 
   logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION]);
 
+  // Variable aliases that allow the minifier to reduce file size.
+  const document = window.document;
+  const addEventListener = window.addEventListener;
+  const removeEventListener = window.removeEventListener;
+  const setTimeout = window.setTimeout;
+  const clearTimeout = window.clearTimeout;
+  const encodeURIComponent = window.encodeURIComponent;
+  const thisScript = document.currentScript as HTMLScriptElement;
+
   // Log JS errors.
   let nErrors = 0;
   function errorHandler(e: ErrorEvent): void {
@@ -74,7 +83,7 @@ LUX = (function () {
       }
     }
   }
-  window.addEventListener("error", errorHandler);
+  addEventListener("error", errorHandler);
 
   const logEntry = (entry: PerformanceEntry) => {
     logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
@@ -217,12 +226,12 @@ LUX = (function () {
     }
 
     function removeListeners() {
-      window.removeEventListener("pointerup", onPointerUp, ghListenerOptions);
-      window.removeEventListener("pointercancel", onPointerCancel, ghListenerOptions);
+      removeEventListener("pointerup", onPointerUp, ghListenerOptions);
+      removeEventListener("pointercancel", onPointerCancel, ghListenerOptions);
     }
 
-    window.addEventListener("pointerup", onPointerUp, ghListenerOptions);
-    window.addEventListener("pointercancel", onPointerCancel, ghListenerOptions);
+    addEventListener("pointerup", onPointerUp, ghListenerOptions);
+    addEventListener("pointercancel", onPointerCancel, ghListenerOptions);
   }
 
   // Record FID as the delta between when the event happened and when the
@@ -266,7 +275,7 @@ LUX = (function () {
 
   // Attach event listener to input events.
   gaEventTypes.forEach(function (eventType) {
-    window.addEventListener(eventType, onInput, ghListenerOptions);
+    addEventListener(eventType, onInput, ghListenerOptions);
   });
   ////////////////////// FID END
 
@@ -708,42 +717,39 @@ LUX = (function () {
     let sLuxjs = "";
     if (performance.getEntriesByName) {
       // Get the lux script URL (including querystring params).
-      const luxScript = getScriptElement("/js/lux.js");
-      if (luxScript) {
-        const aResources = performance.getEntriesByName(luxScript.src);
-        if (aResources && aResources.length) {
-          const r = aResources[0] as PerformanceResourceTiming;
-          // DO NOT USE DURATION!!!!!
-          // See https://www.stevesouders.com/blog/2014/11/25/serious-confusion-with-resource-timing/
-          const dns = floor(r.domainLookupEnd - r.domainLookupStart);
-          const tcp = floor(r.connectEnd - r.connectStart);
-          const fb = floor(r.responseStart - r.requestStart);
-          const content = floor(r.responseEnd - r.responseStart);
-          const networkDuration = dns + tcp + fb + content;
-          const parseEval = scriptEndTime - scriptStartTime;
-          const transferSize = r.encodedBodySize ? r.encodedBodySize : 0;
-          // Instead of a delimiter use a 1-letter abbreviation as a separator.
-          sLuxjs =
-            "d" +
-            dns +
-            "t" +
-            tcp +
-            "f" +
-            fb +
-            "c" +
-            content +
-            "n" +
-            networkDuration +
-            "e" +
-            parseEval +
-            "r" +
-            globalConfig.samplerate + // sample rate
-            (typeof transferSize === "number" ? "x" + transferSize : "") +
-            (typeof gLuxSnippetStart === "number" ? "l" + gLuxSnippetStart : "") +
-            "s" +
-            (scriptStartTime - timing.navigationStart) + // when lux.js started getting evaluated relative to navigationStart
-            "";
-        }
+      const aResources = performance.getEntriesByName(thisScript.src);
+      if (aResources && aResources.length) {
+        const r = aResources[0] as PerformanceResourceTiming;
+        // DO NOT USE DURATION!!!!!
+        // See https://www.stevesouders.com/blog/2014/11/25/serious-confusion-with-resource-timing/
+        const dns = floor(r.domainLookupEnd - r.domainLookupStart);
+        const tcp = floor(r.connectEnd - r.connectStart);
+        const fb = floor(r.responseStart - r.requestStart);
+        const content = floor(r.responseEnd - r.responseStart);
+        const networkDuration = dns + tcp + fb + content;
+        const parseEval = scriptEndTime - scriptStartTime;
+        const transferSize = r.encodedBodySize ? r.encodedBodySize : 0;
+        // Instead of a delimiter use a 1-letter abbreviation as a separator.
+        sLuxjs =
+          "d" +
+          dns +
+          "t" +
+          tcp +
+          "f" +
+          fb +
+          "c" +
+          content +
+          "n" +
+          networkDuration +
+          "e" +
+          parseEval +
+          "r" +
+          globalConfig.samplerate + // sample rate
+          (typeof transferSize === "number" ? "x" + transferSize : "") +
+          (typeof gLuxSnippetStart === "number" ? "l" + gLuxSnippetStart : "") +
+          "s" +
+          (scriptStartTime - timing.navigationStart) + // when lux.js started getting evaluated relative to navigationStart
+          "";
       }
     }
 
@@ -781,10 +787,10 @@ LUX = (function () {
       if (gCustomerDataTimeout) {
         // Cancel the timer for any previous beacons so that if they have not
         // yet been sent we can combine all the data in a new beacon.
-        window.clearTimeout(gCustomerDataTimeout);
+        clearTimeout(gCustomerDataTimeout);
       }
 
-      gCustomerDataTimeout = window.setTimeout(_sendCustomerData, 100);
+      gCustomerDataTimeout = setTimeout(_sendCustomerData, 100);
     }
   }
 
@@ -1140,44 +1146,11 @@ LUX = (function () {
   }
 
   function getCustomerId() {
-    if (typeof LUX.customerid === "undefined") {
-      // Extract the id of the lux.js script element.
-      const luxScript = getScriptElement("/js/lux.js");
-      if (luxScript) {
-        LUX.customerid = getQuerystringParam(luxScript.src, "id");
-      }
+    if (!LUX.customerid) {
+      LUX.customerid = thisScript.src.match(/id=(\d+)/)!.pop();
     }
 
     return LUX.customerid || "";
-  }
-
-  // Return the SCRIPT DOM element whose SRC contains the URL snippet.
-  // This is used to find the LUX script element.
-  function getScriptElement(urlsnippet: string): HTMLScriptElement | undefined {
-    const aScripts = document.getElementsByTagName("script");
-    for (let i = 0, len = aScripts.length; i < len; i++) {
-      const script = aScripts[i];
-      if (script.src && -1 !== script.src.indexOf(urlsnippet)) {
-        return script;
-      }
-    }
-
-    return undefined;
-  }
-
-  function getQuerystringParam(url: string, name: string): string | undefined {
-    const qs = url.split("?")[1];
-    const aTuples = qs.split("&");
-    for (let i = 0, len = aTuples.length; i < len; i++) {
-      const tuple = aTuples[i];
-      const aTuple = tuple.split("=");
-      const key = aTuple[0];
-      if (name === key) {
-        return aTuple[1];
-      }
-    }
-
-    return undefined;
   }
 
   function avgDomDepth() {
@@ -1351,7 +1324,7 @@ LUX = (function () {
 
   function createMaxMeasureTimeout() {
     clearMaxMeasureTimeout();
-    gMaxMeasureTimeout = window.setTimeout(() => {
+    gMaxMeasureTimeout = setTimeout(() => {
       gFlags = addFlag(gFlags, Flags.BeaconSentAfterTimeout);
       _sendLux();
     }, globalConfig.maxMeasureTime - _now());
@@ -1359,7 +1332,7 @@ LUX = (function () {
 
   function clearMaxMeasureTimeout() {
     if (gMaxMeasureTimeout) {
-      window.clearTimeout(gMaxMeasureTimeout);
+      clearTimeout(gMaxMeasureTimeout);
     }
   }
 
@@ -1556,8 +1529,8 @@ LUX = (function () {
   let ixTimerId: number;
 
   function _sendIxAfterDelay(): void {
-    window.clearTimeout(ixTimerId);
-    ixTimerId = window.setTimeout(_sendIx, 100);
+    clearTimeout(ixTimerId);
+    ixTimerId = setTimeout(_sendIx, 100);
   }
 
   // Beacon back the IX data separately (need to sync with LUX beacon on the backend).
@@ -1697,8 +1670,8 @@ LUX = (function () {
   // Wrapper to support older browsers (<= IE8)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function addListener(type: string, callback: (event: any) => void, useCapture = false) {
-    if (window.addEventListener) {
-      window.addEventListener(type, callback, useCapture);
+    if (addEventListener) {
+      addEventListener(type, callback, useCapture);
     } else if (window.attachEvent && __ENABLE_POLYFILLS) {
       window.attachEvent("on" + type, callback as EventListener);
     }
@@ -1707,8 +1680,8 @@ LUX = (function () {
   // Wrapper to support older browsers (<= IE8)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function removeListener(type: string, callback: (event: any) => void, useCapture = false) {
-    if (window.removeEventListener) {
-      window.removeEventListener(type, callback, useCapture);
+    if (removeEventListener) {
+      removeEventListener(type, callback, useCapture);
     } else if (window.detachEvent && __ENABLE_POLYFILLS) {
       window.detachEvent("on" + type, callback);
     }
@@ -1921,7 +1894,7 @@ LUX = (function () {
   // bfcache. Since we have no "onload" event to hook into after a bfcache restore, we rely on the
   // unload and maxMeasureTime handlers to send the beacon.
   if (globalConfig.newBeaconOnPageShow) {
-    window.addEventListener("pageshow", (event) => {
+    addEventListener("pageshow", (event) => {
       if (event.persisted) {
         // Record the timestamp of the bfcache restore
         pageRestoreTime = event.timeStamp;
