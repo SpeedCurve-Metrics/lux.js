@@ -64,7 +64,8 @@ test.describe("LUX prerender support", () => {
 
   test("metrics for prerendered pages are relative to activationStart", async () => {
     const LONG_TASK_TIME = 70;
-    const CLICK_WAIT_TIME = 500;
+    const PAGE_ACTIVATION_TIME = 500;
+    const LONG_TASK_DELAY = 600;
     const IMAGE_DELAY_TIME = 1000;
 
     await page.goto(
@@ -72,9 +73,15 @@ test.describe("LUX prerender support", () => {
         `/prerender-index.html?useBeaconStore=${store.id}`,
         `imageDelay=${IMAGE_DELAY_TIME}`,
         `injectScript=${[
-          `LUX.minMeasureTime=${IMAGE_DELAY_TIME + CLICK_WAIT_TIME}`,
-          `if (location.pathname === "/prerender-page.html") { createLongTask(${LONG_TASK_TIME}); }`,
-        ].join(";")}`,
+          `LUX.minMeasureTime=${IMAGE_DELAY_TIME + PAGE_ACTIVATION_TIME};`,
+          "if (location.pathname === '/prerender-page.html') {",
+          // Create one long task before the page is activated, which should not be recorded
+          "createLongTask();",
+
+          // And another long task after the page is activated, which should be recorded
+          `setTimeout(() => createLongTask(${LONG_TASK_TIME}), ${LONG_TASK_DELAY});`,
+          "}",
+        ].join("")}`,
       ].join("&"),
     );
 
@@ -82,7 +89,7 @@ test.describe("LUX prerender support", () => {
     // with a prerendered page. See https://github.com/microsoft/playwright/issues/22733
     await page.evaluate(
       (timeout) => setTimeout(() => document.getElementById("next-page-link")!.click(), timeout),
-      CLICK_WAIT_TIME,
+      PAGE_ACTIVATION_TIME,
     );
 
     await expect
@@ -92,47 +99,50 @@ test.describe("LUX prerender support", () => {
       .toEqual(1);
 
     const beacon = new URL((await store.findByPathname("/prerender-page.html"))[0].url);
-    const activationStart = getNavTiming(beacon, "as")!;
+    const NT = getNavTiming(beacon);
 
     expect(hasFlag(beacon, Flags.PageWasPrerendered)).toBe(true);
 
     // Navigation timing - activationStart should be roughly equal to when the click happened.
     // Everything else should be zero, because the user's experience of these metrics is that
     // they were instant.
-    expect(activationStart).toBeGreaterThanOrEqual(CLICK_WAIT_TIME);
-    expect(getNavTiming(beacon, "fs")).toEqual(0);
-    expect(getNavTiming(beacon, "ds")).toEqual(0);
-    expect(getNavTiming(beacon, "de")).toEqual(0);
-    expect(getNavTiming(beacon, "cs")).toEqual(0);
-    expect(getNavTiming(beacon, "ce")).toEqual(0);
-    expect(getNavTiming(beacon, "qs")).toEqual(0);
-    expect(getNavTiming(beacon, "bs")).toEqual(0);
-    expect(getNavTiming(beacon, "be")).toEqual(0);
-    expect(getNavTiming(beacon, "oi")).toEqual(0);
-    expect(getNavTiming(beacon, "os")).toEqual(0);
-    expect(getNavTiming(beacon, "oe")).toEqual(0);
-    expect(getNavTiming(beacon, "oc")).toEqual(0);
-    expect(getNavTiming(beacon, "ls")).toEqual(0);
-    expect(getNavTiming(beacon, "le")).toEqual(0);
+    expect(NT.activationStart).toBeGreaterThanOrEqual(PAGE_ACTIVATION_TIME);
+    expect(NT.fetchStart).toEqual(0);
+    expect(NT.domainLookupStart).toEqual(0);
+    expect(NT.domainLookupEnd).toEqual(0);
+    expect(NT.connectStart).toEqual(0);
+    expect(NT.connectEnd).toEqual(0);
+    expect(NT.requestStart).toEqual(0);
+    expect(NT.responseStart).toEqual(0);
+    expect(NT.responseEnd).toEqual(0);
+    expect(NT.domInteractive).toEqual(0);
+    expect(NT.domContentLoadedEventStart).toEqual(0);
+    expect(NT.domContentLoadedEventEnd).toEqual(0);
+    expect(NT.domComplete).toEqual(0);
+    expect(NT.loadEventStart).toEqual(0);
+    expect(NT.loadEventEnd).toEqual(0);
 
     // Element timing
     const ET = parseUserTiming(getSearchParam(beacon, "ET"));
 
-    // The first image should have loaded before activationStart
-    expect(ET["eve-image"].startTime).toBeLessThan(activationStart);
+    // Despite having a delay of 200ms, the first image will load almost instantly because it has
+    // been prerendered.
+    expect(ET["eve-image"].startTime).toBeLessThan(50);
 
-    // The second image was delayed and should have loaded after IMAGE_DELAY TIME, but relative
-    // to activationStart.
+    // The second image was delayed enough that it loaded after page activation.
     expect(ET["charlie-image"].startTime).toBeGreaterThanOrEqual(
-      IMAGE_DELAY_TIME - activationStart,
+      IMAGE_DELAY_TIME - NT.activationStart,
     );
 
     // Paint metrics
-    expect(getNavTiming(beacon, "sr")).toBeLessThan(activationStart);
-    expect(getNavTiming(beacon, "fc")).toBeLessThan(activationStart);
-    expect(getNavTiming(beacon, "lc")).toBeGreaterThanOrEqual(ET["charlie-image"].startTime);
+    expect(NT.startRender).toBeLessThan(NT.activationStart);
+    expect(NT.firstContentfulPaint).toBeLessThan(NT.activationStart);
+    expect(NT.largestContentfulPaint).toBeGreaterThanOrEqual(ET["charlie-image"].startTime);
 
     // CPU metrics
+    // There are two long tasks created on the prerendered page: the first 50ms task occurs before
+    // the page is activated, and is ignored. The second 70ms task occurs after the page is
+    // activated, and is recorded.
     const longTaskCount = getCpuStat(beacon, "n");
     const longTaskTotal = getCpuStat(beacon, "s");
     const longTaskMedian = getCpuStat(beacon, "d");
@@ -141,9 +151,11 @@ test.describe("LUX prerender support", () => {
 
     expect(longTaskCount).toEqual(1);
     expect(longTaskTotal).toBeGreaterThanOrEqual(LONG_TASK_TIME);
+    expect(longTaskTotal).toBeLessThan(LONG_TASK_TIME + 50);
     expect(longTaskMedian).toEqual(longTaskTotal);
     expect(longTaskMax).toEqual(longTaskTotal);
-    expect(firstCpuIdle).toBeLessThan(activationStart);
+    expect(firstCpuIdle).toBeGreaterThanOrEqual(LONG_TASK_DELAY - NT.activationStart);
+    expect(firstCpuIdle).toBeLessThan(LONG_TASK_DELAY);
 
     // The same Playwright bug mentioned above means we have to forcefully close the page after this test
     await page.close();

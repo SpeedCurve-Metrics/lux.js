@@ -19,17 +19,25 @@ BeaconStore.open().then(async (store) => {
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
 
-    const headers = (contentType) => ({
-      "content-type": contentType,
-      "server-timing": parsedUrl.query.serverTiming || "",
-      connection: "close",
-    });
+    const headers = (contentType) => {
+      const h = {
+        "cache-control": `public, max-age=${parsedUrl.query.maxAge || 0}`,
+        "content-type": contentType,
+        "server-timing": parsedUrl.query.serverTiming || "",
+      };
+
+      if (!parsedUrl.query.keepAlive) {
+        h.connection = "close";
+      }
+
+      return h;
+    };
 
     const sendResponse = async (status, headers, body) => {
       console.log(
         [reqTime.toISOString(), status, req.method, `${pathname}${parsedUrl.search || ""}`].join(
-          " "
-        )
+          " ",
+        ),
       );
 
       res.writeHead(status, headers);
@@ -72,7 +80,7 @@ BeaconStore.open().then(async (store) => {
             req.headers["user-agent"],
             new URL(req.url, `http://${req.headers.host}`).href,
             parsedUrl.query.l,
-            decodeURIComponent(parsedUrl.query.PN)
+            decodeURIComponent(parsedUrl.query.PN),
           );
         }
       }
@@ -93,6 +101,10 @@ BeaconStore.open().then(async (store) => {
           };
         `;
 
+          if (parsedUrl.query.injectBeforeSnippet) {
+            injectScript += parsedUrl.query.injectBeforeSnippet;
+          }
+
           if (!parsedUrl.query.noInlineSnippet) {
             injectScript += inlineSnippet;
           }
@@ -107,7 +119,7 @@ BeaconStore.open().then(async (store) => {
         if (parsedUrl.query.delay) {
           setTimeout(
             () => sendResponse(200, headers(contentType), contents),
-            parseInt(parsedUrl.query.delay)
+            parseInt(parsedUrl.query.delay),
           );
         } else {
           sendResponse(200, headers(contentType), contents);
