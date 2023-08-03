@@ -1,6 +1,6 @@
-import typescript from "@rollup/plugin-typescript";
 import replace from "@rollup/plugin-replace";
 import terser from "@rollup/plugin-terser";
+import typescript from "@rollup/plugin-typescript";
 
 const minifiedLux = (file, polyfills) => ({
   file,
@@ -29,6 +29,9 @@ export default [
     plugins: [
       typescript({
         include: "src/**",
+      }),
+      replace({
+        __ENABLE_POLYFILLS: JSON.stringify(true),
       }),
     ],
   },
