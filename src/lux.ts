@@ -8,8 +8,9 @@ import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
 import { clamp, floor, max, sortNumeric } from "./math";
-import * as CLS from "./metric/CLS";
-import * as INP from "./metric/INP";
+import CLS from "./metric/CLS";
+import INP from "./metric/INP";
+import LCP from "./metric/LCP";
 import now from "./now";
 import {
   msSinceNavigationStart,
@@ -85,57 +86,6 @@ LUX = (function () {
   }
   addEventListener("error", errorHandler);
 
-  const logEntry = (entry: PerformanceEntry) => {
-    logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
-  };
-
-  // Most PerformanceEntry types we log an event for and add it to the global entry store.
-  const processAndLogEntry = (entry: PerformanceEntry) => {
-    PO.addEntry(entry);
-    logEntry(entry);
-  };
-
-  // Before long tasks were buffered, we added a PerformanceObserver to the lux.js snippet to capture
-  // any long tasks that occurred before the full script was loaded. To deal with this, we process
-  // all of the snippet long tasks, and we check for double-ups in the new PerformanceObserver.
-  const snippetLongTasks = typeof window.LUX_al === "object" ? window.LUX_al : [];
-  snippetLongTasks.forEach(processAndLogEntry);
-
-  try {
-    PO.observe("longtask", (entry) => {
-      if (PO.ALL_ENTRIES.indexOf(entry) === -1) {
-        processAndLogEntry(entry);
-      }
-    });
-
-    PO.observe("largest-contentful-paint", processAndLogEntry);
-    PO.observe("element", processAndLogEntry);
-    PO.observe("paint", processAndLogEntry);
-
-    PO.observe("layout-shift", (entry) => {
-      CLS.addEntry(entry);
-      logEntry(entry);
-    });
-
-    PO.observe("first-input", (entry) => {
-      const entryTime = (entry as PerformanceEventTiming).processingStart - entry.startTime;
-
-      if (!gFirstInputDelay || gFirstInputDelay < entryTime) {
-        gFirstInputDelay = floor(entryTime);
-      }
-
-      // Allow first-input events to be considered for INP
-      INP.addEntry(entry);
-    });
-
-    // TODO: Add { durationThreshold: 40 } once performance.interactionCount is widely supported.
-    // Right now we have to count every event to get the total interaction count so that we can
-    // estimate a high percentile value for INP.
-    PO.observe("event", INP.addEntry);
-  } catch (e) {
-    logger.logEvent(LogEvent.PerformanceObserverError, [e]);
-  }
-
   // Bitmask of flags for this session & page
   let gFlags = 0;
 
@@ -176,6 +126,80 @@ LUX = (function () {
    * was prerendered or restored from BF cache
    */
   const shouldReportValue = (value: number) => value > 0 || pageRestoreTime || wasPrerendered();
+
+  const logEntry = (entry: PerformanceEntry) => {
+    logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
+  };
+
+  // Most PerformanceEntry types we log an event for and add it to the global entry store.
+  const processAndLogEntry = (entry: PerformanceEntry) => {
+    PO.addEntry(entry);
+    logEntry(entry);
+  };
+
+  // Keep track of metrics that have changed and need to be reported with their updated value.
+  let updatedMetrics: Record<string, number | undefined> = {};
+  const updateMetric = (metric: string, value: number | undefined) => {
+    if (value !== undefined) {
+      const currentValue = updatedMetrics[metric];
+
+      if (currentValue === undefined || currentValue < value) {
+        updatedMetrics[metric] = value;
+      }
+    }
+  };
+
+  // Before long tasks were buffered, we added a PerformanceObserver to the lux.js snippet to capture
+  // any long tasks that occurred before the full script was loaded. To deal with this, we process
+  // all of the snippet long tasks, and we check for double-ups in the new PerformanceObserver.
+  const snippetLongTasks = typeof window.LUX_al === "object" ? window.LUX_al : [];
+  snippetLongTasks.forEach(processAndLogEntry);
+
+  try {
+    PO.observe("longtask", (entry) => {
+      if (PO.ALL_ENTRIES.indexOf(entry) === -1) {
+        processAndLogEntry(entry);
+      }
+    });
+
+    PO.observe("element", processAndLogEntry);
+    PO.observe("paint", processAndLogEntry);
+
+    PO.observe("largest-contentful-paint", (entry) => {
+      LCP.addEntry(entry);
+      updateMetric("LCP", processTimeMetric(LCP.getValue() || 0));
+      logEntry(entry);
+    });
+
+    PO.observe("layout-shift", (entry) => {
+      CLS.addEntry(entry);
+      logEntry(entry);
+      updateMetric("CLS", CLS.getValue());
+    });
+
+    const processInpEntry = (entry: PerformanceEventTiming) => {
+      INP.addEntry(entry);
+      updateMetric("INP", INP.getValue());
+    };
+
+    PO.observe("first-input", (entry) => {
+      const entryTime = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+
+      if (!gFirstInputDelay || gFirstInputDelay < entryTime) {
+        gFirstInputDelay = floor(entryTime);
+      }
+
+      // Allow first-input events to be considered for INP
+      processInpEntry(entry);
+    });
+
+    // TODO: Add { durationThreshold: 40 } once performance.interactionCount is widely supported.
+    // Right now we have to count every event to get the total interaction count so that we can
+    // estimate a high percentile value for INP.
+    PO.observe("event", processInpEntry);
+  } catch (e) {
+    logger.logEvent(LogEvent.PerformanceObserverError, [e]);
+  }
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -691,7 +715,7 @@ LUX = (function () {
 
     // The DCLS column in Redshift is REAL (FLOAT4) which stores a maximum
     // of 6 significant digits.
-    return CLS.getCLS().toFixed(6);
+    return CLS.getValue()!.toFixed(6);
   }
 
   // Return the median value from an array of integers.
@@ -790,7 +814,7 @@ LUX = (function () {
         clearTimeout(gCustomerDataTimeout);
       }
 
-      gCustomerDataTimeout = setTimeout(_sendCustomerData, 100);
+      gCustomerDataTimeout = setTimeout(_sendCustomDataBeacon, 100);
     }
   }
 
@@ -995,7 +1019,7 @@ LUX = (function () {
       const navEntry = getNavigationEntry();
       const startRender = getStartRender();
       const fcp = getFcp();
-      const lcp = getLcp();
+      const lcp = LCP.getValue();
 
       const prefixNTValue = (
         key: keyof PerformanceNavigationTiming,
@@ -1089,23 +1113,6 @@ LUX = (function () {
     return undefined;
   }
 
-  // Return Largest Contentful Paint or undefined if not supported.
-  function getLcp(): number | undefined {
-    const lcpEntries = PO.getEntries("largest-contentful-paint");
-
-    if (lcpEntries.length) {
-      const lastEntry = lcpEntries[lcpEntries.length - 1];
-      const value = processTimeMetric(lastEntry.startTime);
-
-      if (shouldReportValue(value)) {
-        logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
-        return value;
-      }
-    }
-
-    return undefined;
-  }
-
   // Return best guess at Start Render time (in ms).
   // Mostly works on just Chrome and IE.
   // Return undefined if not supported.
@@ -1142,7 +1149,7 @@ LUX = (function () {
       return undefined;
     }
 
-    return INP.getHighPercentileINP();
+    return INP.getValue();
   }
 
   function getCustomerId() {
@@ -1326,7 +1333,7 @@ LUX = (function () {
     clearMaxMeasureTimeout();
     gMaxMeasureTimeout = setTimeout(() => {
       gFlags = addFlag(gFlags, Flags.BeaconSentAfterTimeout);
-      _sendLux();
+      _sendMainBeacon();
     }, globalConfig.maxMeasureTime - _now());
   }
 
@@ -1361,8 +1368,10 @@ LUX = (function () {
     return globalConfig.beaconUrl + "?" + queryParams.join("&");
   }
 
-  // Beacon back the LUX data.
-  function _sendLux(): void {
+  /**
+   * Send the "main" beacon for the current page view.
+   */
+  function _sendMainBeacon(): void {
     if (!isVisible() && !globalConfig.trackHiddenPages) {
       logger.logEvent(LogEvent.SendCancelledPageHidden);
       return;
@@ -1401,7 +1410,7 @@ LUX = (function () {
       sIx = ixValues();
 
       if (sIx === "") {
-        // If there are no interaction metrics, we
+        // If there are no interaction metrics, we wait to send INP until after the main beacon.
         INP = undefined;
       }
     }
@@ -1499,6 +1508,8 @@ LUX = (function () {
       baseUrl + metricsQueryString,
     );
 
+    updatedMetrics = {};
+
     // Send the MAIN LUX beacon.
     const mainBeaconUrl =
       baseUrl +
@@ -1530,11 +1541,14 @@ LUX = (function () {
 
   function _sendIxAfterDelay(): void {
     clearTimeout(ixTimerId);
-    ixTimerId = setTimeout(_sendIx, 100);
+    ixTimerId = setTimeout(_sendInteractionBeacon, 100);
   }
 
-  // Beacon back the IX data separately (need to sync with LUX beacon on the backend).
-  function _sendIx(): void {
+  /**
+   * Send interaction data independently from the main beacon, unless it has already been sent with
+   * the main beacon.
+   */
+  function _sendInteractionBeacon(): void {
     const customerid = getCustomerId();
     if (
       !customerid ||
@@ -1563,9 +1577,10 @@ LUX = (function () {
     }
   }
 
-  // Beacon back customer data that is recorded _after_ the main beacon was sent
-  // (i.e., customer data after window.onload).
-  function _sendCustomerData(): void {
+  /**
+   * Send custom data that has changed since the main beacon was sent.
+   */
+  function _sendCustomDataBeacon(): void {
     const customerid = getCustomerId();
     if (
       !customerid ||
@@ -1582,6 +1597,25 @@ LUX = (function () {
       const beaconUrl = _getBeaconUrl(CustomData.getUpdatedCustomData());
       logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
+    }
+  }
+
+  /**
+   * Send metric data that has changed since the main beacon was sent.
+   */
+  function _sendUpdatedMetricBeacon(): void {
+    let updatedMetricsString = "";
+
+    for (const metric in updatedMetrics) {
+      if (typeof updatedMetrics[metric] !== "undefined") {
+        updatedMetricsString += "&" + metric + "=" + updatedMetrics[metric];
+      }
+    }
+
+    updatedMetrics = {};
+
+    if (updatedMetricsString) {
+      _sendBeacon(_getBeaconUrl({}) + updatedMetricsString);
     }
   }
 
@@ -1691,8 +1725,17 @@ LUX = (function () {
     const onunload = () => {
       gFlags = addFlag(gFlags, Flags.BeaconSentFromUnloadHandler);
       logger.logEvent(LogEvent.UnloadHandlerTriggered);
-      _sendLux();
-      _sendIx();
+
+      if (gbLuxSent) {
+        // If the main beacon has already been sent, check for metrics that have been updated since
+        // it was sent.
+        _sendUpdatedMetricBeacon();
+      } else {
+        // Otherwise send the main beacon as normal.
+        _sendMainBeacon();
+      }
+
+      _sendInteractionBeacon();
     };
 
     // As well as visibilitychange, we also listen for pagehide. This is really only for browsers
@@ -1868,11 +1911,11 @@ LUX = (function () {
 
         if (document.readyState === "complete") {
           // If onload has already passed, send the beacon now.
-          _sendLux();
+          _sendMainBeacon();
         } else {
           // Ow, send the beacon slightly after window.onload.
           addListener("load", () => {
-            setTimeout(_sendLux, 200);
+            setTimeout(_sendMainBeacon, 200);
           });
         }
       } else {
@@ -1942,7 +1985,7 @@ LUX = (function () {
   globalLux.markLoadTime = _markLoadTime;
   globalLux.send = () => {
     logger.logEvent(LogEvent.SendCalled);
-    _sendLux();
+    _sendMainBeacon();
   };
   globalLux.addData = _addData;
   globalLux.getSessionId = _getUniqueId; // so customers can do their own sampling

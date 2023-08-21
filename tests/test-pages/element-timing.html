@@ -8,12 +8,13 @@
 </head>
 <body>
     <h1>LUX element timing test page</h1>
-    <img src="eve.jpg" elementtiming="eve-image">
+    <img class="initial-image" src="eve.jpg" elementtiming="eve-image">
     <script>
         const qs = new URLSearchParams(location.search);
 
         setTimeout(() => {
             const img = document.createElement("img");
+            img.className = "delayed-image";
             img.src = "eve.jpg?delayed";
             img.elementTiming = "eve-image-delayed";
             img.width = 400;
