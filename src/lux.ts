@@ -41,7 +41,7 @@ LUX = (function () {
   const setTimeout = window.setTimeout;
   const clearTimeout = window.clearTimeout;
   const encodeURIComponent = window.encodeURIComponent;
-  const thisScript = document.currentScript as HTMLScriptElement;
+  const thisScript = (document.currentScript as HTMLScriptElement) || {};
 
   // Log JS errors.
   let nErrors = 0;
