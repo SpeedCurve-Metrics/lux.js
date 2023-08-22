@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2023-08-22: v311
+
+### Bug fixes
+
+- Fix a script error in Internet Explorer.
+
 ## 2023-08-22: v310
 
 ### Improvements
