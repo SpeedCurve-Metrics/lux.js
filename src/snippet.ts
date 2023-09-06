@@ -10,19 +10,17 @@ import scriptStartTime from "./start-marker";
 // eslint-disable-next-line no-var
 declare var LUX: LuxGlobal;
 
-LUX = {
-  ac: [],
-  addData: (name, value) => LUX.cmd(["addData", name, value]),
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  cmd: (cmd: Command) => LUX.ac!.push(cmd),
-  getDebug: () => [[scriptStartTime, 0, []]],
-  init: () => LUX.cmd(["init"]),
-  mark: _mark,
-  markLoadTime: () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]),
-  measure: _measure,
-  send: () => LUX.cmd(["send"]),
-  ns: scriptStartTime,
-};
+LUX = window.LUX || ({} as LuxGlobal);
+LUX.ac = [];
+LUX.addData = (name, value) => LUX.cmd(["addData", name, value]);
+LUX.cmd = (cmd: Command) => LUX.ac!.push(cmd);
+LUX.getDebug = () => [[scriptStartTime, 0, []]];
+LUX.init = () => LUX.cmd(["init"]);
+LUX.mark = _mark;
+LUX.markLoadTime = () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]);
+LUX.measure = _measure;
+LUX.send = () => LUX.cmd(["send"]);
+LUX.ns = scriptStartTime;
 
 export default LUX;
 
