@@ -30,6 +30,21 @@ test.describe("LUX page labels in auto mode", () => {
     expect(hasFlag(beacon, Flags.PageLabelFromUrlPattern)).toBe(false);
   });
 
+  test("using a custom label injected before the snippet", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto(
+      "/default.html?injectBeforeSnippet=LUX=window.LUX||{};LUX.label='Custom Label';",
+    );
+    await luxRequests.waitForMatchingRequest();
+    const beacon = luxRequests.getUrl(0)!;
+
+    expect(beacon.searchParams.get("l")).toEqual("Custom Label");
+    expect(hasFlag(beacon, Flags.PageLabelFromLabelProp)).toBe(true);
+    expect(hasFlag(beacon, Flags.PageLabelFromDocumentTitle)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromGlobalVariable)).toBe(false);
+    expect(hasFlag(beacon, Flags.PageLabelFromUrlPattern)).toBe(false);
+  });
+
   test("custom label is null", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.label=null;");
