@@ -1,6 +1,7 @@
 {
   "name": "@speedcurve/lux",
   "version": "3.0.11",
+  "main": "dist/lux.js",
   "scripts": {
     "build": "npm run rollup",
     "rollup": "rollup --config rollup.config.mjs",
