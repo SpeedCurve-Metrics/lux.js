@@ -1,5 +1,5 @@
 {
-  "name": "@speedcurve-metrics/lux.js",
+  "name": "@speedcurve/lux",
   "version": "3.0.11",
   "scripts": {
     "build": "npm run rollup",
@@ -11,8 +11,13 @@
     "test:all": "jest && playwright test",
     "test:unit": "jest tests/unit/",
     "test:e2e": "playwright test tests/integration/",
-    "watch": "npm run rollup -- --watch"
+    "watch": "npm run rollup -- --watch",
+    "prepublishOnly": "npm run build"
   },
+  "files": [
+    "dist",
+    "src"
+  ],
   "devDependencies": {
     "@babel/core": "^7.21.5",
     "@babel/preset-env": "^7.21.5",
@@ -40,12 +45,9 @@
   "prettier": {
     "printWidth": 100
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/speedcurve-metrics"
-  },
   "repository": {
     "type": "git",
-    "url": "ssh://git@github.com:speedcurve-metrics/lux.js.git",
-    "directory": "@speedcurve-metrics/lux.js"
-  }
+    "url": "https://github.com:speedcurve-metrics/lux.js.git"
+  },
+  "license": "BSD-3-Clause"
 }
