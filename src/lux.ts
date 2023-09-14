@@ -1856,6 +1856,14 @@ LUX = (function () {
   // Set "LUX.auto=false" to disable send results automatically and
   // instead you must call LUX.send() explicitly.
   if (globalConfig.auto) {
+    const sendBeaconWhenVisible = () => {
+      if (globalConfig.trackHiddenPages) {
+        _sendLux();
+      } else {
+        onVisible(_sendLux);
+      }
+    };
+
     const sendBeaconAfterMinimumMeasureTime = () => {
       const elapsedTime = _now();
       const timeRemaining = globalConfig.minMeasureTime - elapsedTime;
@@ -1868,11 +1876,11 @@ LUX = (function () {
 
         if (document.readyState === "complete") {
           // If onload has already passed, send the beacon now.
-          _sendLux();
+          sendBeaconWhenVisible();
         } else {
           // Ow, send the beacon slightly after window.onload.
           addListener("load", () => {
-            setTimeout(_sendLux, 200);
+            setTimeout(sendBeaconWhenVisible, 200);
           });
         }
       } else {
@@ -1881,13 +1889,7 @@ LUX = (function () {
       }
     };
 
-    if (globalConfig.trackHiddenPages) {
-      // The trackHiddenPages config forces the beacon to be sent even when the page is not visible.
-      sendBeaconAfterMinimumMeasureTime();
-    } else {
-      // Otherwise we only send the beacon when the page is visible.
-      onVisible(sendBeaconAfterMinimumMeasureTime);
-    }
+    sendBeaconAfterMinimumMeasureTime();
   }
 
   // When newBeaconOnPageShow = true, we initiate a new page view whenever a page is restored from

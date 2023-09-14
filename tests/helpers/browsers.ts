@@ -1,3 +1,5 @@
+import { Page } from "@playwright/test";
+
 export function referenceErrorMessage(browserName, reference) {
   switch (browserName) {
     case "chromium":
@@ -22,4 +24,24 @@ export function syntaxErrorMessage(browserName) {
     case "webkit":
       return "SyntaxError: Unexpected end of script";
   }
+}
+
+export function getPageHiddenScript(hidden: boolean): string {
+  return `
+    Object.defineProperty(document, "visibilityState", {
+      value: ${JSON.stringify(hidden ? "hidden" : "visible")},
+      writable: true,
+    });
+
+    Object.defineProperty(document, "hidden", {
+      value: ${JSON.stringify(hidden)},
+      writable: true,
+    });
+
+    document.dispatchEvent(new Event("visibilitychange"));
+  `;
+}
+
+export async function setPageHidden(page: Page, hidden: boolean) {
+  await page.evaluate(getPageHiddenScript(hidden));
 }
