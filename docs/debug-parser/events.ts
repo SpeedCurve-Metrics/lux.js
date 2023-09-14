@@ -82,7 +82,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       message = `Onload handler was triggered after ${args[0]} ms.`;
 
       if (args[1] > 0) {
-        message += `Minimum measure time was ${args[1]}`;
+        message += ` Minimum measure time was ${args[1]}`;
       }
 
       return message;
