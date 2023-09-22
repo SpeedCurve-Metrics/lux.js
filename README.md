@@ -10,6 +10,8 @@ This repository contains the source code for lux.js, [SpeedCurve's real user mon
 4. Click on the **JS Snippet** tab
 5. Copy the RUM JS snippet into the `<head>` of your page
 
+> ⚠️ Self-hosting lux.js is not recommended. Please read our [self-hosting documentation](https://support.speedcurve.com/docs/self-hosted-real-user-monitoring) for more information.
+
 ## Local development
 
 - Compile the lux.js script with `npm run build` or `npm run watch`
