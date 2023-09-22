@@ -25,11 +25,3 @@ This repository contains the source code for lux.js, [SpeedCurve's real user mon
 5. Create a new release in GitHub, following the naming convention and documentation process of previous releases
 6. Run `npm run build` to generate the lux.js bundles.
 7. Follow the rum-backend release process to deploy the updated lux.js bundles.
-
-## Publishing the public package
-
-When publishing a new version of the @speedcurve/lux.js package, you must explicitly allow public access:
-
-```
-npm publish --access public
-```
