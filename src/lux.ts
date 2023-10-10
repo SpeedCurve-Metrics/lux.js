@@ -203,7 +203,7 @@ LUX = (function () {
   // Record the FIRST input delay.
   function recordDelay(delay: number) {
     if (!gFirstInputDelay) {
-      gFirstInputDelay = delay;
+      gFirstInputDelay = floor(delay);
 
       // remove event listeners
       gaEventTypes.forEach(function (eventType) {
