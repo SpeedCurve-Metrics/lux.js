@@ -1,5 +1,12 @@
 # lux.js changelog
 
+## 2023-10-11: v312
+
+### Bug fixes
+
+- Fix an edge case where a beacon is not sent if the page was hidden when it started loading.
+- Fix an edge case where some FID values were recorded as floats.
+
 ## 2023-08-22: v311
 
 ### Bug fixes
