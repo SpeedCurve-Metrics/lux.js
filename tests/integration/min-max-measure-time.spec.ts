@@ -20,6 +20,29 @@ test.describe("LUX minimum and maximum measure times", () => {
     expect(beaconTiming.startTime).toBeGreaterThan(300);
   });
 
+  test("LUX.minMeasureTime can be set after lux.js is loaded", async ({ page }) => {
+    // Start off with minMeasureTime = 200
+    await page.goto("/default.html?injectScript=LUX.minMeasureTime=200;");
+
+    // Wait for the lux.js script to load
+    await page.waitForFunction(() => typeof LUX.version !== "undefined");
+
+    // Set minMeasureTime = 500
+    await page.evaluate(() => (LUX.minMeasureTime = 500));
+
+    // Wait for the beacon to be sent and check that 500 ms was used as the minimum measure time
+    await page.waitForLoadState("networkidle");
+    const beaconTiming: PerformanceNavigationTiming = await page.evaluate(() =>
+      performance
+        .getEntriesByType("resource")
+        .filter((r) => r.name.search(/\/beacon\//) > -1)
+        .map((r) => r.toJSON())
+        .pop(),
+    );
+
+    expect(beaconTiming.startTime).toBeGreaterThan(500);
+  });
+
   test("LUX.minMeasureTime is ignored when LUX.send() is called", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.minMeasureTime=300;setTimeout(LUX.send, 100);");
