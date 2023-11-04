@@ -149,7 +149,7 @@ LUX = (function () {
   const gSessionTimeout = 30 * 60; // number of seconds after which we consider a session to have "timed out" (used for calculating bouncerate)
   let gSyncId = createSyncId(); // if we send multiple beacons, use this to sync them (eg, LUX & IX) (also called "luxid")
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
-  let gCustomerDataTimeout: number | undefined; // setTimeout timer for sending a Customer Data beacon after onload
+  let gCustomDataTimeout: number | undefined; // setTimeout timer for sending a Custom data beacon after onload
   let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
   let pageRestoreTime: number | undefined; // ms since navigationStart representing when the page was restored from the bfcache
 
@@ -780,17 +780,17 @@ LUX = (function () {
 
     if (gbLuxSent) {
       // This is special: We want to allow customers to call LUX.addData()
-      // _after_ window.onload. So we have to send a Customer Data beacon that
-      // includes the new customer data.
+      // _after_ window.onload. So we have to send a Custom data beacon that
+      // includes the new custom data.
       // Do setTimeout so that if there are multiple back-to-back addData calls
       // we get them all in one beacon.
-      if (gCustomerDataTimeout) {
+      if (gCustomDataTimeout) {
         // Cancel the timer for any previous beacons so that if they have not
         // yet been sent we can combine all the data in a new beacon.
-        clearTimeout(gCustomerDataTimeout);
+        clearTimeout(gCustomDataTimeout);
       }
 
-      gCustomerDataTimeout = setTimeout(_sendCustomerData, 100);
+      gCustomDataTimeout = setTimeout(_sendCustomData, 100);
     }
   }
 
@@ -1351,10 +1351,10 @@ LUX = (function () {
       queryParams.push("fl=" + gFlags);
     }
 
-    const customerData = CustomData.valuesToString(customData);
+    const customDataValues = CustomData.valuesToString(customData);
 
-    if (customerData) {
-      queryParams.push("CD=" + customerData);
+    if (customDataValues) {
+      queryParams.push("CD=" + customDataValues);
       CustomData.clearUpdateCustomData();
     }
 
@@ -1439,7 +1439,7 @@ LUX = (function () {
       );
     }
 
-    // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & customerdata).
+    // We want ALL beacons to have ALL the data used for query filters (geo, pagelabel, browser, & custom data).
     // So we create a base URL that has all the necessary information:
     const baseUrl = _getBeaconUrl(CustomData.getAllCustomData());
 
@@ -1563,9 +1563,9 @@ LUX = (function () {
     }
   }
 
-  // Beacon back customer data that is recorded _after_ the main beacon was sent
-  // (i.e., customer data after window.onload).
-  function _sendCustomerData(): void {
+  // Beacon back custom data that is recorded _after_ the main beacon was sent
+  // (i.e., custom data after window.onload).
+  function _sendCustomData(): void {
     const customerid = getCustomerId();
     if (
       !customerid ||
@@ -1576,9 +1576,9 @@ LUX = (function () {
       return;
     }
 
-    const sCustomerData = CustomData.valuesToString(CustomData.getUpdatedCustomData());
+    const customDataValues = CustomData.valuesToString(CustomData.getUpdatedCustomData());
 
-    if (sCustomerData) {
+    if (customDataValues) {
       const beaconUrl = _getBeaconUrl(CustomData.getUpdatedCustomData());
       logger.logEvent(LogEvent.CustomDataBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
