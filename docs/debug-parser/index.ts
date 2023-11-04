@@ -34,6 +34,7 @@ function renderOutput(output: Element) {
 
   for (const event of inputEvents) {
     if (event[1] === LogEvent.NavigationStart) {
+      // Always show the navigation start event first
       navigationStart = (event[2] as [number])[0];
       break;
     }
@@ -44,13 +45,15 @@ function renderOutput(output: Element) {
   inputEvents.forEach((event: LogEventRecord) => {
     const timestamp = Number(new Date(event[0])) - navigationStart;
     const message = getMessageForEvent(event, filters);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const args = event[2] as any[];
 
     if (message) {
       if (isBeaconEvent(event[1])) {
         const item = li(`${new Intl.NumberFormat().format(timestamp)} ms: ${message}`);
         item.classList.add("tooltip-container");
 
-        const beaconUrl = new URL((event[2] as string[])[0]);
+        const beaconUrl = new URL(args[0]);
         const tooltip = document.createElement("span");
         tooltip.className = "tooltip";
         tooltip.innerHTML = `
@@ -59,6 +62,21 @@ function renderOutput(output: Element) {
           <b>Path:</b> ${beaconUrl.searchParams.get("PN")}<br>
           <b>lux.js version:</b> ${beaconUrl.searchParams.get("v")}<br>
         `;
+
+        item.appendChild(tooltip);
+        output.appendChild(item);
+      } else if (event[1] === LogEvent.EvaluationStart && typeof args[1] === "object") {
+        // Support for EvaluationStart event containing LUX config (since v313)
+        const item = li(
+          `${new Intl.NumberFormat().format(
+            timestamp,
+          )} ms: ${message} Hover to view configuration.`,
+        );
+        item.classList.add("tooltip-container");
+
+        const tooltip = document.createElement("span");
+        tooltip.className = "tooltip";
+        tooltip.innerHTML = `<pre>${JSON.stringify(args[1], null, 4)}</pre>`;
 
         item.appendChild(tooltip);
         output.appendChild(item);

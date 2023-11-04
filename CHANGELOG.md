@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## ????-??-??: v313
+
+### Improvements
+
+- `LUX.getDebug()` now includes the LUX configuration at init time.
+
 ## 2023-10-11: v312
 
 ### Bug fixes

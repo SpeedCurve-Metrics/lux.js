@@ -28,11 +28,11 @@ let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
 
 LUX = (function () {
-  const SCRIPT_VERSION = "312";
+  const SCRIPT_VERSION = "313";
   const logger = new Logger();
   const globalConfig = Config.fromObject(LUX);
 
-  logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION]);
+  logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION, globalConfig]);
 
   // Variable aliases that allow the minifier to reduce file size.
   const document = window.document;
