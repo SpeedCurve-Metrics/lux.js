@@ -1,4 +1,7 @@
-# lux.js
+# lux.js - real user monitoring
+
+![](https://flat.badgen.net/bundlephobia/minzip/@speedcurve/lux)
+![](https://flat.badgen.net/bundlephobia/min/@speedcurve/lux)
 
 This repository contains the source code for lux.js, [SpeedCurve's real user monitoring (RUM)](https://www.speedcurve.com/) script.
 
