@@ -12,6 +12,12 @@ This repository contains the source code for lux.js, [SpeedCurve's real user mon
 
 > ⚠️ Self-hosting lux.js is not recommended. Please read our [self-hosting documentation](https://support.speedcurve.com/docs/self-hosted-real-user-monitoring) for more information.
 
+## Project goals
+
+1. **Browser compatibility** - lux.js runs and gathers basic metrics in every browser that supports ES3, while still gathering modern metrics from evergreen browsers.
+2. **Small size** - lux.js aims to be under 10 KB when compressed. Today it is 20.6 KB uncompressed, 8.0 KB compressed with gzip 9, and 7.2 KB compressed with brotli 11.
+3. **Low overhead** - lux.js creates only a handful of event handlers and observers. Most metrics are calculated on-demand before a beacon is sent.
+
 ## Local development
 
 - Compile the lux.js script with `npm run build` or `npm run watch`
