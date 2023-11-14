@@ -15,6 +15,14 @@ This repository contains the source code for lux.js, [SpeedCurve's real user mon
 
 > ⚠️ Self-hosting lux.js is not recommended. Please read our [self-hosting documentation](https://support.speedcurve.com/docs/self-hosted-real-user-monitoring) for more information.
 
+## Configuring lux.js
+
+See [the lux.js API documentation](https://support.speedcurve.com/docs/rum-js-api).
+
+## Using lux.js in a SPA
+
+See [the SPA documentation](https://support.speedcurve.com/docs/single-page-applications).
+
 ## Project goals
 
 1. **Browser compatibility** - lux.js runs and gathers basic metrics in every browser that supports ES3, while still gathering modern metrics from evergreen browsers.
