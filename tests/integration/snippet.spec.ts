@@ -118,4 +118,12 @@ test.describe("LUX inline snippet", () => {
       referenceErrorMessage(browserName, "snippet"),
     );
   });
+
+  test("settings that are set before the snippet are preserved", async ({ page }) => {
+    await page.goto("/default.html?injectBeforeSnippet=LUX={minMeasureTime:300};");
+
+    const minMeasureTime = await page.evaluate(() => LUX.minMeasureTime);
+
+    expect(minMeasureTime).toEqual(300);
+  });
 });
