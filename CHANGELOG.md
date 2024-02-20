@@ -1,10 +1,11 @@
 # lux.js changelog
 
-## ????-??-??: v313
+## 2024-02-??: v313
 
 ### Improvements
 
 - `LUX.getDebug()` now includes the LUX configuration at init time.
+- The `InitCalled` flag is no longer set for bfcache restores, unless it was already set on the page being restored.
 
 ## 2023-10-11: v312
 
