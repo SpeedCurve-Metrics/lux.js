@@ -65,6 +65,11 @@ test.describe("BF cache integration", () => {
     expect(hasFlag(firstBeacon, Flags.PageWasBfCacheRestored)).toBe(false);
     expect(hasFlag(bfcBeacon, Flags.PageWasBfCacheRestored)).toBe(true);
 
+    // This is not a SPA so the InitCalled flag should not be present on either beacon, even though
+    // the bfcache implementation calls init() to initialise a fresh beacon.
+    expect(hasFlag(firstBeacon, Flags.InitCalled)).toBe(false);
+    expect(hasFlag(bfcBeacon, Flags.InitCalled)).toBe(false);
+
     // Test the page stats are correct for both beacons
     Shared.testPageStats({ beacon: firstBeacon, page, browserName }, true);
     Shared.testPageStats({ beacon: bfcBeacon, page, browserName }, true);
