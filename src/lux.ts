@@ -809,7 +809,7 @@ LUX = (function () {
    * Re-initialize lux.js to start a new "page". This is typically called within a SPA at the
    * beginning of a page transition, but is also called internally when the BF cache is restored.
    */
-  function _init(startTime?: number): void {
+  function _init(startTime?: number, clearFlags = true): void {
     // Some customers (incorrectly) call LUX.init on the very first page load of a SPA. This would
     // cause some first-page-only data (like paint metrics) to be lost. To prevent this, we silently
     // bail from this function when we detect an unnecessary LUX.init call.
@@ -849,8 +849,10 @@ LUX = (function () {
     gFirstInputDelay = undefined;
 
     // Clear flags then set the flag that init was called (ie, this is a SPA).
-    gFlags = 0;
-    gFlags = addFlag(gFlags, Flags.InitCalled);
+    if (clearFlags) {
+      gFlags = 0;
+      gFlags = addFlag(gFlags, Flags.InitCalled);
+    }
 
     // Reset the maximum measure timeout
     createMaxMeasureTimeout();
@@ -1909,7 +1911,7 @@ LUX = (function () {
           if (gbLuxSent) {
             // If the beacon was already sent for this page, we start a new page view and mark the
             // load time as the time it took to restore the page.
-            _init(pageRestoreTime);
+            _init(pageRestoreTime, false);
             _markLoadTime();
           }
 
