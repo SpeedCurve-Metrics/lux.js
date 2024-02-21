@@ -1,6 +1,6 @@
 # lux.js changelog
 
-## 2024-02-??: v313
+## 2024-02-24: v313
 
 ### Improvements
 
