@@ -20,7 +20,7 @@ filterInputs.forEach((input) => {
 function renderOutput(output: Element) {
   output.innerHTML = "";
 
-  let inputEvents = [];
+  let inputEvents: LogEventRecord[] = [];
 
   try {
     inputEvents = JSON.parse(input.value);
@@ -40,9 +40,11 @@ function renderOutput(output: Element) {
     }
   }
 
+  let lastInit = navigationStart;
+  let dataCollectionFinished = false;
   const filters = getFilters(filterInputs);
 
-  inputEvents.forEach((event: LogEventRecord) => {
+  inputEvents.forEach((event, eventIndex) => {
     const timestamp = Number(new Date(event[0])) - navigationStart;
     const message = getMessageForEvent(event, filters);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,6 +84,45 @@ function renderOutput(output: Element) {
         output.appendChild(item);
       } else {
         output.appendChild(li(`${new Intl.NumberFormat().format(timestamp)} ms: ${message}`));
+      }
+
+      // Track when data collection has finished
+      if (event[1] === LogEvent.DataCollectionStart) {
+        dataCollectionFinished = true;
+      }
+
+      // Track when a new beacon is initialised
+      if (event[1] === LogEvent.InitCalled) {
+        lastInit = event[0];
+        dataCollectionFinished = false;
+      }
+
+      // Warn when data was gathered for less than 1 second
+      if (event[1] === LogEvent.SendCalled) {
+        const sendTime = event[0];
+        const measureTime = sendTime - lastInit;
+
+        if (measureTime < 1000) {
+          output.appendChild(
+            li(
+              `${new Intl.NumberFormat().format(timestamp)} ms: ⚠️ Data was gathered for less than 1 second. Consider increasing the value of LUX.minMeasureTime.`,
+            ),
+          );
+        }
+      }
+
+      // Warn when performance entries occur after data collection has finished
+      if (dataCollectionFinished && event[1] === LogEvent.PerformanceEntryReceived) {
+        const nextEvent = inputEvents[eventIndex + 1];
+
+        // Only show the warning once for multiple performance entries
+        if (nextEvent[1] !== LogEvent.PerformanceEntryReceived) {
+          output.appendChild(
+            li(
+              `${new Intl.NumberFormat().format(timestamp)} ms: ⚠️ Performance entries were received after the beacon was sent.`,
+            ),
+          );
+        }
       }
     }
   });
