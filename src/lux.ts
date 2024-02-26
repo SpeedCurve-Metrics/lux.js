@@ -1950,7 +1950,12 @@ LUX = (function () {
   };
   globalLux.addData = _addData;
   globalLux.getSessionId = _getUniqueId; // so customers can do their own sampling
-  globalLux.getDebug = () => logger.getEvents();
+  globalLux.getDebug = () => {
+    console.log(
+      "SpeedCurve RUM debugging documentation: https://support.speedcurve.com/docs/rum-js-api#luxgetdebug",
+    );
+    return logger.getEvents();
+  };
   globalLux.forceSample = () => {
     logger.logEvent(LogEvent.ForceSampleCalled);
     setUniqueId(createSyncId(true));
