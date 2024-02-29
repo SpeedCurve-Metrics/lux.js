@@ -17,6 +17,16 @@ The onload event hasn't been a relevant measure of page performance -or even pag
 
 The existing behaviour, driven by the global onload event handler.
 
+### `LUX.measureUntil = "auto"`
+
+Automatically determine a good point to measure until for each page and browser.
+
+- Wait for LCP and CLS events to show up.
+- Browsers that don't support LCP or CLS can fall back to other events like onload.
+- Have a reasonable idle period to wait for events. If no events are received after this period, the beacon is sent.
+- Unload and page hidden events cause the beacon to be sent immediately.
+- Calling `LUX.send()` or `LUX.init()` causes the beacon to be sent immediately.
+
 ### `LUX.measureUntil = "pagehidden"`
 
 Wait until the visibilitychange event signals that the page has been hidden.
