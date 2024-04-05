@@ -5,6 +5,7 @@ export interface ConfigObject {
   auto: boolean;
   beaconUrl: string;
   conversions?: UrlPatternMapping;
+  cookieDomain?: string;
   customerid?: string;
   errorBeaconUrl: string;
   jspagelabel?: string;
@@ -34,6 +35,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     auto: autoMode,
     beaconUrl: getProperty(obj, "beaconUrl", luxOrigin + "/lux/"),
     conversions: getProperty(obj, "conversions"),
+    cookieDomain: getProperty(obj, "cookieDomain"),
     customerid: getProperty(obj, "customerid"),
     errorBeaconUrl: getProperty(obj, "errorBeaconUrl", luxOrigin + "/error/"),
     jspagelabel: getProperty(obj, "jspagelabel"),
