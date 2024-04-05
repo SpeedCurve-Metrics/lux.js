@@ -1844,6 +1844,7 @@ LUX = (function () {
         "=" +
         escape(value) +
         (seconds ? "; max-age=" + seconds : "") +
+        (globalConfig.cookieDomain ? "; domain=" + globalConfig.cookieDomain : "") +
         "; path=/; SameSite=Lax";
     } catch (e) {
       logger.logEvent(LogEvent.CookieSetError);
