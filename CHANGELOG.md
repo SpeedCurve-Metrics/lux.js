@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2024-??-??: v314
+
+### Improvements
+
+- Add `LUX.cookieDomain` to control which domain the user session cookie is stored on. This is useful for tracking user sessions across subdomains.
+
 ## 2024-02-24: v313
 
 ### Improvements

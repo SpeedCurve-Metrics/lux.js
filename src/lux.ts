@@ -28,7 +28,7 @@ let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
 
 LUX = (function () {
-  const SCRIPT_VERSION = "313";
+  const SCRIPT_VERSION = "314";
   const logger = new Logger();
   const globalConfig = Config.fromObject(LUX);
 
