@@ -8,6 +8,7 @@ import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document"
 import { getNodeSelector } from "./dom";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
+import { getTrackingParams } from "./integrations/tracking";
 import { InteractionInfo } from "./interaction";
 import { addListener, removeListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
@@ -1446,6 +1447,13 @@ LUX = (function () {
       // Record the synthetic loadEventStart time for this page, unless it was already recorded
       // with LUX.markLoadTime()
       _markLoadTime();
+    }
+
+    // Store any tracking parameters as custom data
+    const trackingParams = getTrackingParams();
+    for (const key in trackingParams) {
+      logger.logEvent(LogEvent.TrackingParamAdded, [key, trackingParams[key]]);
+      CustomData.addCustomDataValue("_" + key, trackingParams[key]);
     }
 
     let sIx = "";
