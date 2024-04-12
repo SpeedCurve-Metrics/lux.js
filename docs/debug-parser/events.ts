@@ -63,6 +63,9 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
 
       return "";
 
+    case LogEvent.TrackingParamAdded:
+      return `Tracking parameter ${args[0]}=${args[1]} picked up automatically`;
+
     case LogEvent.SendCalled:
       return "LUX.send()";
 

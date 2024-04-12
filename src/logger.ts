@@ -28,6 +28,7 @@ export const LogEvent: Record<string, number> = {
   NavigationStart: 41,
   PerformanceEntryReceived: 42,
   PerformanceEntryProcessed: 43,
+  TrackingParamAdded: 44,
 
   // Errors
   PerformanceObserverError: 51,
