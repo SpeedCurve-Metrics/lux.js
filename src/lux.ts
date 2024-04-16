@@ -1139,12 +1139,33 @@ LUX = (function () {
     return undefined;
   }
 
-  function getINP(): number | undefined {
+  function getINPDetails(): INP.Interaction | undefined {
     if (!("PerformanceEventTiming" in self)) {
       return undefined;
     }
 
-    return INP.getHighPercentileINP();
+    return INP.getHighPercentileInteraction();
+  }
+
+  /**
+   * Build the query string for the INP parameters:
+   *
+   * - INP: The duration of the P98 interaction
+   * - INPs: The selector of the P98 interaction element
+   * - INPt: The timestamp of the P98 interaction start time
+   * - INPi: The input delay subpart of the P98 interaction
+   * - INPp: The processing time subpart of the P98 interaction
+   * - INPd: The presentation delay subpart of the P98 interaction
+   */
+  function getINPString(details: INP.Interaction): string {
+    return [
+      "&INP=" + details.duration,
+      "&INPs=" + "TODO",
+      "&INPt=" + floor(details.startTime),
+      "&INPi=" + floor(details.processingStart - details.startTime),
+      "&INPp=" + floor(details.processingEnd - details.processingStart),
+      "&INPd=" + floor(details.startTime + details.duration - details.processingEnd),
+    ].join("");
   }
 
   function getCustomerId() {
@@ -1394,7 +1415,7 @@ LUX = (function () {
     }
 
     let sIx = "";
-    let INP = getINP();
+    let INP = getINPDetails();
 
     // It's possible that the interaction beacon has been sent before the main beacon. We don't want
     // to send the interaction metrics twice, so we only include them here if the interaction beacon
@@ -1403,7 +1424,7 @@ LUX = (function () {
       sIx = ixValues();
 
       if (sIx === "") {
-        // If there are no interaction metrics, we
+        // If there are no interaction metrics, we wait to send INP with the main beacon.
         INP = undefined;
       }
     }
@@ -1491,7 +1512,8 @@ LUX = (function () {
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
       (typeof CLS !== "undefined" ? "&CLS=" + CLS : "") +
-      (typeof INP !== "undefined" ? "&INP=" + INP : "");
+      // INP and sub-parts
+      (typeof INP !== "undefined" ? getINPString(INP) : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();
@@ -1549,7 +1571,7 @@ LUX = (function () {
     }
 
     const sIx = ixValues(); // Interaction Metrics
-    const INP = getINP();
+    const INP = getINPDetails();
 
     if (sIx) {
       const beaconUrl =
@@ -1557,7 +1579,7 @@ LUX = (function () {
         "&IX=" +
         sIx +
         (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
-        (typeof INP !== "undefined" ? "&INP=" + INP : "");
+        (typeof INP !== "undefined" ? getINPString(INP) : "");
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 

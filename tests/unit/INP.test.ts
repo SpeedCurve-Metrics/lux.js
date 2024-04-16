@@ -21,12 +21,12 @@ describe("INP", () => {
 
     // The first-input entry should be ignored, so the high percentile value is one of the first
     // 50 interactions.
-    expect(INP.getHighPercentileINP()).toEqual(100);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(100);
 
     // Now create a unique first-input entry that becomes the high percentile value
     INP.addEntry(makeEntry(61, 200, "first-input"));
 
-    expect(INP.getHighPercentileINP()).toEqual(200);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
   });
 
   test("INP is calculated correctly for small sets of interactions", () => {
@@ -35,7 +35,7 @@ describe("INP", () => {
     INP.addEntry(makeEntry(3, 300));
     INP.addEntry(makeEntry(0, 400));
 
-    expect(INP.getHighPercentileINP()).toEqual(300);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(300);
   });
 
   test("INP is calculated correctly for small sets of interactions with duplicate IDs", () => {
@@ -49,7 +49,7 @@ describe("INP", () => {
     INP.addEntry(makeEntry(0, 990));
     INP.addEntry(makeEntry(0, 400));
 
-    expect(INP.getHighPercentileINP()).toEqual(300);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(300);
   });
 
   test("INP is calculated correctly for large sets of interactions", () => {
@@ -67,7 +67,7 @@ describe("INP", () => {
       INP.addEntry(makeEntry(interactions, 50));
     }
 
-    expect(INP.getHighPercentileINP()).toEqual(400);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(400);
 
     // The logic to estimate the high percentile is basically to use the Nth slowest interaction,
     // where N is the interaction count divided by 50. So at 100 interactions we should use the
@@ -77,7 +77,7 @@ describe("INP", () => {
       INP.addEntry(makeEntry(interactions, 50));
     }
 
-    expect(INP.getHighPercentileINP()).toEqual(200);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
   });
 
   test("INP is calculated correctly for large sets of interactions with duplicate IDs", () => {
@@ -92,7 +92,7 @@ describe("INP", () => {
     INP.addEntry(makeEntry(3, 200));
     INP.addEntry(makeEntry(3, 200));
 
-    expect(INP.getHighPercentileINP()).toEqual(600);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(600);
 
     let interactions = 3;
 
@@ -103,7 +103,7 @@ describe("INP", () => {
       INP.addEntry(makeEntry(interactions, 50));
     }
 
-    expect(INP.getHighPercentileINP()).toEqual(400);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(400);
 
     // The logic to estimate the high percentile is basically to use the Nth slowest interaction,
     // where N is the interaction count divided by 50. So at 100 interactions we should use the
@@ -113,7 +113,7 @@ describe("INP", () => {
       INP.addEntry(makeEntry(interactions, 50));
     }
 
-    expect(INP.getHighPercentileINP()).toEqual(200);
+    expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
   });
 });
 

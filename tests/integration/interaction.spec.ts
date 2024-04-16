@@ -79,6 +79,7 @@ test.describe("LUX interaction", () => {
     await luxRequests.waitForMatchingRequest();
 
     // Then wait for the interaction beacon after clicking
+    const timeBeforeClick = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-js").click(), 2);
 
     const mainBeacon = luxRequests.getUrl(0)!;
@@ -92,7 +93,22 @@ test.describe("LUX interaction", () => {
       // INP not supported in webkit
       expect(ixBeacon.searchParams.get("INP")).toBeNull();
     } else {
-      expect(parseInt(getSearchParam(ixBeacon, "INP"))).toBeGreaterThanOrEqual(0);
+      const INP = parseInt(getSearchParam(ixBeacon, "INP"));
+      const INPTimestamp = parseInt(getSearchParam(ixBeacon, "INPt"));
+
+      expect(INP).toBeGreaterThanOrEqual(0);
+      expect(INPTimestamp).toBeGreaterThanOrEqual(timeBeforeClick);
+
+      const INPInputDelay = parseInt(getSearchParam(ixBeacon, "INPi"));
+      const INPProcessingTime = parseInt(getSearchParam(ixBeacon, "INPp"));
+      const INPPresentationDelay = parseInt(getSearchParam(ixBeacon, "INPd"));
+      const allSubParts = INPInputDelay + INPProcessingTime + INPPresentationDelay;
+
+      // The subparts are floored, so they can add up to 1ms less than the INP duration
+      expect(allSubParts).toBeGreaterThanOrEqual(INP - 1);
+      expect(allSubParts).toBeLessThanOrEqual(INP);
+
+      // const INPSelector = getSearchParam(ixBeacon, "INPs");
     }
   });
 

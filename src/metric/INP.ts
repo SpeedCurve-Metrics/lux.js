@@ -1,4 +1,3 @@
-import { max } from "../math";
 import { performance } from "../performance";
 
 /**
@@ -9,10 +8,12 @@ import { performance } from "../performance";
 // The maximum number of interactions to store
 const MAX_INTERACTIONS = 10;
 
-interface Interaction {
+export interface Interaction {
   interactionId: number | undefined;
   duration: number;
   startTime: number;
+  processingStart: number;
+  processingEnd: number;
 }
 
 // A list of the slowest interactions
@@ -32,14 +33,25 @@ export function reset(): void {
 
 export function addEntry(entry: PerformanceEventTiming): void {
   if (entry.interactionId || (entry.entryType === "first-input" && !entryExists(entry))) {
-    const { duration, startTime, interactionId } = entry;
+    const { duration, startTime, interactionId, processingStart, processingEnd } = entry;
     const existingEntry = slowestEntriesMap[interactionId!];
 
     if (existingEntry) {
-      existingEntry.duration = max(duration, existingEntry.duration);
+      if (existingEntry.duration < duration) {
+        existingEntry.duration = duration;
+        existingEntry.startTime = startTime;
+        existingEntry.processingStart = processingStart;
+        existingEntry.processingEnd = processingEnd;
+      }
     } else {
       interactionCountEstimate++;
-      slowestEntriesMap[interactionId!] = { duration, interactionId, startTime };
+      slowestEntriesMap[interactionId!] = {
+        duration,
+        interactionId,
+        startTime,
+        processingStart,
+        processingEnd,
+      };
       slowestEntries.push(slowestEntriesMap[interactionId!]);
     }
 
@@ -59,10 +71,10 @@ function entryExists(e1: PerformanceEntry): boolean {
  * Returns an estimated high percentile INP value based on the total number of interactions on the
  * current page.
  */
-export function getHighPercentileINP(): number | undefined {
+export function getHighPercentileInteraction(): Interaction | undefined {
   const index = Math.min(slowestEntries.length - 1, Math.floor(getInteractionCount() / 50));
 
-  return slowestEntries[index]?.duration;
+  return slowestEntries[index];
 }
 
 function getInteractionCount(): number {
