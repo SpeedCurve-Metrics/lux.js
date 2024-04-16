@@ -4,6 +4,8 @@ export function floor(x: number): number {
 
 export const max = Math.max;
 
+export const round = Math.round;
+
 /**
  * Clamp a number so that it is never less than 0
  */

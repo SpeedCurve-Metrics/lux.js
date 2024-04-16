@@ -7,7 +7,7 @@ import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { interactionAttributionForElement, InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
-import { clamp, floor, max, sortNumeric } from "./math";
+import { clamp, floor, max, round, sortNumeric } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import now from "./now";
@@ -159,7 +159,7 @@ LUX = (function () {
    * is the page restore time. On all other pages this value will be zero.
    */
   const getZeroTime = () =>
-    Math.max(
+    max(
       pageRestoreTime || 0,
       getNavigationEntry().activationStart,
       _getMark(START_MARK)?.startTime || 0,
@@ -708,7 +708,7 @@ LUX = (function () {
       return aValues[half];
     } else {
       // Return the average of the two middle values.
-      return Math.round((aValues[half - 1] + aValues[half]) / 2.0);
+      return round((aValues[half - 1] + aValues[half]) / 2.0);
     }
   }
 
@@ -1162,7 +1162,7 @@ LUX = (function () {
     while (i--) {
       totalParents += numParents(aElems[i]);
     }
-    const average = Math.round(totalParents / aElems.length);
+    const average = round(totalParents / aElems.length);
     return average;
   }
 
@@ -1485,7 +1485,7 @@ LUX = (function () {
       nErrors +
       "nt" +
       navigationType() +
-      (navigator.deviceMemory ? "dm" + Math.round(navigator.deviceMemory) : "") + // device memory (GB)
+      (navigator.deviceMemory ? "dm" + round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
@@ -1739,7 +1739,7 @@ LUX = (function () {
       return Number(new Date()) + "00000";
     }
 
-    return Number(new Date()) + _padLeft(String(Math.round(100000 * Math.random())), "00000");
+    return Number(new Date()) + _padLeft(String(round(100000 * Math.random())), "00000");
   }
 
   // Unique ID (also known as Session ID)
