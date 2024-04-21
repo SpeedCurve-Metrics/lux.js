@@ -56,7 +56,7 @@ export function interactionAttributionForElement(el: Element): string {
   return "";
 }
 
-function getClosestScTrackAttribute(el: Element): string | null {
+export function getClosestScTrackAttribute(el: Element): string | null {
   if (el.hasAttribute("data-sctrack")) {
     const trackId = el.getAttribute("data-sctrack")?.trim();
 

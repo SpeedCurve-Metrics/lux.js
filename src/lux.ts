@@ -3,9 +3,10 @@ import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
 import * as CustomData from "./custom-data";
 import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document";
+import { getNodeSelector } from "./dom";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
-import { interactionAttributionForElement, InteractionInfo } from "./interaction";
+import { InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
 import { clamp, floor, max, round, sortNumeric } from "./math";
 import * as CLS from "./metric/CLS";
@@ -765,7 +766,7 @@ LUX = (function () {
   function ixValues(): string {
     const aIx = [];
     for (const key in ghIx) {
-      aIx.push(key + "|" + ghIx[key as keyof InteractionInfo]);
+      aIx.push(key + "|" + encodeURIComponent(ghIx[key as keyof InteractionInfo]!));
     }
 
     return aIx.join(",");
@@ -1160,7 +1161,7 @@ LUX = (function () {
   function getINPString(details: INP.Interaction): string {
     return [
       "&INP=" + details.duration,
-      "&INPs=" + "TODO",
+      details.target ? "&INPs=" + encodeURIComponent(getNodeSelector(details.target)) : "",
       "&INPt=" + floor(details.startTime),
       "&INPi=" + floor(details.processingStart - details.startTime),
       "&INPp=" + floor(details.processingEnd - details.processingStart),
@@ -1652,7 +1653,7 @@ LUX = (function () {
       ghIx["k"] = _now();
 
       if (e && e.target instanceof Element) {
-        const trackId = interactionAttributionForElement(e.target);
+        const trackId = getNodeSelector(e.target);
         if (trackId) {
           ghIx["ki"] = trackId;
         }
@@ -1682,7 +1683,7 @@ LUX = (function () {
           ghIx["cx"] = e.clientX;
           ghIx["cy"] = e.clientY;
         }
-        const trackId = interactionAttributionForElement(target);
+        const trackId = getNodeSelector(target);
         if (trackId) {
           ghIx["ci"] = trackId;
         }

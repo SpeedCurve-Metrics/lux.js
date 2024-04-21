@@ -19,7 +19,7 @@ test.describe("LUX interaction", () => {
     expect(parseInt(ixMetrics.c)).toBeGreaterThanOrEqual(timeBeforeClick);
 
     // Click attribution
-    expect(ixMetrics.ci).toEqual("button-with-id");
+    expect(ixMetrics.ci).toEqual("#button-with-id");
 
     // Click coordinates
     expect(parseInt(ixMetrics.cx)).toBeGreaterThan(0);
@@ -39,7 +39,7 @@ test.describe("LUX interaction", () => {
     expect(parseInt(ixMetrics.k)).toBeGreaterThanOrEqual(timeBeforeKeyPress);
 
     // Key press attribution
-    expect(ixMetrics.ki).toEqual("button-with-id");
+    expect(ixMetrics.ki).toEqual("#button-with-id");
   });
 
   test("modifier keys are ignored for keypress interactions", async ({ page }) => {
@@ -108,7 +108,8 @@ test.describe("LUX interaction", () => {
       expect(allSubParts).toBeGreaterThanOrEqual(INP - 1);
       expect(allSubParts).toBeLessThanOrEqual(INP);
 
-      // const INPSelector = getSearchParam(ixBeacon, "INPs");
+      const INPSelector = getSearchParam(ixBeacon, "INPs");
+      expect(INPSelector).toEqual("#button-with-js");
     }
   });
 

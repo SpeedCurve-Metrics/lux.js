@@ -14,6 +14,7 @@ export interface Interaction {
   startTime: number;
   processingStart: number;
   processingEnd: number;
+  target: Node | null;
 }
 
 // A list of the slowest interactions
@@ -33,7 +34,7 @@ export function reset(): void {
 
 export function addEntry(entry: PerformanceEventTiming): void {
   if (entry.interactionId || (entry.entryType === "first-input" && !entryExists(entry))) {
-    const { duration, startTime, interactionId, processingStart, processingEnd } = entry;
+    const { duration, startTime, interactionId, processingStart, processingEnd, target } = entry;
     const existingEntry = slowestEntriesMap[interactionId!];
 
     if (existingEntry) {
@@ -42,6 +43,7 @@ export function addEntry(entry: PerformanceEventTiming): void {
         existingEntry.startTime = startTime;
         existingEntry.processingStart = processingStart;
         existingEntry.processingEnd = processingEnd;
+        existingEntry.target = target;
       }
     } else {
       interactionCountEstimate++;
@@ -51,6 +53,7 @@ export function addEntry(entry: PerformanceEventTiming): void {
         startTime,
         processingStart,
         processingEnd,
+        target,
       };
       slowestEntries.push(slowestEntriesMap[interactionId!]);
     }
