@@ -42,6 +42,51 @@ test.describe("LUX interaction", () => {
     expect(ixMetrics.ki).toEqual("#button-with-id");
   });
 
+  test("scroll interaction metrics are gathered", async ({ page }) => {
+    // Scroll events do not trigger the IX beacon, so we need to set LUX.auto=false and manually
+    // send the beacon.
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/interaction.html?injectScript=LUX.auto=false;");
+    const timeBeforeScroll = await getElapsedMs(page);
+    await page.locator("#scroll-anchor").scrollIntoViewIfNeeded();
+
+    // Wait for the scroll event to be processed
+    await page.waitForTimeout(50);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+
+    const beacon = luxRequests.getUrl(0)!;
+    const ixMetrics = parseNestedPairs(getSearchParam(beacon, "IX"));
+
+    // Scroll time
+    expect(parseInt(ixMetrics.s)).toBeGreaterThanOrEqual(timeBeforeScroll);
+
+    // Scroll interaction is not attributed to an element
+    expect(ixMetrics.si).toBeUndefined();
+  });
+
+  test("scroll interaction metrics are not sent if another interaction happens after scroll", async ({
+    page,
+  }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/interaction.html");
+    await luxRequests.waitForMatchingRequest();
+
+    // Wait for the scroll interaction to be processed
+    await page.locator("#scroll-anchor").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(50);
+
+    // Make a click after the scroll
+    const timeBeforeClick = await getElapsedMs(page);
+    await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-id").click());
+
+    const ixBeacon = luxRequests.getUrl(1)!;
+    const ixMetrics = parseNestedPairs(getSearchParam(ixBeacon, "IX"));
+
+    // Click time
+    expect(parseInt(ixMetrics.c)).toBeGreaterThanOrEqual(timeBeforeClick);
+    expect(ixMetrics.s).toBeUndefined();
+  });
+
   test("modifier keys are ignored for keypress interactions", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html", { waitUntil: "networkidle" });
