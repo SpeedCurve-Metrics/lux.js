@@ -1647,8 +1647,6 @@ LUX = (function () {
       return;
     }
 
-    _removeIxHandlers();
-
     if (typeof ghIx["k"] === "undefined") {
       ghIx["k"] = _now();
 
@@ -1658,14 +1656,24 @@ LUX = (function () {
           ghIx["ki"] = trackId;
         }
       }
+
+      // Only one interaction type is recorded. Scrolls are considered less important, so delete
+      // any scroll times if they exist.
+      delete ghIx["s"];
+
       _sendIxAfterDelay();
     }
+
+    _removeIxHandlers();
   }
 
   function _clickHandler(e: MouseEvent) {
-    _removeIxHandlers();
     if (typeof ghIx["c"] === "undefined") {
       ghIx["c"] = _now();
+
+      // Only one interaction type is recorded. Scrolls are considered less important, so delete
+      // any scroll times if they exist.
+      delete ghIx["s"];
 
       let target: Element | undefined;
       try {
@@ -1690,6 +1698,8 @@ LUX = (function () {
       }
       _sendIxAfterDelay();
     }
+
+    _removeIxHandlers();
   }
 
   // Wrapper to support older browsers (<= IE8)
