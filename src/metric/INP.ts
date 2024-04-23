@@ -1,3 +1,4 @@
+import { getNodeSelector } from "../dom";
 import { performance } from "../performance";
 
 /**
@@ -14,7 +15,7 @@ export interface Interaction {
   startTime: number;
   processingStart: number;
   processingEnd: number;
-  target: Node | null;
+  selector: string | null;
 }
 
 // A list of the slowest interactions
@@ -36,6 +37,7 @@ export function addEntry(entry: PerformanceEventTiming): void {
   if (entry.interactionId || (entry.entryType === "first-input" && !entryExists(entry))) {
     const { duration, startTime, interactionId, processingStart, processingEnd, target } = entry;
     const existingEntry = slowestEntriesMap[interactionId!];
+    const selector = target ? getNodeSelector(target) : null;
 
     if (existingEntry) {
       if (existingEntry.duration < duration) {
@@ -43,7 +45,7 @@ export function addEntry(entry: PerformanceEventTiming): void {
         existingEntry.startTime = startTime;
         existingEntry.processingStart = processingStart;
         existingEntry.processingEnd = processingEnd;
-        existingEntry.target = target;
+        existingEntry.selector = selector;
       }
     } else {
       interactionCountEstimate++;
@@ -53,7 +55,7 @@ export function addEntry(entry: PerformanceEventTiming): void {
         startTime,
         processingStart,
         processingEnd,
-        target,
+        selector,
       };
       slowestEntries.push(slowestEntriesMap[interactionId!]);
     }

@@ -1161,7 +1161,7 @@ LUX = (function () {
   function getINPString(details: INP.Interaction): string {
     return [
       "&INP=" + details.duration,
-      details.target ? "&INPs=" + encodeURIComponent(getNodeSelector(details.target)) : "",
+      details.selector ? "&INPs=" + encodeURIComponent(details.selector) : "",
       "&INPt=" + floor(details.startTime),
       "&INPi=" + floor(details.processingStart - details.startTime),
       "&INPp=" + floor(details.processingEnd - details.processingStart),
