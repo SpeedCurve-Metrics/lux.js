@@ -15,7 +15,7 @@
     <button id="add-speculation-rules">Add speculation rules</button>
 
     <script>
-        const nextPageUrl = "/prerender-page.html" + document.location.search;
+        const nextPageUrl = `/prerender-page.html${document.location.search}`;
         const speculationRules = document.createElement("script");
         speculationRules.type = "speculationrules";
         speculationRules.text = `

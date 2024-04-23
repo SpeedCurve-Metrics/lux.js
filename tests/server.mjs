@@ -73,7 +73,7 @@ BeaconStore.open().then(async (store) => {
       ].join(";");
 
       sendResponse(200, headers(contentType), `${preamble};${contents}`);
-    } else if (pathname == "/beacon/" || pathname == "/error/") {
+    } else if (pathname === "/beacon/" || pathname === "/error/") {
       if (req.headers.referer) {
         const referrerUrl = url.parse(req.headers.referer, true);
 
