@@ -184,13 +184,16 @@ test.describe("LUX interaction", () => {
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     await page.waitForTimeout(100);
 
-    // Note: we use force: true for the click operation because we are making assertions about the
-    // interaction time that is recorded. Setting force: true disables Playwright's accountability
-    // checks, which can add delays before the actual click operation is performed.
     const timeBeforeInit = await getElapsedMs(page);
     await page.evaluate(() => LUX.init());
     await page.waitForTimeout(20);
+
+    // Click the button to trigger an interaction, and wait for the long task to finish.
+    // Note: we use force: true for the click operation because we are making assertions about the
+    // interaction time that is recorded. Setting force: true disables Playwright's accountability
+    // checks, which can add delays before the actual click operation is performed.
     await page.locator("#button-with-js").click({ force: true });
+    await page.waitForTimeout(100);
     const timeAfterClick = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
