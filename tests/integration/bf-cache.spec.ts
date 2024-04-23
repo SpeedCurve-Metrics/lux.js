@@ -10,12 +10,12 @@ import {
 } from "../helpers/lux";
 import * as Shared from "../helpers/shared-tests";
 
-test.describe("BF cache integration", () => {
-  test.skip(
-    ({ browserName }) => browserName !== "chromium",
-    "bfcache tests only work reliably in Chromium",
-  );
+test.skip(
+  ({ browserName }) => browserName !== "chromium",
+  "bfcache tests only work reliably in Chromium",
+);
 
+test.describe("BF cache integration", () => {
   let browser: Browser, page: Page, store: BeaconStore, browserName: string;
 
   test.beforeAll(async () => {
