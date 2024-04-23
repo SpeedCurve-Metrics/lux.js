@@ -1162,10 +1162,10 @@ LUX = (function () {
     return [
       "&INP=" + details.duration,
       details.selector ? "&INPs=" + encodeURIComponent(details.selector) : "",
-      "&INPt=" + floor(details.startTime),
-      "&INPi=" + floor(details.processingStart - details.startTime),
-      "&INPp=" + floor(details.processingEnd - details.processingStart),
-      "&INPd=" + floor(details.startTime + details.duration - details.processingEnd),
+      "&INPt=" + clamp(floor(details.startTime)),
+      "&INPi=" + clamp(floor(details.processingStart - details.startTime)),
+      "&INPp=" + clamp(floor(details.processingEnd - details.processingStart)),
+      "&INPd=" + clamp(floor(details.startTime + details.duration - details.processingEnd)),
     ].join("");
   }
 
