@@ -1418,14 +1418,14 @@ LUX = (function () {
     let sIx = "";
     let INP = getINPDetails();
 
-    // It's possible that the interaction beacon has been sent before the main beacon. We don't want
-    // to send the interaction metrics twice, so we only include them here if the interaction beacon
-    // has not been sent.
+    // If we haven't already sent an interaction beacon, check for interaction metrics and include
+    // them in the main beacon.
     if (!gbIxSent) {
       sIx = ixValues();
 
       if (sIx === "") {
-        // If there are no interaction metrics, we wait to send INP with the main beacon.
+        // If there are no interaction metrics, we wait to send INP with the IX beacon to increase
+        // the chance that we capture a valid INP.
         INP = undefined;
       }
     }
