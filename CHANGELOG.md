@@ -1,10 +1,19 @@
 # lux.js changelog
 
-## 2024-??-??: v314
+## 2024-04-25: v314
+
+### New features
+
+- INP diagnostic information is now collected. This includes the INP element selector, the INP event start time, and the input delay, processing time, and presentation delay sub-parts.
 
 ### Improvements
 
 - Add `LUX.cookieDomain` to control which domain the user session cookie is stored on. This is useful for tracking user sessions across subdomains.
+- Interaction element attribution has been changed. Please see [the data-sctrack documentation](https://support.speedcurve.com/docs/rum-js-api#data-sctrack) for more information.
+
+### Bug fixes
+
+- Pages that had a scroll interaction before a click or keypress interaction will now report the click or keypress as the main interaction. Previously the scroll was being reported as the main interaction.
 
 ## 2024-02-24: v313
 
