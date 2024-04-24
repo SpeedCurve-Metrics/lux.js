@@ -3,9 +3,10 @@ import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
 import * as CustomData from "./custom-data";
 import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document";
+import { getNodeSelector } from "./dom";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
-import { interactionAttributionForElement, InteractionInfo } from "./interaction";
+import { InteractionInfo } from "./interaction";
 import Logger, { LogEvent } from "./logger";
 import { clamp, floor, max, round, sortNumeric } from "./math";
 import * as CLS from "./metric/CLS";
@@ -765,7 +766,7 @@ LUX = (function () {
   function ixValues(): string {
     const aIx = [];
     for (const key in ghIx) {
-      aIx.push(key + "|" + ghIx[key as keyof InteractionInfo]);
+      aIx.push(key + "|" + encodeURIComponent(ghIx[key as keyof InteractionInfo]!));
     }
 
     return aIx.join(",");
@@ -1139,12 +1140,33 @@ LUX = (function () {
     return undefined;
   }
 
-  function getINP(): number | undefined {
+  function getINPDetails(): INP.Interaction | undefined {
     if (!("PerformanceEventTiming" in self)) {
       return undefined;
     }
 
-    return INP.getHighPercentileINP();
+    return INP.getHighPercentileInteraction();
+  }
+
+  /**
+   * Build the query string for the INP parameters:
+   *
+   * - INP: The duration of the P98 interaction
+   * - INPs: The selector of the P98 interaction element
+   * - INPt: The timestamp of the P98 interaction start time
+   * - INPi: The input delay subpart of the P98 interaction
+   * - INPp: The processing time subpart of the P98 interaction
+   * - INPd: The presentation delay subpart of the P98 interaction
+   */
+  function getINPString(details: INP.Interaction): string {
+    return [
+      "&INP=" + details.duration,
+      details.selector ? "&INPs=" + encodeURIComponent(details.selector) : "",
+      "&INPt=" + clamp(floor(details.startTime)),
+      "&INPi=" + clamp(floor(details.processingStart - details.startTime)),
+      "&INPp=" + clamp(floor(details.processingEnd - details.processingStart)),
+      "&INPd=" + clamp(floor(details.startTime + details.duration - details.processingEnd)),
+    ].join("");
   }
 
   function getCustomerId() {
@@ -1394,16 +1416,16 @@ LUX = (function () {
     }
 
     let sIx = "";
-    let INP = getINP();
+    let INP = getINPDetails();
 
-    // It's possible that the interaction beacon has been sent before the main beacon. We don't want
-    // to send the interaction metrics twice, so we only include them here if the interaction beacon
-    // has not been sent.
+    // If we haven't already sent an interaction beacon, check for interaction metrics and include
+    // them in the main beacon.
     if (!gbIxSent) {
       sIx = ixValues();
 
       if (sIx === "") {
-        // If there are no interaction metrics, we
+        // If there are no interaction metrics, we wait to send INP with the IX beacon to increase
+        // the chance that we capture a valid INP.
         INP = undefined;
       }
     }
@@ -1491,7 +1513,8 @@ LUX = (function () {
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
       (typeof CLS !== "undefined" ? "&CLS=" + CLS : "") +
-      (typeof INP !== "undefined" ? "&INP=" + INP : "");
+      // INP and sub-parts
+      (typeof INP !== "undefined" ? getINPString(INP) : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();
@@ -1549,7 +1572,7 @@ LUX = (function () {
     }
 
     const sIx = ixValues(); // Interaction Metrics
-    const INP = getINP();
+    const INP = getINPDetails();
 
     if (sIx) {
       const beaconUrl =
@@ -1557,7 +1580,7 @@ LUX = (function () {
         "&IX=" +
         sIx +
         (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
-        (typeof INP !== "undefined" ? "&INP=" + INP : "");
+        (typeof INP !== "undefined" ? getINPString(INP) : "");
       logger.logEvent(LogEvent.InteractionBeaconSent, [beaconUrl]);
       _sendBeacon(beaconUrl);
 
@@ -1624,25 +1647,33 @@ LUX = (function () {
       return;
     }
 
-    _removeIxHandlers();
-
     if (typeof ghIx["k"] === "undefined") {
       ghIx["k"] = _now();
 
       if (e && e.target instanceof Element) {
-        const trackId = interactionAttributionForElement(e.target);
+        const trackId = getNodeSelector(e.target);
         if (trackId) {
           ghIx["ki"] = trackId;
         }
       }
+
+      // Only one interaction type is recorded. Scrolls are considered less important, so delete
+      // any scroll times if they exist.
+      delete ghIx["s"];
+
       _sendIxAfterDelay();
     }
+
+    _removeIxHandlers();
   }
 
   function _clickHandler(e: MouseEvent) {
-    _removeIxHandlers();
     if (typeof ghIx["c"] === "undefined") {
       ghIx["c"] = _now();
+
+      // Only one interaction type is recorded. Scrolls are considered less important, so delete
+      // any scroll times if they exist.
+      delete ghIx["s"];
 
       let target: Element | undefined;
       try {
@@ -1660,13 +1691,15 @@ LUX = (function () {
           ghIx["cx"] = e.clientX;
           ghIx["cy"] = e.clientY;
         }
-        const trackId = interactionAttributionForElement(target);
+        const trackId = getNodeSelector(target);
         if (trackId) {
           ghIx["ci"] = trackId;
         }
       }
       _sendIxAfterDelay();
     }
+
+    _removeIxHandlers();
   }
 
   // Wrapper to support older browsers (<= IE8)

@@ -57,14 +57,17 @@
         <span class="footer-span">Footer span</span>
     </footer>
 
+    <div style="margin-top: 2000px;">
+        <p id="scroll-anchor">This element can be scrolled to.</p>
+    </div>
+
     <script>
+        const qs = new URLSearchParams(location.search);
+        const blockFor = Number(qs.get("blockFor")) || 100;
         const events = ["mousedown", "keydown"];
 
         events.forEach((event) => {
             document.getElementById("button-with-js").addEventListener(event, () => {
-
-                const qs = new URLSearchParams(location.search);
-                const blockFor = Number(qs.get("blockFor")) || 100;
                 createLongTask(blockFor);
 
                 // Trigger a CSS transition
@@ -76,6 +79,17 @@
 
                 document.body.appendChild(el);
             }, true);
+        });
+
+        let scrolling = false;
+
+        document.addEventListener("scroll", () => {
+            if (!scrolling) {
+                createLongTask(blockFor);
+                scrolling = false;
+            }
+
+            scrolling = true;
         });
     </script>
 </body>
