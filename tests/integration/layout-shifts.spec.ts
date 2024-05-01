@@ -19,7 +19,7 @@ test.describe("LUX layout shifts", () => {
 
   test("CLS is reset between SPA page transitions", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto("/layout-shifts.html?&injectScript=LUX.auto=false;");
+    await page.goto("/layout-shifts.html?noShiftDelay&injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     let beacon = luxRequests.getUrl(0)!;

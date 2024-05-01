@@ -1,4 +1,6 @@
-import { fitUserTimingEntries } from "./beacon";
+import { Beacon, fitUserTimingEntries } from "./beacon";
+import { onLayoutStable } from "./beacon-triggers/layout-stable";
+import onPageLoad from "./beacon-triggers/page-load";
 import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
 import * as CustomData from "./custom-data";
@@ -7,13 +9,14 @@ import { getNodeSelector } from "./dom";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { InteractionInfo } from "./interaction";
+import { addListener, removeListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
 import { clamp, floor, max, round, sortNumeric } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
+import * as LCP from "./metric/LCP";
 import now from "./now";
 import {
-  msSinceNavigationStart,
   performance,
   timing,
   getEntriesByType,
@@ -23,17 +26,26 @@ import {
 import * as PO from "./performance-observer";
 import * as ST from "./server-timing";
 import scriptStartTime from "./start-marker";
+import { padStart } from "./string";
+import {
+  msSinceNavigationStart,
+  msSincePageInit,
+  getPageRestoreTime,
+  setPageRestoreTime,
+  getZeroTime,
+  processTimeMetric,
+} from "./timing";
 import { getMatchesFromPatternMap } from "./url-matcher";
+import { VERSION, versionAsFloat } from "./version";
 
 let LUX = (window.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
 
 LUX = (function () {
-  const SCRIPT_VERSION = "316";
   const logger = new Logger();
   const globalConfig = Config.fromObject(LUX);
 
-  logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION, JSON.stringify(globalConfig)]);
+  logger.logEvent(LogEvent.EvaluationStart, [VERSION, JSON.stringify(globalConfig)]);
 
   // Variable aliases that allow the minifier to reduce file size.
   const document = window.document;
@@ -43,6 +55,10 @@ LUX = (function () {
   const clearTimeout = window.clearTimeout;
   const encodeURIComponent = window.encodeURIComponent;
   const thisScript = (document.currentScript as HTMLScriptElement) || {};
+
+  onLayoutStable(5000, () => {
+    console.log("Layout has been stable for 5 seconds");
+  });
 
   // Log JS errors.
   let nErrors = 0;
@@ -63,7 +79,7 @@ LUX = (function () {
         new Image().src =
           globalConfig.errorBeaconUrl +
           "?v=" +
-          SCRIPT_VERSION +
+          versionAsFloat() +
           "&id=" +
           getCustomerId() +
           "&fn=" +
@@ -102,10 +118,30 @@ LUX = (function () {
     PO.observe("element", processAndLogEntry);
     PO.observe("paint", processAndLogEntry);
 
-    PO.observe("layout-shift", (entry) => {
-      logEntry(entry);
-      CLS.addEntry(entry);
+    PO.observe("largest-contentful-paint", (entry) => {
+      // Process the LCP entry for the legacy beacon
+      processAndLogEntry(entry);
+
+      // Process the LCP entry for the new beacon
+      LCP.processEntry(entry);
+      beacon.setMetricData("lcp", LCP.getData()!);
     });
+
+    PO.observe("layout-shift", (entry) => {
+      CLS.processEntry(entry);
+      beacon.setMetricData("cls", CLS.getData());
+      logEntry(entry);
+    });
+
+    const handleINPEntry = (entry: PerformanceEventTiming) => {
+      INP.processEntry(entry);
+
+      const data = INP.getData();
+
+      if (data) {
+        beacon.setMetricData("inp", data);
+      }
+    };
 
     PO.observe("first-input", (entry) => {
       logEntry(entry);
@@ -117,7 +153,7 @@ LUX = (function () {
       }
 
       // Allow first-input events to be considered for INP
-      INP.addEntry(entry);
+      handleINPEntry(entry);
     });
 
     // TODO: Set durationThreshold to 40 once performance.interactionCount is widely supported.
@@ -126,7 +162,7 @@ LUX = (function () {
     PO.observe(
       "event",
       (entry: PerformanceEventTiming) => {
-        INP.addEntry(entry);
+        handleINPEntry(entry);
 
         // It's useful to log the interactionId, but it is not serialised by default. Annoyingly, we
         // need to manually serialize our own object with the keys we want.
@@ -161,31 +197,25 @@ LUX = (function () {
   let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
   let gCustomDataTimeout: number | undefined; // setTimeout timer for sending a Custom data beacon after onload
   let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
-  let pageRestoreTime: number | undefined; // ms since navigationStart representing when the page was restored from the bfcache
 
-  /**
-   * To measure the way a user experienced a metric, we measure metrics relative to the time the user
-   * started viewing the page. On prerendered pages, this is activationStart. On bfcache restores, this
-   * is the page restore time. On all other pages this value will be zero.
-   */
-  const getZeroTime = () =>
-    max(
-      pageRestoreTime || 0,
-      getNavigationEntry().activationStart,
-      _getMark(START_MARK)?.startTime || 0,
-    );
+  const initPostBeacon = () => {
+    return new Beacon({
+      config: globalConfig,
+      logger,
+      customerId: getCustomerId(),
+      sessionId: gUid,
+      pageId: gSyncId,
+    });
+  };
 
-  /**
-   * Most time-based metrics that LUX reports should be relative to the "zero" marker, rounded down
-   * to the nearest unit so as not to report times in the future, and clamped to zero.
-   */
-  const processTimeMetric = (value: number) => clamp(floor(value - getZeroTime()));
+  let beacon = initPostBeacon();
 
   /**
    * Some values should only be reported if they are non-zero. The exception to this is when the page
    * was prerendered or restored from BF cache
    */
-  const shouldReportValue = (value: number) => value > 0 || pageRestoreTime || wasPrerendered();
+  const shouldReportValue = (value: number) =>
+    value > 0 || getPageRestoreTime() || wasPrerendered();
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -258,7 +288,7 @@ LUX = (function () {
     }
 
     if (bCancelable) {
-      let now = _now(true);
+      let now = msSinceNavigationStart();
       const eventTimeStamp = evt.timeStamp;
 
       if (eventTimeStamp > 1520000000) {
@@ -289,26 +319,6 @@ LUX = (function () {
   });
   ////////////////////// FID END
 
-  /**
-   * Returns the time elapsed (in ms) since navigationStart. For SPAs, returns
-   * the time elapsed since the last LUX.init call.
-   *
-   * When `absolute = true` the time is always relative to navigationStart, even
-   * in SPAs.
-   */
-  function _now(absolute?: boolean): number {
-    const sinceNavigationStart = msSinceNavigationStart();
-    const startMark = _getMark(START_MARK);
-
-    // For SPA page views, we use our internal mark as a reference point
-    if (startMark && !absolute) {
-      return floor(sinceNavigationStart - startMark.startTime);
-    }
-
-    // For "regular" page views, we can use performance.now() if it's available...
-    return sinceNavigationStart;
-  }
-
   // This is a wrapper around performance.mark that falls back to a polyfill when the User Timing
   // API isn't supported.
   function _mark(
@@ -325,7 +335,7 @@ LUX = (function () {
     if (__ENABLE_POLYFILLS) {
       const name = args[0];
       const detail = args[1]?.detail || null;
-      const startTime = args[1]?.startTime || _now();
+      const startTime = args[1]?.startTime || msSincePageInit();
 
       const entry = {
         entryType: "mark",
@@ -392,7 +402,7 @@ LUX = (function () {
     if (__ENABLE_POLYFILLS) {
       const navEntry = getNavigationEntry();
       let startTime = typeof startMarkName === "number" ? startMarkName : 0;
-      let endTime = typeof endMarkName === "number" ? endMarkName : _now();
+      let endTime = typeof endMarkName === "number" ? endMarkName : msSincePageInit();
       const throwError = (missingMark: string) => {
         throw new DOMException(
           "Failed to execute 'measure' on 'Performance': The mark '" +
@@ -699,9 +709,9 @@ LUX = (function () {
       return undefined;
     }
 
-    // The DCLS column in Redshift is REAL (FLOAT4) which stores a maximum
-    // of 6 significant digits.
-    return CLS.getCLS().toFixed(6);
+    const clsData = CLS.getData();
+
+    return clsData.value.toFixed(6);
   }
 
   // Return the median value from an array of integers.
@@ -858,6 +868,8 @@ LUX = (function () {
     nErrors = 0;
     gFirstInputDelay = undefined;
 
+    beacon = initPostBeacon();
+
     // Clear flags then set the flag that init was called (ie, this is a SPA).
     if (clearFlags) {
       gFlags = 0;
@@ -984,9 +996,9 @@ LUX = (function () {
     let ns = timing.navigationStart;
     const startMark = _getMark(START_MARK);
     const endMark = _getMark(END_MARK);
-    if (startMark && endMark && !pageRestoreTime) {
+    if (startMark && endMark && !getPageRestoreTime()) {
       // This is a SPA page view, so send the SPA marks & measures instead of Nav Timing.
-      // Note: pageRestoreTime indicates this was a bfcache restore, which we don't want to treat as a SPA.
+      // Note: getPageRestoreTime() indicates this was a bfcache restore, which we don't want to treat as a SPA.
       const start = floor(startMark.startTime); // the start mark is "zero"
       ns += start; // "navigationStart" for a SPA is the real navigationStart plus the start mark
       const end = floor(endMark.startTime) - start; // delta from start mark
@@ -1031,7 +1043,7 @@ LUX = (function () {
       let loadEventStartStr = prefixNTValue("loadEventStart", "ls", true);
       let loadEventEndStr = prefixNTValue("loadEventEnd", "le", true);
 
-      if (pageRestoreTime && startMark && endMark) {
+      if (getPageRestoreTime() && startMark && endMark) {
         // For bfcache restores, we set the load time to the time it took for the page to be restored.
         const loadTime = floor(endMark.startTime - startMark.startTime);
         loadEventStartStr = "ls" + loadTime;
@@ -1044,8 +1056,8 @@ LUX = (function () {
       s = [
         ns,
         "as" + clamp(navEntry.activationStart),
-        redirect && !pageRestoreTime ? prefixNTValue("redirectStart", "rs") : "",
-        redirect && !pageRestoreTime ? prefixNTValue("redirectEnd", "re") : "",
+        redirect && !getPageRestoreTime() ? prefixNTValue("redirectStart", "rs") : "",
+        redirect && !getPageRestoreTime() ? prefixNTValue("redirectEnd", "re") : "",
         prefixNTValue("fetchStart", "fs"),
         prefixNTValue("domainLookupStart", "ds"),
         prefixNTValue("domainLookupEnd", "de"),
@@ -1171,7 +1183,7 @@ LUX = (function () {
     return [
       "&INP=" + details.duration,
       details.selector ? "&INPs=" + encodeURIComponent(details.selector) : "",
-      "&INPt=" + clamp(floor(details.startTime)),
+      "&INPt=" + floor(details.startTime),
       "&INPi=" + clamp(floor(details.processingStart - details.startTime)),
       "&INPp=" + clamp(floor(details.processingTime)),
       "&INPd=" + clamp(floor(details.startTime + details.duration - details.processingEnd)),
@@ -1360,7 +1372,7 @@ LUX = (function () {
     gMaxMeasureTimeout = setTimeout(() => {
       gFlags = addFlag(gFlags, Flags.BeaconSentAfterTimeout);
       _sendLux();
-    }, globalConfig.maxMeasureTime - _now());
+    }, globalConfig.maxMeasureTime - msSincePageInit());
   }
 
   function clearMaxMeasureTimeout() {
@@ -1371,7 +1383,7 @@ LUX = (function () {
 
   function _getBeaconUrl(customData: CustomData.CustomDataDict) {
     const queryParams = [
-      "v=" + SCRIPT_VERSION,
+      "v=" + versionAsFloat(),
       "id=" + getCustomerId(),
       "sid=" + gSyncId,
       "uid=" + gUid,
@@ -1636,7 +1648,7 @@ LUX = (function () {
     // Note for scroll input we don't remove the handlers or send the IX beacon because we want to
     // capture click and key events as well, since these are typically more important than scrolls.
     if (typeof ghIx["s"] === "undefined") {
-      ghIx["s"] = _now();
+      ghIx["s"] = msSincePageInit();
     }
   }
 
@@ -1657,7 +1669,7 @@ LUX = (function () {
     }
 
     if (typeof ghIx["k"] === "undefined") {
-      ghIx["k"] = _now();
+      ghIx["k"] = msSincePageInit();
 
       if (e && e.target instanceof Element) {
         const trackId = getNodeSelector(e.target);
@@ -1678,7 +1690,7 @@ LUX = (function () {
 
   function _clickHandler(e: MouseEvent) {
     if (typeof ghIx["c"] === "undefined") {
-      ghIx["c"] = _now();
+      ghIx["c"] = msSincePageInit();
 
       // Only one interaction type is recorded. Scrolls are considered less important, so delete
       // any scroll times if they exist.
@@ -1711,32 +1723,13 @@ LUX = (function () {
     _removeIxHandlers();
   }
 
-  // Wrapper to support older browsers (<= IE8)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function addListener(type: string, callback: (event: any) => void, useCapture = false) {
-    if (addEventListener) {
-      addEventListener(type, callback, useCapture);
-    } else if (window.attachEvent && __ENABLE_POLYFILLS) {
-      window.attachEvent("on" + type, callback as EventListener);
-    }
-  }
-
-  // Wrapper to support older browsers (<= IE8)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function removeListener(type: string, callback: (event: any) => void, useCapture = false) {
-    if (removeEventListener) {
-      removeEventListener(type, callback, useCapture);
-    } else if (window.detachEvent && __ENABLE_POLYFILLS) {
-      window.detachEvent("on" + type, callback);
-    }
-  }
-
   function _addUnloadHandlers() {
     const onunload = () => {
       gFlags = addFlag(gFlags, Flags.BeaconSentFromUnloadHandler);
       logger.logEvent(LogEvent.UnloadHandlerTriggered);
       _sendLux();
       _sendIx();
+      beacon.send();
     };
 
     // As well as visibilitychange, we also listen for pagehide. This is really only for browsers
@@ -1781,7 +1774,7 @@ LUX = (function () {
       return Number(new Date()) + "00000";
     }
 
-    return Number(new Date()) + _padLeft(String(round(100000 * Math.random())), "00000");
+    return Number(new Date()) + padStart(String(round(100000 * Math.random())), 5, "0");
   }
 
   // Unique ID (also known as Session ID)
@@ -1893,11 +1886,6 @@ LUX = (function () {
     }
   }
 
-  // "padding" MUST be the length of the resulting string, eg, "0000" if you want a result of length 4.
-  function _padLeft(str: string, padding: string): string {
-    return (padding + str).slice(-padding.length);
-  }
-
   // Set "LUX.auto=false" to disable send results automatically and
   // instead you must call LUX.send() explicitly.
   if (globalConfig.auto) {
@@ -1910,7 +1898,7 @@ LUX = (function () {
     };
 
     const sendBeaconAfterMinimumMeasureTime = () => {
-      const elapsedTime = _now();
+      const elapsedTime = msSincePageInit();
       const timeRemaining = globalConfig.minMeasureTime - elapsedTime;
 
       if (timeRemaining <= 0) {
@@ -1919,14 +1907,8 @@ LUX = (function () {
           globalConfig.minMeasureTime,
         ]);
 
-        if (document.readyState === "complete") {
-          // If onload has already passed, send the beacon now.
-          sendBeaconWhenVisible();
-        } else {
-          // Ow, send the beacon slightly after window.onload.
-          addListener("load", () => {
-            setTimeout(sendBeaconWhenVisible, 200);
-          });
+        if (globalConfig.measureUntil === "onload") {
+          onPageLoad(sendBeaconWhenVisible);
         }
       } else {
         // Try again after the minimum measurement time has elapsed
@@ -1944,7 +1926,7 @@ LUX = (function () {
     addEventListener("pageshow", (event) => {
       if (event.persisted) {
         // Record the timestamp of the bfcache restore
-        pageRestoreTime = event.timeStamp;
+        setPageRestoreTime(event.timeStamp);
 
         // In Chromium, document.visibilityState is still "hidden" when pageshow fires after a bfcache
         // restore. Wrapping this in a setTimeout ensures the browser has enough time to update the
@@ -1954,7 +1936,7 @@ LUX = (function () {
           if (gbLuxSent) {
             // If the beacon was already sent for this page, we start a new page view and mark the
             // load time as the time it took to restore the page.
-            _init(pageRestoreTime, false);
+            _init(getPageRestoreTime(), false);
             _markLoadTime();
           }
 
@@ -2009,7 +1991,7 @@ LUX = (function () {
   globalLux.cmd = _runCommand;
 
   // Public properties
-  globalLux.version = SCRIPT_VERSION;
+  globalLux.version = VERSION;
 
   /**
    * Run a command from the command queue

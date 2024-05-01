@@ -12,6 +12,7 @@ describe("Config.fromObject()", () => {
     expect(config.label).toBeUndefined();
     expect(config.maxErrors).toEqual(5);
     expect(config.maxMeasureTime).toEqual(60_000);
+    expect(config.measureUntil).toEqual("onload");
     expect(config.minMeasureTime).toEqual(0);
     expect(config.samplerate).toEqual(100);
     expect(config.sendBeaconOnPageHidden).toEqual(true);

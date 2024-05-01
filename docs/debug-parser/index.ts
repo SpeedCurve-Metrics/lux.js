@@ -107,6 +107,29 @@ function renderOutput(output: Element) {
 
         item.appendChild(tooltip);
         output.appendChild(item);
+      } else if (event[1] === LogEvent.PostBeaconSent) {
+        const item = li(
+          `${new Intl.NumberFormat().format(timestamp)} ms: ${message} Hover to view data.`,
+        );
+        item.classList.add("tooltip-container");
+
+        let payload = args[1];
+        try {
+          payload = JSON.parse(payload);
+        } catch (e) {
+          // Ignore
+        }
+
+        const tooltip = document.createElement("div");
+        tooltip.className = "tooltip";
+        tooltip.innerHTML = `
+          <div class="tooltip-inner">
+            <pre>${JSON.stringify(payload, null, 4)}</pre>
+          </div>
+        `;
+
+        item.appendChild(tooltip);
+        output.appendChild(item);
       } else {
         output.appendChild(li(`${new Intl.NumberFormat().format(timestamp)} ms: ${message}`));
       }

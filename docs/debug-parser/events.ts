@@ -129,6 +129,28 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
 
       return message;
 
+    case LogEvent.PostBeaconInitialised:
+      return "POST beacon initialised.";
+
+    case LogEvent.PostBeaconSendCalled:
+      return "POST beacon send() called.";
+
+    case LogEvent.PostBeaconTimeoutReached:
+      return "POST beacon maximum measure timeout reached.";
+
+    case LogEvent.PostBeaconSent:
+      if (filters.includes("beaconUrl")) {
+        return `POST beacon sent: ${args[0]}`;
+      }
+
+      return "POST beacon sent.";
+
+    case LogEvent.PostBeaconAlreadySent:
+      return "POST beacon cancelled (already sent).";
+
+    case LogEvent.PostBeaconCancelled:
+      return "POST beacon cancelled.";
+
     case LogEvent.NavigationStart:
       return "";
 

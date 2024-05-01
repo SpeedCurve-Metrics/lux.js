@@ -1,4 +1,7 @@
 import { ConfigObject } from "./config";
+import Logger, { LogEvent } from "./logger";
+import { msSincePageInit } from "./timing";
+import { VERSION } from "./version";
 
 /**
  * Fit an array of user timing delimited strings into a URL and return both the entries that fit and
@@ -20,3 +23,139 @@ export function fitUserTimingEntries(utValues: string[], config: ConfigObject, u
 
   return [beaconUtValues, remainingUtValues];
 }
+
+type BeaconOptions = {
+  config: ConfigObject;
+  logger: Logger;
+  customerId: string;
+  sessionId: string;
+  pageId: string;
+};
+
+export class Beacon {
+  config: ConfigObject;
+  logger: Logger;
+  customerId: string;
+  pageId: string;
+  sessionId: string;
+  isSent = false;
+  metricData: Partial<MetricData>;
+  maxMeasureTimeout = 0;
+
+  constructor(opts: BeaconOptions) {
+    this.config = opts.config;
+    this.logger = opts.logger;
+    this.customerId = opts.customerId;
+    this.sessionId = opts.sessionId;
+    this.pageId = opts.pageId;
+    this.metricData = {};
+
+    this.maxMeasureTimeout = window.setTimeout(() => {
+      this.logger.logEvent(LogEvent.PostBeaconTimeoutReached);
+      this.send();
+    }, this.config.maxMeasureTime);
+
+    this.logger.logEvent(LogEvent.PostBeaconInitialised);
+  }
+
+  setMetricData<K extends keyof MetricData>(metric: K, data: MetricData[K]) {
+    this.metricData[metric] = data;
+  }
+
+  hasMetricData() {
+    return Object.keys(this.metricData).length > 0;
+  }
+
+  beaconUrl() {
+    return this.config.beaconUrlV2 || "https://dev.beacon.speedcurve.com/store";
+  }
+
+  send() {
+    this.logger.logEvent(LogEvent.PostBeaconSendCalled);
+
+    if (!this.hasMetricData()) {
+      // TODO: This is only required while the new beacon is supplementary. Once it's the primary
+      // beacon, we should send it regardless of how much metric data it has.
+      this.logger.logEvent(LogEvent.PostBeaconCancelled);
+      return;
+    }
+
+    if (this.isSent) {
+      this.logger.logEvent(LogEvent.PostBeaconAlreadySent);
+      return;
+    }
+
+    // Only clear the max measure timeout if there's data to send.
+    clearTimeout(this.maxMeasureTimeout);
+
+    const beaconUrl = this.beaconUrl();
+    const payload: BeaconPayload = Object.assign(
+      {
+        customerId: this.customerId,
+        measureDuration: msSincePageInit(),
+        pageId: this.pageId,
+        scriptVersion: VERSION,
+        sessionId: this.sessionId,
+      },
+      this.metricData,
+    );
+
+    navigator.sendBeacon(beaconUrl, JSON.stringify(payload));
+    this.isSent = true;
+    this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
+  }
+}
+
+type BeaconPayload = BeaconMetaData & Partial<MetricData>;
+
+type BeaconMetaData = {
+  customerId: string;
+  pageId: string;
+  sessionId: string;
+
+  /** The lux.js version that sent the beacon */
+  scriptVersion: string;
+
+  /** How long in milliseconds did this beacon capture page data for */
+  measureDuration: number;
+};
+
+export interface MetricData extends Record<string, Metric> {
+  lcp: Metric & {
+    attribution: MetricAttribution | null;
+
+    /** LCP sub-parts can be null if the LCP element was not loaded by a resource */
+    subParts: {
+      resourceLoadDelay: number | null;
+      resourceLoadTime: number | null;
+      elementRenderDelay: number | null;
+    };
+  };
+
+  inp: Metric & {
+    startTime: number;
+    attribution: (MetricAttribution & { eventType: string }) | null;
+    subParts: {
+      inputDelay: number;
+      processingTime: number;
+      presentationDelay: number;
+    };
+  };
+
+  cls: Metric & {
+    /** Largest entry can be null if there were no layout shifts (value will be 0) */
+    largestEntry: {
+      value: number;
+      startTime: number;
+    } | null;
+  };
+}
+
+type Metric = {
+  value: number;
+};
+
+type MetricAttribution = {
+  elementSelector: string;
+  elementType: string;
+};

@@ -1,6 +1,7 @@
 import { Command, LuxGlobal } from "./global";
-import { msSinceNavigationStart, performance } from "./performance";
+import { performance } from "./performance";
 import scriptStartTime from "./start-marker";
+import { msSinceNavigationStart } from "./timing";
 
 /**
  * This is the inline snippet that we ask customers to put at the top of their pages. It provides

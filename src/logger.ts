@@ -41,6 +41,14 @@ export const LogEvent: Record<string, number> = {
   // Browser support messages
   NavTimingNotSupported: 71,
   PaintTimingNotSupported: 72,
+
+  // POST beacon events
+  PostBeaconInitialised: 80,
+  PostBeaconSendCalled: 81,
+  PostBeaconTimeoutReached: 82,
+  PostBeaconSent: 83,
+  PostBeaconAlreadySent: 84,
+  PostBeaconCancelled: 85,
 };
 
 export type LogEventRecord = [number, number, ...unknown[]];

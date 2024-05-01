@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { versionAsFloat } from "../../src/version";
 import { getLuxJsStat, getSearchParam } from "../helpers/lux";
 import * as Shared from "../helpers/shared-tests";
 import RequestInterceptor from "../request-interceptor";
@@ -14,7 +15,7 @@ test.describe("Default metrics in auto mode", () => {
     expect(luxRequests.count()).toEqual(1);
 
     // LUX version is included in the beacon
-    expect(parseInt(getSearchParam(beacon, "v"))).toBeGreaterThan(200);
+    expect(getSearchParam(beacon, "v")).toEqual(versionAsFloat().toString());
 
     // customer ID is detected correctly
     expect(getSearchParam(beacon, "id")).toEqual("10001");

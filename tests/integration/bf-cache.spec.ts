@@ -29,7 +29,9 @@ test.describe("BF cache integration", () => {
   });
 
   test.afterAll(async () => {
-    await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   });
 
   test("a beacon is sent on BF cache restore when LUX.newBeaconOnPageShow=true", async () => {

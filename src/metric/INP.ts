@@ -1,4 +1,6 @@
+import { MetricData } from "../beacon";
 import { getNodeSelector } from "../dom";
+import { clamp, floor } from "../math";
 import { performance } from "../performance";
 
 /**
@@ -10,13 +12,15 @@ import { performance } from "../performance";
 const MAX_INTERACTIONS = 10;
 
 export interface Interaction {
-  interactionId: number | undefined;
   duration: number;
-  startTime: number;
-  processingTime: number;
-  processingStart: number;
+  interactionId: number | undefined;
+  name: string;
   processingEnd: number;
+  processingStart: number;
+  processingTime: number;
   selector: string | null;
+  startTime: number;
+  target: Node | null;
 }
 
 // A list of the slowest interactions
@@ -34,9 +38,10 @@ export function reset(): void {
   slowestEntriesMap = {};
 }
 
-export function addEntry(entry: PerformanceEventTiming): void {
+export function processEntry(entry: PerformanceEventTiming): void {
   if (entry.interactionId || (entry.entryType === "first-input" && !entryExists(entry))) {
-    const { duration, startTime, interactionId, processingStart, processingEnd, target } = entry;
+    const { duration, startTime, interactionId, name, processingStart, processingEnd, target } =
+      entry;
     const processingTime = processingEnd - processingStart;
     const existingEntry = slowestEntriesMap[interactionId!];
     const selector = target ? getNodeSelector(target) : null;
@@ -51,22 +56,26 @@ export function addEntry(entry: PerformanceEventTiming): void {
         // same but the processing time is longer. The logic around this is that the interaction with
         // longer processing time is likely to be the event that actually had a handler.
         existingEntry.duration = duration;
-        existingEntry.startTime = startTime;
-        existingEntry.processingStart = processingStart;
+        existingEntry.name = name;
         existingEntry.processingEnd = processingEnd;
+        existingEntry.processingStart = processingStart;
         existingEntry.processingTime = processingTime;
         existingEntry.selector = selector;
+        existingEntry.startTime = startTime;
+        existingEntry.target = target;
       }
     } else {
       interactionCountEstimate++;
       slowestEntriesMap[interactionId!] = {
         duration,
         interactionId,
-        startTime,
-        processingStart,
+        name,
         processingEnd,
+        processingStart,
         processingTime,
         selector,
+        startTime,
+        target,
       };
       slowestEntries.push(slowestEntriesMap[interactionId!]);
     }
@@ -91,6 +100,33 @@ export function getHighPercentileInteraction(): Interaction | undefined {
   const index = Math.min(slowestEntries.length - 1, Math.floor(getInteractionCount() / 50));
 
   return slowestEntries[index];
+}
+
+export function getData(): MetricData["inp"] | undefined {
+  const interaction = getHighPercentileInteraction();
+
+  if (!interaction) {
+    return undefined;
+  }
+
+  return {
+    value: interaction.duration,
+    startTime: interaction.startTime,
+    subParts: {
+      inputDelay: clamp(floor(interaction.processingStart - interaction.startTime)),
+      processingTime: clamp(floor(interaction.processingTime)),
+      presentationDelay: clamp(
+        floor(interaction.startTime + interaction.duration - interaction.processingEnd),
+      ),
+    },
+    attribution: interaction.selector
+      ? {
+          elementSelector: interaction.selector,
+          elementType: interaction.target?.nodeName || "",
+          eventType: interaction.name,
+        }
+      : null,
+  };
 }
 
 function getInteractionCount(): number {
