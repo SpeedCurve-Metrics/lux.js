@@ -67,7 +67,7 @@ function renderOutput(output: Element) {
 
         item.appendChild(tooltip);
         output.appendChild(item);
-      } else if (event[1] === LogEvent.EvaluationStart && typeof args[1] === "object") {
+      } else if (event[1] === LogEvent.EvaluationStart) {
         // Support for EvaluationStart event containing LUX config (since v313)
         const item = li(
           `${new Intl.NumberFormat().format(
@@ -76,9 +76,16 @@ function renderOutput(output: Element) {
         );
         item.classList.add("tooltip-container");
 
+        let config = args[1];
+        try {
+          config = JSON.parse(config);
+        } catch (e) {
+          // Ignore
+        }
+
         const tooltip = document.createElement("span");
         tooltip.className = "tooltip";
-        tooltip.innerHTML = `<pre>${JSON.stringify(args[1], null, 4)}</pre>`;
+        tooltip.innerHTML = `<pre>${JSON.stringify(config, null, 4)}</pre>`;
 
         item.appendChild(tooltip);
         output.appendChild(item);

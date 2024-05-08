@@ -33,7 +33,7 @@ LUX = (function () {
   const logger = new Logger();
   const globalConfig = Config.fromObject(LUX);
 
-  logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION, globalConfig]);
+  logger.logEvent(LogEvent.EvaluationStart, [SCRIPT_VERSION, JSON.stringify(globalConfig)]);
 
   // Variable aliases that allow the minifier to reduce file size.
   const document = window.document;
