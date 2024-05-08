@@ -67,7 +67,7 @@ export default [
     },
     plugins: [
       typescript({
-        include: ["docs/**", "src/**"],
+        include: ["docs/**", "src/**", "tests/helpers/lux.ts"],
         declaration: false,
       }),
     ],

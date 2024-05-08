@@ -1,3 +1,4 @@
+import { Page } from "@playwright/test";
 import * as Flags from "../../src/flags";
 
 const navigationTimingKeys = {
@@ -52,15 +53,19 @@ export function getNavTiming(
 
   const matches = getSearchParam(beacon, "NT").match(/[a-z]+[0-9]+/g);
 
+  if (!matches) {
+    return {} as Record<NavigationTimingKey, number>;
+  }
+
   return Object.fromEntries(
-    matches!.map((str) => {
+    matches.map((str) => {
       const key = str.match(/[a-z]+/)![0];
-      const name = navigationTimingKeys[key];
+      const name = navigationTimingKeys[key as keyof typeof navigationTimingKeys];
       const val = parseFloat(str.match(/\d+/)![0]);
 
       return [name, val];
     }),
-  );
+  ) as Record<NavigationTimingKey, number>;
 }
 
 export function hasFlag(beacon: URL, flag: number): boolean {
@@ -104,7 +109,7 @@ interface UserTimingItem {
 
 export function parseUserTiming(userTimingString: string): Record<string, UserTimingItem> {
   const pairs = parseNestedPairs(userTimingString);
-  const userTiming = {};
+  const userTiming: Record<string, UserTimingItem> = {};
 
   for (const [key, value] of Object.entries(pairs)) {
     if (value.indexOf("|") > -1) {
@@ -127,8 +132,9 @@ export function parseUserTiming(userTimingString: string): Record<string, UserTi
 /**
  * Gets a performance.timing value as milliseconds since navigation start
  */
-export async function getNavigationTimingMs(page, metric): Promise<number> {
+export async function getNavigationTimingMs(page: Page, metric: string): Promise<number> {
   return page.evaluate(
+    // @ts-expect-error No need for complex types here
     (metric) => Math.floor(performance.getEntriesByType("navigation")[0][metric]),
     metric,
   );
@@ -137,6 +143,6 @@ export async function getNavigationTimingMs(page, metric): Promise<number> {
 /**
  * Gets the current time as milliseconds since navigation start
  */
-export async function getElapsedMs(page): Promise<number> {
+export async function getElapsedMs(page: Page): Promise<number> {
   return await page.evaluate(() => Math.floor(performance.now()));
 }

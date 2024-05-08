@@ -1,4 +1,5 @@
 import { LogEvent, LogEventRecord } from "../../src/logger";
+import { getNavTiming } from "../../tests/helpers/lux";
 import { getMessageForEvent, isBeaconEvent } from "./events";
 import { getFilters } from "./filters";
 
@@ -56,6 +57,7 @@ function renderOutput(output: Element) {
         item.classList.add("tooltip-container");
 
         const beaconUrl = new URL(args[0]);
+        const NT = getNavTiming(beaconUrl);
         const tooltip = document.createElement("span");
         tooltip.className = "tooltip";
         tooltip.innerHTML = `
@@ -63,6 +65,11 @@ function renderOutput(output: Element) {
           <b>Hostname:</b> ${beaconUrl.searchParams.get("HN")}<br>
           <b>Path:</b> ${beaconUrl.searchParams.get("PN")}<br>
           <b>lux.js version:</b> ${beaconUrl.searchParams.get("v")}<br>
+          <hr>
+          <b>LCP:</b> ${NT.largestContentfulPaint}<br>
+          <b>CLS:</b> ${beaconUrl.searchParams.get("DCLS")}<br>
+          <b>INP:</b> ${beaconUrl.searchParams.get("INP")}<br>
+          <b>FID:</b> ${beaconUrl.searchParams.get("FID")}<br>
         `;
 
         item.appendChild(tooltip);

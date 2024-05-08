@@ -1,5 +1,13 @@
 # lux.js changelog
 
+## 2024-05-09: v315
+
+### Improvements
+
+- INP entries are now included in the debug log.
+- The config object is copied before being added to the debug log to reflect the fact that config changes after initialization have no effect.
+- The Debug Parser now shows Core Web Vitals metrics in the beacon details.
+
 ## 2024-04-25: v314
 
 ### New features
