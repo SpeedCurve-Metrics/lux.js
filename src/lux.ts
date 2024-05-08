@@ -127,12 +127,16 @@ LUX = (function () {
 
       // Allow first-input events to be considered for INP
       INP.addEntry(entry);
+      logEntry(entry);
     });
 
     // TODO: Add { durationThreshold: 40 } once performance.interactionCount is widely supported.
     // Right now we have to count every event to get the total interaction count so that we can
     // estimate a high percentile value for INP.
-    PO.observe("event", INP.addEntry);
+    PO.observe("event", (entry) => {
+      INP.addEntry(entry);
+      logEntry(entry);
+    });
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }

@@ -139,6 +139,10 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
         )}`;
       } else if (args[0].entryType === "longtask") {
         return `Received long task with duration of ${args[0].duration} ms`;
+      } else if (args[0].entryType === "event") {
+        return `Received INP entry with duration of ${args[0].duration} ms`;
+      } else if (args[0].entryType === "first-input") {
+        return `Received FID entry with duration of ${args[0].duration} ms`;
       } else if (args[0].entryType === "largest-contentful-paint") {
         return `Received LCP entry at ${args[0].startTime.toFixed()} ms`;
       } else if (args[0].entryType === "element") {
