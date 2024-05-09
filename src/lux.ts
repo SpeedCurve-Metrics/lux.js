@@ -114,11 +114,13 @@ LUX = (function () {
     PO.observe("paint", processAndLogEntry);
 
     PO.observe("layout-shift", (entry) => {
-      CLS.addEntry(entry);
       logEntry(entry);
+      CLS.addEntry(entry);
     });
 
     PO.observe("first-input", (entry) => {
+      logEntry(entry);
+
       const entryTime = (entry as PerformanceEventTiming).processingStart - entry.startTime;
 
       if (!gFirstInputDelay || gFirstInputDelay < entryTime) {
@@ -127,15 +129,18 @@ LUX = (function () {
 
       // Allow first-input events to be considered for INP
       INP.addEntry(entry);
-      logEntry(entry);
     });
 
     // TODO: Add { durationThreshold: 40 } once performance.interactionCount is widely supported.
     // Right now we have to count every event to get the total interaction count so that we can
     // estimate a high percentile value for INP.
     PO.observe("event", (entry) => {
+      // It's useful to log the interactionId, but it is not serialised by default. We need to
+      // manually add it here:
+      logEntry(
+        Object.assign({ interactionId: entry.interactionId }, JSON.parse(JSON.stringify(entry))),
+      );
       INP.addEntry(entry);
-      logEntry(entry);
     });
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
