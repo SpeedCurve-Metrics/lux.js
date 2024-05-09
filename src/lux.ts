@@ -1173,7 +1173,7 @@ LUX = (function () {
       details.selector ? "&INPs=" + encodeURIComponent(details.selector) : "",
       "&INPt=" + clamp(floor(details.startTime)),
       "&INPi=" + clamp(floor(details.processingStart - details.startTime)),
-      "&INPp=" + clamp(floor(details.processingEnd - details.processingStart)),
+      "&INPp=" + clamp(floor(details.processingTime)),
       "&INPd=" + clamp(floor(details.startTime + details.duration - details.processingEnd)),
     ].join("");
   }
