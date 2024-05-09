@@ -4,6 +4,7 @@
 
 ### Improvements
 
+- When duplicate INP entries are encountered, the one with the longest processing time is picked.
 - INP entries are now included in the debug log.
 - The config object is copied before being added to the debug log to reflect the fact that config changes after initialization have no effect.
 - The Debug Parser now shows Core Web Vitals metrics in the beacon details.

@@ -40,7 +40,16 @@ export function addEntry(entry: PerformanceEventTiming): void {
     const selector = target ? getNodeSelector(target) : null;
 
     if (existingEntry) {
-      if (existingEntry.duration < duration) {
+      const existingProcessingTime = existingEntry.processingEnd - existingEntry.processingStart;
+      const newProcessingTime = processingEnd - processingStart;
+      const longerDuration = duration > existingEntry.duration;
+      const sameWithLongerProcessingTime =
+        duration === existingEntry.duration && newProcessingTime >= existingProcessingTime;
+
+      if (longerDuration || sameWithLongerProcessingTime) {
+        // Only replace an existing interation if the duration is longer, or if the duration is the
+        // same but the processing time is longer. The logic around this is that the interaction with
+        // longer processing time is likely to be the event that actually had a handler.
         existingEntry.duration = duration;
         existingEntry.startTime = startTime;
         existingEntry.processingStart = processingStart;
