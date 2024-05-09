@@ -18,6 +18,11 @@ filterInputs.forEach((input) => {
   input.addEventListener("change", () => renderOutput(output));
 });
 
+if (input.value) {
+  // Initial render if there is already input
+  renderOutput(output);
+}
+
 function renderOutput(output: Element) {
   output.innerHTML = "";
 
@@ -58,18 +63,20 @@ function renderOutput(output: Element) {
 
         const beaconUrl = new URL(args[0]);
         const NT = getNavTiming(beaconUrl);
-        const tooltip = document.createElement("span");
+        const tooltip = document.createElement("div");
         tooltip.className = "tooltip";
         tooltip.innerHTML = `
-          <b>Page label:</b> ${beaconUrl.searchParams.get("l")}<br>
-          <b>Hostname:</b> ${beaconUrl.searchParams.get("HN")}<br>
-          <b>Path:</b> ${beaconUrl.searchParams.get("PN")}<br>
-          <b>lux.js version:</b> ${beaconUrl.searchParams.get("v")}<br>
-          <hr>
-          <b>LCP:</b> ${NT.largestContentfulPaint}<br>
-          <b>CLS:</b> ${beaconUrl.searchParams.get("DCLS")}<br>
-          <b>INP:</b> ${beaconUrl.searchParams.get("INP")}<br>
-          <b>FID:</b> ${beaconUrl.searchParams.get("FID")}<br>
+          <div class="tooltip-inner">
+            <b>Page label:</b> ${beaconUrl.searchParams.get("l")}<br>
+            <b>Hostname:</b> ${beaconUrl.searchParams.get("HN")}<br>
+            <b>Path:</b> ${beaconUrl.searchParams.get("PN")}<br>
+            <b>lux.js version:</b> ${beaconUrl.searchParams.get("v")}<br>
+            <hr>
+            <b>LCP:</b> ${NT.largestContentfulPaint}<br>
+            <b>CLS:</b> ${beaconUrl.searchParams.get("DCLS")}<br>
+            <b>INP:</b> ${beaconUrl.searchParams.get("INP")}<br>
+            <b>FID:</b> ${beaconUrl.searchParams.get("FID")}<br>
+          </div>
         `;
 
         item.appendChild(tooltip);
@@ -90,9 +97,13 @@ function renderOutput(output: Element) {
           // Ignore
         }
 
-        const tooltip = document.createElement("span");
+        const tooltip = document.createElement("div");
         tooltip.className = "tooltip";
-        tooltip.innerHTML = `<pre>${JSON.stringify(config, null, 4)}</pre>`;
+        tooltip.innerHTML = `
+          <div class="tooltip-inner">
+            <pre>${JSON.stringify(config, null, 4)}</pre>
+          </div>
+        `;
 
         item.appendChild(tooltip);
         output.appendChild(item);

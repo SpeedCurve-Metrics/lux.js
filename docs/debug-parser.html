@@ -36,6 +36,7 @@
 
         pre, code {
             font-size: 90%;
+            white-space: break-spaces;
         }
 
         textarea {
@@ -60,16 +61,22 @@
         }
 
         .tooltip {
+            transform: translateY(-100%);
+            display: none;
+            position: absolute;
+            z-index: 1;
+        }
+
+        .tooltip-inner {
             background: #777;
             border-radius: 10px;
             color: #fff;
             content: attr(data-tooltip);
-            display: none;
-            padding: 10px;
-            position: absolute;
-            transform: translateY(-110%);
+            max-height: 500px;
+            margin-bottom: 1.1rem;
             min-width: 400px;
-            z-index: 1;
+            overflow-y: auto;
+            padding: 10px;
         }
     </style>
 </head>
