@@ -8,6 +8,7 @@ export interface ConfigObject {
   cookieDomain?: string;
   customerid?: string;
   errorBeaconUrl: string;
+  interactionBeaconDelay: number;
   jspagelabel?: string;
   label?: string;
   maxBeaconUrlLength: number;
@@ -38,6 +39,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     cookieDomain: getProperty(obj, "cookieDomain"),
     customerid: getProperty(obj, "customerid"),
     errorBeaconUrl: getProperty(obj, "errorBeaconUrl", luxOrigin + "/error/"),
+    interactionBeaconDelay: getProperty(obj, "interactionBeaconDelay", 200),
     jspagelabel: getProperty(obj, "jspagelabel"),
     label: getProperty(obj, "label"),
     maxBeaconUrlLength: getProperty(obj, "maxBeaconUrlLength", 8190),

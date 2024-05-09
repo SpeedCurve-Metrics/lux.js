@@ -1564,7 +1564,7 @@ LUX = (function () {
 
   function _sendIxAfterDelay(): void {
     clearTimeout(ixTimerId);
-    ixTimerId = setTimeout(_sendIx, 100);
+    ixTimerId = setTimeout(_sendIx, globalConfig.interactionBeaconDelay);
   }
 
   // Beacon back the IX data separately (need to sync with LUX beacon on the backend).
