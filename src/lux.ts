@@ -1173,7 +1173,7 @@ LUX = (function () {
       details.selector ? "&INPs=" + encodeURIComponent(details.selector) : "",
       "&INPt=" + clamp(floor(details.startTime)),
       "&INPi=" + clamp(floor(details.processingStart - details.startTime)),
-      "&INPp=" + clamp(floor(details.processingEnd - details.processingStart)),
+      "&INPp=" + clamp(floor(details.processingTime)),
       "&INPd=" + clamp(floor(details.startTime + details.duration - details.processingEnd)),
     ].join("");
   }
@@ -1564,7 +1564,7 @@ LUX = (function () {
 
   function _sendIxAfterDelay(): void {
     clearTimeout(ixTimerId);
-    ixTimerId = setTimeout(_sendIx, 100);
+    ixTimerId = setTimeout(_sendIx, globalConfig.interactionBeaconDelay);
   }
 
   // Beacon back the IX data separately (need to sync with LUX beacon on the backend).

@@ -1,12 +1,18 @@
 # lux.js changelog
 
-## 2024-05-09: v315
+## 2024-05-??: v315
+
+### New features
+
+- Add `LUX.interactionBeaconDelay` to control how long lux.js waits before sending the interaction beacon. This defaults to 200ms, but can be increased on pages that have very slow event handlers. Increasing the delay will improve INP collection but may result in data loss if users abandon the page before the beacon is sent.
 
 ### Improvements
 
+- When duplicate INP entries are encountered, the one with the longest processing time is picked.
 - INP entries are now included in the debug log.
 - The config object is copied before being added to the debug log to reflect the fact that config changes after initialization have no effect.
 - The Debug Parser now shows Core Web Vitals metrics in the beacon details.
+- Interaction beacons have a slightly longer delay before being sent to allow for long INP entries to be picked up.
 
 ## 2024-04-25: v314
 

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as INP from "../../src/metric/INP";
+import "../../src/window.d.ts";
 
 describe("INP", () => {
   beforeEach(() => {
@@ -12,51 +13,51 @@ describe("INP", () => {
     // Create 50 interactions so that we go over the threshold for using the high percentile value
     while (interactions < 50) {
       interactions++;
-      INP.addEntry(makeEntry(interactions, 100));
+      INP.addEntry(makeEntry({ interactionId: interactions, duration: 100 }));
     }
 
     // Create duplicate event and first-input entries
-    INP.addEntry(makeEntry(60, 300, "event"));
-    INP.addEntry(makeEntry(0, 300, "first-input"));
+    INP.addEntry(makeEntry({ interactionId: 60, duration: 300 }));
+    INP.addEntry(makeEntry({ interationId: 0, duration: 300, entryType: "first-input" }));
 
     // The first-input entry should be ignored, so the high percentile value is one of the first
     // 50 interactions.
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(100);
 
     // Now create a unique first-input entry that becomes the high percentile value
-    INP.addEntry(makeEntry(61, 200, "first-input"));
+    INP.addEntry(makeEntry({ interationId: 61, duration: 200, entryType: "first-input" }));
 
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
   });
 
   test("INP is calculated correctly for small sets of interactions", () => {
-    INP.addEntry(makeEntry(1, 100));
-    INP.addEntry(makeEntry(2, 200));
-    INP.addEntry(makeEntry(3, 300));
-    INP.addEntry(makeEntry(0, 400));
+    INP.addEntry(makeEntry({ interactionId: 1, duration: 100 }));
+    INP.addEntry(makeEntry({ interactionId: 2, duration: 200 }));
+    INP.addEntry(makeEntry({ interactionId: 3, duration: 300 }));
+    INP.addEntry(makeEntry({ interactionId: 0, duration: 400 }));
 
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(300);
   });
 
   test("INP is calculated correctly for small sets of interactions with duplicate IDs", () => {
-    INP.addEntry(makeEntry(1, 100));
-    INP.addEntry(makeEntry(1, 110));
-    INP.addEntry(makeEntry(2, 200));
-    INP.addEntry(makeEntry(3, 300));
-    INP.addEntry(makeEntry(3, 290));
-    INP.addEntry(makeEntry(4, 220));
-    INP.addEntry(makeEntry(4, 200));
-    INP.addEntry(makeEntry(0, 990));
-    INP.addEntry(makeEntry(0, 400));
+    INP.addEntry(makeEntry({ interactionId: 1, duration: 100 }));
+    INP.addEntry(makeEntry({ interactionId: 1, duration: 110 }));
+    INP.addEntry(makeEntry({ interactionId: 2, duration: 200 }));
+    INP.addEntry(makeEntry({ interactionId: 3, duration: 300 }));
+    INP.addEntry(makeEntry({ interactionId: 3, duration: 290 }));
+    INP.addEntry(makeEntry({ interactionId: 4, duration: 220 }));
+    INP.addEntry(makeEntry({ interactionId: 4, duration: 200 }));
+    INP.addEntry(makeEntry({ interactionId: 0, duration: 990 }));
+    INP.addEntry(makeEntry({ interactionId: 0, duration: 400 }));
 
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(300);
   });
 
   test("INP is calculated correctly for large sets of interactions", () => {
     // Generate some long interactions
-    INP.addEntry(makeEntry(1, 600));
-    INP.addEntry(makeEntry(2, 400));
-    INP.addEntry(makeEntry(3, 200));
+    INP.addEntry(makeEntry({ interactionId: 1, duration: 600 }));
+    INP.addEntry(makeEntry({ interactionId: 2, duration: 400 }));
+    INP.addEntry(makeEntry({ interactionId: 3, duration: 200 }));
 
     let interactions = 3;
 
@@ -64,7 +65,7 @@ describe("INP", () => {
     // estimated high percentile value rather than the longest value
     while (interactions < 50) {
       interactions++;
-      INP.addEntry(makeEntry(interactions, 50));
+      INP.addEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(400);
@@ -74,7 +75,7 @@ describe("INP", () => {
     // third-slowest interaction
     while (interactions < 100) {
       interactions++;
-      INP.addEntry(makeEntry(interactions, 50));
+      INP.addEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
@@ -82,15 +83,15 @@ describe("INP", () => {
 
   test("INP is calculated correctly for large sets of interactions with duplicate IDs", () => {
     // Generate some duplicate long interactions
-    INP.addEntry(makeEntry(1, 590));
-    INP.addEntry(makeEntry(1, 600));
-    INP.addEntry(makeEntry(1, 580));
-    INP.addEntry(makeEntry(2, 400));
-    INP.addEntry(makeEntry(2, 399));
-    INP.addEntry(makeEntry(2, 390));
-    INP.addEntry(makeEntry(2, 400));
-    INP.addEntry(makeEntry(3, 200));
-    INP.addEntry(makeEntry(3, 200));
+    INP.addEntry(makeEntry({ interactionId: 1, duration: 590 }));
+    INP.addEntry(makeEntry({ interactionId: 1, duration: 600 }));
+    INP.addEntry(makeEntry({ interactionId: 1, duration: 580 }));
+    INP.addEntry(makeEntry({ interactionId: 2, duration: 400 }));
+    INP.addEntry(makeEntry({ interactionId: 2, duration: 399 }));
+    INP.addEntry(makeEntry({ interactionId: 2, duration: 390 }));
+    INP.addEntry(makeEntry({ interactionId: 2, duration: 400 }));
+    INP.addEntry(makeEntry({ interactionId: 3, duration: 200 }));
+    INP.addEntry(makeEntry({ interactionId: 3, duration: 200 }));
 
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(600);
 
@@ -100,7 +101,7 @@ describe("INP", () => {
     // estimated high percentile value rather than the longest value
     while (interactions < 50) {
       interactions++;
-      INP.addEntry(makeEntry(interactions, 50));
+      INP.addEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(400);
@@ -110,22 +111,33 @@ describe("INP", () => {
     // third-slowest interaction
     while (interactions < 100) {
       interactions++;
-      INP.addEntry(makeEntry(interactions, 50));
+      INP.addEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
     expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
   });
+
+  test("Entries with a longer processing time are preferred", () => {
+    const entry1 = makeEntry({ interactionId: 1, duration: 100 });
+    const entry2 = makeEntry({ interactionId: 1, duration: 100 });
+    entry1.processingEnd = 10;
+    entry2.processingEnd = 20;
+
+    INP.addEntry(entry1);
+    INP.addEntry(entry2);
+
+    expect(INP.getHighPercentileInteraction()!.processingEnd).toEqual(20);
+  });
 });
 
-function makeEntry(
-  interactionId: number,
-  duration: number,
-  entryType = "event",
-): PerformanceEventTiming {
+function makeEntry(props: Partial<PerformanceEventTiming>): PerformanceEventTiming {
   return {
-    interactionId,
-    duration,
-    entryType,
+    interactionId: 0,
+    duration: 0,
+    entryType: "event",
     startTime: 0,
+    processingStart: 0,
+    processingEnd: 0,
+    ...props,
   } as PerformanceEventTiming;
 }

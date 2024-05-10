@@ -13,6 +13,7 @@ export interface Interaction {
   interactionId: number | undefined;
   duration: number;
   startTime: number;
+  processingTime: number;
   processingStart: number;
   processingEnd: number;
   selector: string | null;
@@ -36,15 +37,24 @@ export function reset(): void {
 export function addEntry(entry: PerformanceEventTiming): void {
   if (entry.interactionId || (entry.entryType === "first-input" && !entryExists(entry))) {
     const { duration, startTime, interactionId, processingStart, processingEnd, target } = entry;
+    const processingTime = processingEnd - processingStart;
     const existingEntry = slowestEntriesMap[interactionId!];
     const selector = target ? getNodeSelector(target) : null;
 
     if (existingEntry) {
-      if (existingEntry.duration < duration) {
+      const longerDuration = duration > existingEntry.duration;
+      const sameWithLongerProcessingTime =
+        duration === existingEntry.duration && processingTime > existingEntry.processingTime;
+
+      if (longerDuration || sameWithLongerProcessingTime) {
+        // Only replace an existing interation if the duration is longer, or if the duration is the
+        // same but the processing time is longer. The logic around this is that the interaction with
+        // longer processing time is likely to be the event that actually had a handler.
         existingEntry.duration = duration;
         existingEntry.startTime = startTime;
         existingEntry.processingStart = processingStart;
         existingEntry.processingEnd = processingEnd;
+        existingEntry.processingTime = processingTime;
         existingEntry.selector = selector;
       }
     } else {
@@ -55,6 +65,7 @@ export function addEntry(entry: PerformanceEventTiming): void {
         startTime,
         processingStart,
         processingEnd,
+        processingTime,
         selector,
       };
       slowestEntries.push(slowestEntriesMap[interactionId!]);
