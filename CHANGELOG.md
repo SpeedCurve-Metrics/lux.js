@@ -14,6 +14,10 @@
 - The Debug Parser now shows Core Web Vitals metrics in the beacon details.
 - Interaction beacons have a slightly longer delay before being sent to allow for long INP entries to be picked up.
 
+### Bug fixes
+
+- Fixed a bug where element selector string could be too long.
+
 ## 2024-04-25: v314
 
 ### New features
