@@ -49,6 +49,10 @@ describe("DOM", () => {
               <a data-test-id="card-button" href="#" class="btn btn-primary button-WDj01iHIXvMk8o2JqJ6U button--active-yh5sBeahQ855CObtU1Lj">Go somewhere</a>
             </div>
           </div>
+
+          <a href="#" data-test-id="long-classname" class="button__link-o7s0BBmcy1Mf3HQWTasA.button--secondary-cYMyXEz7z2vOr8VwCbDg button-W3DA1Oo7vxGcpJ6GA5jg button--link-style-z69Aa_cbSolYBn8xepzH home__action-button-xwXUDBUof8sT7vrBrAwa">
+            Button/link with lots of classes
+          </a>
         </div>
       </div>
     `;
@@ -117,6 +121,13 @@ describe("DOM", () => {
     expect(cardButtonSelector.length).toBeLessThan(101);
     expect(cardButtonSelector).toEqual(
       "div.card-body>a.btn.btn-primary.button-WDj01iHIXvMk8o2JqJ6U.button--active-yh5sBeahQ855CObtU1Lj",
+    );
+
+    const longClassName = document.querySelector("[data-test-id=long-classname]")!;
+    const longClassNameSelector = DOM.getNodeSelector(longClassName);
+    expect(longClassNameSelector.length).toBeLessThan(101);
+    expect(longClassNameSelector).toEqual(
+      "div.container>a.button__link-o7s0BBmcy1Mf3HQWTasA.button--secondary-cYMyXEz7z2vOr8VwCbDg",
     );
   });
 });

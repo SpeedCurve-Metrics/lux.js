@@ -39,7 +39,13 @@ export function getNodeSelector(node: Node, selector = ""): string {
     } else {
       // Otherwise attempt to get parent elements recursively
       const name = el.nodeType === 1 ? el.nodeName.toLowerCase() : el.nodeName.toUpperCase();
-      const classes = el.className ? "." + el.className.replace(/\s+/g, ".") : "";
+      let classes = el.className ? "." + el.className.replace(/\s+/g, ".") : "";
+
+      // Remove classes until the selector is short enough
+      while ((name + classes).length > MAX_SELECTOR_LENGTH) {
+        classes = classes.split(".").slice(0, -1).join(".");
+      }
+
       const currentSelector = name + classes + (selector ? ">" + selector : "");
 
       if (el.parentNode) {
