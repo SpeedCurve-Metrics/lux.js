@@ -1,6 +1,13 @@
 # lux.js changelog
 
-## 2024-05-??: v315
+## 2024-05-15: v316
+
+### Bug fixes
+
+- Prevent "Converting circular structure to JSON" errors when some INP events are received.
+- Prevent trying to access `nodeName` on `null` values.
+
+## 2024-05-15: v315
 
 ### New features
 
