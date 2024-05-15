@@ -50,8 +50,12 @@ describe("DOM", () => {
             </div>
           </div>
 
-          <a href="#" data-test-id="long-classname" class="button__link-o7s0BBmcy1Mf3HQWTasA.button--secondary-cYMyXEz7z2vOr8VwCbDg button-W3DA1Oo7vxGcpJ6GA5jg button--link-style-z69Aa_cbSolYBn8xepzH home__action-button-xwXUDBUof8sT7vrBrAwa">
-            Button/link with lots of classes
+          <a href="#" data-test-id="many-classnames" class="button__link-o7s0BBmcy1Mf3HQWTasA button--secondary-cYMyXEz7z2vOr8VwCbDg button-W3DA1Oo7vxGcpJ6GA5jg button--link-style-z69Aa_cbSolYBn8xepzH home__action-button-xwXUDBUof8sT7vrBrAwa">
+            Anchor with many classes
+          </a>
+
+          <a href="#" data-test-id="long-classname" class="button__link-o7s0BBmcy1Mf3HQWTasA_-_button--secondary-cYMyXEz7z2vOr8VwCbDg_-_button-W3DA1Oo7vxGcpJ6GA5jg_-_button--link-style-z69Aa_cbSolYBn8xepzH_-_home__action-button-xwXUDBUof8sT7vrBrAwa">
+            Anchor with a long classname
           </a>
         </div>
       </div>
@@ -123,11 +127,33 @@ describe("DOM", () => {
       "div.card-body>a.btn.btn-primary.button-WDj01iHIXvMk8o2JqJ6U.button--active-yh5sBeahQ855CObtU1Lj",
     );
 
+    const manyClassNames = document.querySelector("[data-test-id=many-classnames]")!;
+    const manyClassNamesSelector = DOM.getNodeSelector(manyClassNames);
+    expect(manyClassNamesSelector.length).toBeLessThan(101);
+    expect(manyClassNamesSelector).toEqual(
+      "div.container>a.button__link-o7s0BBmcy1Mf3HQWTasA.button--secondary-cYMyXEz7z2vOr8VwCbDg",
+    );
+
     const longClassName = document.querySelector("[data-test-id=long-classname]")!;
     const longClassNameSelector = DOM.getNodeSelector(longClassName);
     expect(longClassNameSelector.length).toBeLessThan(101);
     expect(longClassNameSelector).toEqual(
-      "div.container>a.button__link-o7s0BBmcy1Mf3HQWTasA.button--secondary-cYMyXEz7z2vOr8VwCbDg",
+      "html>body>div.body-wrapper-y4195VjkmAgT5ZVvGD0Q>div.container>a",
     );
+  });
+
+  test(".getNodeSelector() when the node is removed", () => {
+    document.body.innerHTML = `
+      <div class="body-wrapper-y4195VjkmAgT5ZVvGD0Q">
+        <div class="container">
+          <button class="btn btn-primary">Click me</button>
+        </div>
+      </div>
+    `;
+
+    const button = document.querySelector("button")!;
+    button.remove();
+    const buttonSelector = DOM.getNodeSelector(button);
+    expect(buttonSelector).toEqual("button.btn.btn-primary");
   });
 });
