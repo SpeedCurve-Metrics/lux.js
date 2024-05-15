@@ -36,7 +36,7 @@ export function getNodeSelector(node: Node, selector = ""): string {
     if (el.id) {
       // Once we've found an element with ID we return the selector.
       return "#" + el.id + (selector ? ">" + selector : "");
-    } else {
+    } else if (el) {
       // Otherwise attempt to get parent elements recursively
       const name = el.nodeType === 1 ? el.nodeName.toLowerCase() : el.nodeName.toUpperCase();
       let classes = el.className ? "." + el.className.replace(/\s+/g, ".") : "";
