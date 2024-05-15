@@ -86,12 +86,12 @@ LUX = (function () {
   }
   addEventListener("error", errorHandler);
 
-  const logEntry = (entry: PerformanceEntry) => {
+  const logEntry = <T extends PerformanceEntry>(entry: T) => {
     logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
   };
 
   // Most PerformanceEntry types we log an event for and add it to the global entry store.
-  const processAndLogEntry = (entry: PerformanceEntry) => {
+  const processAndLogEntry = <T extends PerformanceEntry>(entry: T) => {
     PO.addEntry(entry);
     logEntry(entry);
   };
@@ -134,13 +134,20 @@ LUX = (function () {
     // TODO: Add { durationThreshold: 40 } once performance.interactionCount is widely supported.
     // Right now we have to count every event to get the total interaction count so that we can
     // estimate a high percentile value for INP.
-    PO.observe("event", (entry) => {
-      // It's useful to log the interactionId, but it is not serialised by default. We need to
-      // manually add it here:
-      logEntry(
-        Object.assign({ interactionId: entry.interactionId }, JSON.parse(JSON.stringify(entry))),
-      );
+    PO.observe("event", (entry: PerformanceEventTiming) => {
       INP.addEntry(entry);
+
+      // It's useful to log the interactionId, but it is not serialised by default. Annoyingly, we
+      // need to manually serialize our own object with the keys we want.
+      logEntry({
+        interactionId: entry.interactionId,
+        name: entry.name,
+        entryType: entry.entryType,
+        startTime: entry.startTime,
+        duration: entry.duration,
+        processingStart: entry.processingStart,
+        processingEnd: entry.processingEnd,
+      } as PerformanceEventTiming);
     });
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
