@@ -64,7 +64,7 @@
     <script>
         const qs = new URLSearchParams(location.search);
         const blockFor = Number(qs.get("blockFor")) || 100;
-        const events = ["mousedown", "keydown"];
+        const events = ["pointerdown", "keydown"];
 
         events.forEach((event) => {
             document.getElementById("button-with-js").addEventListener(event, () => {
