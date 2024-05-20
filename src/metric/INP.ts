@@ -42,11 +42,20 @@ export function addEntry(entry: PerformanceEventTiming): void {
     const selector = target ? getNodeSelector(target) : null;
 
     if (existingEntry) {
+      console.log("Existing interaction", {
+        name: entry.name,
+        interactionId: entry.interactionId,
+        duration: entry.duration,
+      });
       const longerDuration = duration > existingEntry.duration;
       const sameWithLongerProcessingTime =
         duration === existingEntry.duration && processingTime > existingEntry.processingTime;
 
       if (longerDuration || sameWithLongerProcessingTime) {
+        console.log("Replacing existing interaction", {
+          longerDuration,
+          sameWithLongerProcessingTime,
+        });
         // Only replace an existing interation if the duration is longer, or if the duration is the
         // same but the processing time is longer. The logic around this is that the interaction with
         // longer processing time is likely to be the event that actually had a handler.
@@ -56,8 +65,15 @@ export function addEntry(entry: PerformanceEventTiming): void {
         existingEntry.processingEnd = processingEnd;
         existingEntry.processingTime = processingTime;
         existingEntry.selector = selector;
+      } else {
+        console.log("Ignoring this interaction");
       }
     } else {
+      console.log("New interaction", {
+        name: entry.name,
+        interactionId: entry.interactionId,
+        duration: entry.duration,
+      });
       interactionCountEstimate++;
       slowestEntriesMap[interactionId!] = {
         duration,
@@ -93,10 +109,14 @@ export function getHighPercentileInteraction(): Interaction | undefined {
   return slowestEntries[index];
 }
 
-function getInteractionCount(): number {
+export function getInteractionCount(): number {
   if ("interactionCount" in performance) {
     return performance.interactionCount;
   }
 
   return interactionCountEstimate;
+}
+
+export function getSlowestEntries() {
+  return slowestEntries;
 }
