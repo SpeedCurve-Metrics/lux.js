@@ -4,8 +4,8 @@ import scriptStartTime from "./start-marker";
 
 /**
  * This is the inline snippet that we ask customers to put at the top of their pages. It provides
- * polyfills for performance.mark/measure, registers a PerformanceObserver and error handler, and
- * allows LUX functions to be called before the full script is loaded.
+ * polyfills for performance.mark/measure, registers an error handler, and allows LUX functions
+ * to be called before the full script is loaded.
  */
 // eslint-disable-next-line no-var
 declare var LUX: LuxGlobal;
