@@ -131,24 +131,28 @@ LUX = (function () {
       INP.addEntry(entry);
     });
 
-    // TODO: Add { durationThreshold: 40 } once performance.interactionCount is widely supported.
+    // TODO: Set durationThreshold to 40 once performance.interactionCount is widely supported.
     // Right now we have to count every event to get the total interaction count so that we can
     // estimate a high percentile value for INP.
-    PO.observe("event", (entry: PerformanceEventTiming) => {
-      INP.addEntry(entry);
+    PO.observe(
+      "event",
+      (entry: PerformanceEventTiming) => {
+        INP.addEntry(entry);
 
-      // It's useful to log the interactionId, but it is not serialised by default. Annoyingly, we
-      // need to manually serialize our own object with the keys we want.
-      logEntry({
-        interactionId: entry.interactionId,
-        name: entry.name,
-        entryType: entry.entryType,
-        startTime: entry.startTime,
-        duration: entry.duration,
-        processingStart: entry.processingStart,
-        processingEnd: entry.processingEnd,
-      } as PerformanceEventTiming);
-    });
+        // It's useful to log the interactionId, but it is not serialised by default. Annoyingly, we
+        // need to manually serialize our own object with the keys we want.
+        logEntry({
+          interactionId: entry.interactionId,
+          name: entry.name,
+          entryType: entry.entryType,
+          startTime: entry.startTime,
+          duration: entry.duration,
+          processingStart: entry.processingStart,
+          processingEnd: entry.processingEnd,
+        } as PerformanceEventTiming);
+      },
+      { durationThreshold: 0 },
+    );
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
