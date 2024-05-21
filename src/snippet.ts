@@ -78,23 +78,3 @@ window.addEventListener("error", function (e) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   window.LUX_ae!.push(e);
 });
-
-// Initialize Long Task observer ASAP
-window.LUX_al = [];
-if (typeof PerformanceObserver === "function" && typeof PerformanceLongTaskTiming === "function") {
-  const LongTaskObserver = new PerformanceObserver(function (list) {
-    // Keep an array of perf objects to process later.
-    const perfEntries = list.getEntries();
-    for (let i = 0; i < perfEntries.length; i++) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      window.LUX_al!.push(perfEntries[i]);
-    }
-  });
-  try {
-    // Only track Long Tasks in the snippet because there is no way to
-    // get them after-the-fact ("buffered" is not supported for LongTasks).
-    LongTaskObserver.observe({ type: "longtask" });
-  } catch (e) {
-    // Silently ignore errors
-  }
-}
