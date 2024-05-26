@@ -50,9 +50,11 @@ export function getData(): MetricData["lcp"] | undefined {
   return {
     value: processTimeMetric(lcpEntry.startTime),
     subParts: { resourceLoadDelay, resourceLoadTime, elementRenderDelay },
-    attribution: {
-      elementSelector: getNodeSelector(lcpEntry.element),
-      elementType: lcpEntry.element.nodeName,
-    },
+    attribution: lcpEntry.element
+      ? {
+          elementSelector: getNodeSelector(lcpEntry.element),
+          elementType: lcpEntry.element.nodeName,
+        }
+      : null,
   };
 }
