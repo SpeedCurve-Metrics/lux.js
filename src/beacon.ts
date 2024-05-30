@@ -126,10 +126,10 @@ export interface MetricData extends Record<string, Metric> {
 
     /** LCP sub-parts can be null if the LCP element was not loaded by a resource */
     subParts: {
-      resourceLoadDelay: number | null;
-      resourceLoadTime: number | null;
-      elementRenderDelay: number | null;
-    };
+      resourceLoadDelay: number;
+      resourceLoadTime: number;
+      elementRenderDelay: number;
+    } | null;
   };
 
   inp: Metric & {

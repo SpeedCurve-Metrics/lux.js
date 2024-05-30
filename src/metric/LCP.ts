@@ -21,9 +21,7 @@ export function getData(): MetricData["lcp"] | undefined {
     return undefined;
   }
 
-  let resourceLoadDelay: number | null = null;
-  let resourceLoadTime: number | null = null;
-  let elementRenderDelay: number | null = null;
+  let subParts = null;
 
   if (lcpEntry.url) {
     const lcpResource = performance
@@ -41,15 +39,17 @@ export function getData(): MetricData["lcp"] | undefined {
       const lcpResponseEnd = Math.max(lcpRequestStart, lcpResource.responseEnd - activationStart);
       const lcpRenderTime = Math.max(lcpResponseEnd, lcpStartTime - activationStart);
 
-      resourceLoadDelay = clamp(floor(lcpRequestStart - ttfb));
-      resourceLoadTime = clamp(floor(lcpResponseEnd - lcpRequestStart));
-      elementRenderDelay = clamp(floor(lcpRenderTime - lcpResponseEnd));
+      subParts = {
+        resourceLoadDelay: clamp(floor(lcpRequestStart - ttfb)),
+        resourceLoadTime: clamp(floor(lcpResponseEnd - lcpRequestStart)),
+        elementRenderDelay: clamp(floor(lcpRenderTime - lcpResponseEnd)),
+      };
     }
   }
 
   return {
     value: processTimeMetric(lcpEntry.startTime),
-    subParts: { resourceLoadDelay, resourceLoadTime, elementRenderDelay },
+    subParts,
     attribution: lcpEntry.element
       ? {
           elementSelector: getNodeSelector(lcpEntry.element),
