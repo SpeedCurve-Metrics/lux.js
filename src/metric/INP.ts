@@ -111,7 +111,7 @@ export function getData(): MetricData["inp"] | undefined {
 
   return {
     value: interaction.duration,
-    startTime: interaction.startTime,
+    startTime: floor(interaction.startTime),
     subParts: {
       inputDelay: clamp(floor(interaction.processingStart - interaction.startTime)),
       processingTime: clamp(floor(interaction.processingTime)),
