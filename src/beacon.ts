@@ -48,6 +48,7 @@ export class Beacon {
   customerId: string;
   pageId: string;
   sessionId: string;
+  isRecording = true;
   isSent = false;
   metricData: Partial<MetricData>;
   maxMeasureTimeout = 0;
@@ -62,13 +63,24 @@ export class Beacon {
 
     this.maxMeasureTimeout = window.setTimeout(() => {
       this.logger.logEvent(LogEvent.PostBeaconTimeoutReached);
+      this.stopRecording();
       this.send();
     }, this.config.maxMeasureTime);
 
     this.logger.logEvent(LogEvent.PostBeaconInitialised);
   }
 
+  stopRecording() {
+    this.isRecording = false;
+    this.logger.logEvent(LogEvent.PostBeaconStopRecording);
+  }
+
   setMetricData<K extends keyof MetricData>(metric: K, data: MetricData[K]) {
+    if (!this.isRecording) {
+      this.logger.logEvent(LogEvent.PostBeaconMetricRejected, [metric]);
+      return;
+    }
+
     this.metricData[metric] = data;
   }
 
