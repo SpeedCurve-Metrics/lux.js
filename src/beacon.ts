@@ -3,6 +3,16 @@ import Logger, { LogEvent } from "./logger";
 import { msSincePageInit } from "./timing";
 import { VERSION } from "./version";
 
+const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("content-type", "application/json");
+  xhr.send(String(data));
+};
+
+const sendBeacon =
+  "sendBeacon" in navigator ? navigator.sendBeacon.bind(navigator) : sendBeaconFallback;
+
 /**
  * Fit an array of user timing delimited strings into a URL and return both the entries that fit and
  * the remaining entries that didn't fit.
@@ -100,7 +110,7 @@ export class Beacon {
       this.metricData,
     );
 
-    navigator.sendBeacon(beaconUrl, JSON.stringify(payload));
+    sendBeacon(beaconUrl, JSON.stringify(payload));
     this.isSent = true;
     this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
   }
