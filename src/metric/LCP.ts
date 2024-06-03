@@ -1,6 +1,6 @@
 import { MetricData } from "../beacon";
 import { getNodeSelector } from "../dom";
-import { clamp, floor } from "../math";
+import { clamp, floor, max } from "../math";
 import { getNavigationEntry, timing } from "../performance";
 import { processTimeMetric } from "../timing";
 
@@ -32,12 +32,12 @@ export function getData(): MetricData["lcp"] | undefined {
       const navEntry = getNavigationEntry();
       const responseStart = navEntry.responseStart || timing.responseStart;
       const activationStart = navEntry.activationStart;
-      const ttfb = Math.max(0, responseStart - activationStart);
+      const ttfb = max(0, responseStart - activationStart);
 
       const lcpStartTime = lcpResource.startTime;
       const lcpRequestStart = (lcpResource.requestStart || lcpStartTime) - activationStart;
-      const lcpResponseEnd = Math.max(lcpRequestStart, lcpResource.responseEnd - activationStart);
-      const lcpRenderTime = Math.max(lcpResponseEnd, lcpStartTime - activationStart);
+      const lcpResponseEnd = max(lcpRequestStart, lcpResource.responseEnd - activationStart);
+      const lcpRenderTime = max(lcpResponseEnd, lcpStartTime - activationStart);
 
       subParts = {
         resourceLoadDelay: clamp(floor(lcpRequestStart - ttfb)),
