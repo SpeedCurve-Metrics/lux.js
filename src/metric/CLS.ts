@@ -1,5 +1,6 @@
 import { MetricData } from "../beacon";
-import { floor, max } from "../math";
+import { max } from "../math";
+import { processTimeMetric } from "../timing";
 
 let sessionValue = 0;
 let sessionEntries: LayoutShift[] = [];
@@ -41,12 +42,11 @@ export function reset(): void {
 
 export function getData(): MetricData["cls"] {
   return {
-    // CLS is stored as REAL (FLOAT4) which represents a maximum of 6 significant digits
     value: maximumSessionValue,
     largestEntry: largestEntry
       ? {
           value: largestEntry.value,
-          startTime: floor(largestEntry.startTime),
+          startTime: processTimeMetric(largestEntry.startTime),
         }
       : null,
   };

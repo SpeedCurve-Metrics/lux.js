@@ -2,6 +2,7 @@ import { MetricData } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor } from "../math";
 import { performance } from "../performance";
+import { processTimeMetric } from "../timing";
 
 /**
  * This implementation is based on the web-vitals implementation, however it is stripped back to the
@@ -111,7 +112,7 @@ export function getData(): MetricData["inp"] | undefined {
 
   return {
     value: interaction.duration,
-    startTime: floor(interaction.startTime),
+    startTime: processTimeMetric(interaction.startTime),
     subParts: {
       inputDelay: clamp(floor(interaction.processingStart - interaction.startTime)),
       processingTime: clamp(floor(interaction.processingTime)),
