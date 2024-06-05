@@ -165,13 +165,20 @@ export interface MetricData extends Record<string, Metric> {
   };
 
   cls: Metric & {
+    startTime: number | null;
     /** Largest entry can be null if there were no layout shifts (value will be 0) */
     largestEntry: {
       value: number;
       startTime: number;
     } | null;
+    sources: CLSAttribution[];
   };
 }
+
+type CLSAttribution = MetricAttribution & {
+  value: number;
+  startTime: number;
+};
 
 type Metric = {
   value: number;

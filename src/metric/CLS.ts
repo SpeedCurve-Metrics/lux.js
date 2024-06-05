@@ -1,9 +1,11 @@
 import { MetricData } from "../beacon";
+import { getNodeSelector } from "../dom";
 import { max } from "../math";
 import { processTimeMetric } from "../timing";
 
 let sessionValue = 0;
 let sessionEntries: LayoutShift[] = [];
+let sessionAttributions: MetricData["cls"]["sources"] = [];
 let largestEntry: LayoutShift | undefined;
 let maximumSessionValue = 0;
 
@@ -11,6 +13,14 @@ export function processEntry(entry: LayoutShift): void {
   if (!entry.hadRecentInput) {
     const firstEntry = sessionEntries[0];
     const latestEntry = sessionEntries[sessionEntries.length - 1];
+    const sources = entry.sources
+      .filter((source) => source.node)
+      .map((source) => ({
+        value: entry.value,
+        startTime: processTimeMetric(entry.startTime),
+        elementSelector: getNodeSelector(source.node!),
+        elementType: source.node!.nodeName,
+      }));
 
     if (
       sessionEntries.length &&
@@ -19,10 +29,12 @@ export function processEntry(entry: LayoutShift): void {
     ) {
       sessionValue = entry.value;
       sessionEntries = [entry];
+      sessionAttributions = sources;
       largestEntry = entry;
     } else {
       sessionValue += entry.value;
       sessionEntries.push(entry);
+      sessionAttributions = sessionAttributions.concat(sources);
 
       if (!largestEntry || entry.value > largestEntry.value) {
         largestEntry = entry;
@@ -43,11 +55,13 @@ export function reset(): void {
 export function getData(): MetricData["cls"] {
   return {
     value: maximumSessionValue,
+    startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0].startTime) : null,
     largestEntry: largestEntry
       ? {
           value: largestEntry.value,
           startTime: processTimeMetric(largestEntry.startTime),
         }
       : null,
+    sources: sessionAttributions,
   };
 }
