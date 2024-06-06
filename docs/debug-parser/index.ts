@@ -130,7 +130,9 @@ function renderOutput(output: Element) {
         if (measureTime < 1000) {
           output.appendChild(
             li(
-              `${new Intl.NumberFormat().format(timestamp)} ms: ⚠️ Data was gathered for less than 1 second. Consider increasing the value of LUX.minMeasureTime.`,
+              `${new Intl.NumberFormat().format(
+                timestamp,
+              )} ms: ⚠️ Data was gathered for less than 1 second. Consider increasing the value of LUX.minMeasureTime.`,
             ),
           );
         }
@@ -144,7 +146,9 @@ function renderOutput(output: Element) {
         if (nextEvent[1] !== LogEvent.PerformanceEntryReceived) {
           output.appendChild(
             li(
-              `${new Intl.NumberFormat().format(timestamp)} ms: ⚠️ Performance entries were received after the beacon was sent.`,
+              `${new Intl.NumberFormat().format(
+                timestamp,
+              )} ms: ⚠️ Performance entries were received after the beacon was sent.`,
             ),
           );
         }
