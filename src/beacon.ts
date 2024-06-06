@@ -171,11 +171,11 @@ export interface MetricData extends Record<string, Metric> {
       value: number;
       startTime: number;
     } | null;
-    sources: CLSAttribution[];
+    sources: CLSAttribution[] | null;
   };
 }
 
-type CLSAttribution = MetricAttribution & {
+export type CLSAttribution = MetricAttribution & {
   value: number;
   startTime: number;
 };

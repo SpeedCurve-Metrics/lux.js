@@ -1,11 +1,11 @@
-import { MetricData } from "../beacon";
+import { CLSAttribution, MetricData } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { max } from "../math";
 import { processTimeMetric } from "../timing";
 
 let sessionValue = 0;
 let sessionEntries: LayoutShift[] = [];
-let sessionAttributions: MetricData["cls"]["sources"] = [];
+let sessionAttributions: CLSAttribution[] = [];
 let largestEntry: LayoutShift | undefined;
 let maximumSessionValue = 0;
 
@@ -62,6 +62,6 @@ export function getData(): MetricData["cls"] {
           startTime: processTimeMetric(largestEntry.startTime),
         }
       : null,
-    sources: sessionAttributions,
+    sources: sessionAttributions.length ? sessionAttributions : null,
   };
 }
