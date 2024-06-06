@@ -163,6 +163,10 @@ LUX = (function () {
   let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
   let pageRestoreTime: number | undefined; // ms since navigationStart representing when the page was restored from the bfcache
 
+  // Storing the customer ID in a local variable makes it possible to run multiple instances of lux.js
+  // on the same page.
+  let _thisCustomerId = LUX.customerid;
+
   /**
    * To measure the way a user experienced a metric, we measure metrics relative to the time the user
    * started viewing the page. On prerendered pages, this is activationStart. On bfcache restores, this
@@ -1179,11 +1183,11 @@ LUX = (function () {
   }
 
   function getCustomerId() {
-    if (!LUX.customerid) {
-      LUX.customerid = thisScript.src.match(/id=(\d+)/)!.pop();
+    if (!_thisCustomerId) {
+      _thisCustomerId = thisScript.src.match(/id=(\d+)/)!.pop();
     }
 
-    return LUX.customerid || "";
+    return _thisCustomerId || "";
   }
 
   function avgDomDepth() {
