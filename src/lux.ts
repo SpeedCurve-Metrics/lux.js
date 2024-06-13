@@ -1971,6 +1971,7 @@ LUX = (function () {
   globalLux.markLoadTime = _markLoadTime;
   globalLux.send = () => {
     logger.logEvent(LogEvent.SendCalled);
+    beacon.send();
     _sendLux();
   };
   globalLux.addData = _addData;
