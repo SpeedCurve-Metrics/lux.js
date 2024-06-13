@@ -102,6 +102,34 @@ LUX = (function () {
   }
   addEventListener("error", errorHandler);
 
+  // Bitmask of flags for this session & page
+  let gFlags = 0;
+
+  const gaMarks: PerformanceEntryList = [];
+  const gaMeasures: PerformanceEntryList = [];
+  let ghIx: InteractionInfo = {}; // hash for Interaction Metrics (scroll, click, keyboard)
+  let gbLuxSent = 0; // have we sent the LUX data? (avoid sending twice in unload)
+  let gbNavSent = 0; // have we sent the Nav Timing beacon yet? (avoid sending twice for SPA)
+  let gbIxSent = 0; // have we sent the IX data? (avoid sending twice for SPA)
+  let gbFirstPV = 1; // this is the first page view (vs. a SPA "soft nav")
+  const gSessionTimeout = 30 * 60; // number of seconds after which we consider a session to have "timed out" (used for calculating bouncerate)
+  let gSyncId = createSyncId(); // if we send multiple beacons, use this to sync them (eg, LUX & IX) (also called "luxid")
+  let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
+  let gCustomDataTimeout: number | undefined; // setTimeout timer for sending a Custom data beacon after onload
+  let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
+
+  const initPostBeacon = () => {
+    return new Beacon({
+      config: globalConfig,
+      logger,
+      customerId: getCustomerId(),
+      sessionId: gUid,
+      pageId: gSyncId,
+    });
+  };
+
+  let beacon = initPostBeacon();
+
   const logEntry = <T extends PerformanceEntry>(entry: T) => {
     logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
   };
@@ -181,34 +209,6 @@ LUX = (function () {
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
-
-  // Bitmask of flags for this session & page
-  let gFlags = 0;
-
-  const gaMarks: PerformanceEntryList = [];
-  const gaMeasures: PerformanceEntryList = [];
-  let ghIx: InteractionInfo = {}; // hash for Interaction Metrics (scroll, click, keyboard)
-  let gbLuxSent = 0; // have we sent the LUX data? (avoid sending twice in unload)
-  let gbNavSent = 0; // have we sent the Nav Timing beacon yet? (avoid sending twice for SPA)
-  let gbIxSent = 0; // have we sent the IX data? (avoid sending twice for SPA)
-  let gbFirstPV = 1; // this is the first page view (vs. a SPA "soft nav")
-  const gSessionTimeout = 30 * 60; // number of seconds after which we consider a session to have "timed out" (used for calculating bouncerate)
-  let gSyncId = createSyncId(); // if we send multiple beacons, use this to sync them (eg, LUX & IX) (also called "luxid")
-  let gUid = refreshUniqueId(gSyncId); // cookie for this session ("Unique ID")
-  let gCustomDataTimeout: number | undefined; // setTimeout timer for sending a Custom data beacon after onload
-  let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
-
-  const initPostBeacon = () => {
-    return new Beacon({
-      config: globalConfig,
-      logger,
-      customerId: getCustomerId(),
-      sessionId: gUid,
-      pageId: gSyncId,
-    });
-  };
-
-  let beacon = initPostBeacon();
 
   /**
    * Some values should only be reported if they are non-zero. The exception to this is when the page
