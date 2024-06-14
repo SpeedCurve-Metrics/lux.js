@@ -1,5 +1,6 @@
 import { ConfigObject } from "./config";
 import Logger, { LogEvent } from "./logger";
+import { NavigationTimingData } from "./metric/navigation-timing";
 import { getZeroTime, msSincePageInit } from "./timing";
 import { VERSION } from "./version";
 
@@ -212,29 +213,4 @@ type Metric = {
 type MetricAttribution = {
   elementSelector: string;
   elementType: string;
-};
-
-export type NavigationTimingData = {
-  activationStart: number;
-  connectEnd?: number;
-  connectStart?: number;
-  decodedBodySize?: number;
-  domainLookupEnd?: number;
-  domainLookupStart?: number;
-  domComplete?: number;
-  domContentLoadedEventEnd?: number;
-  domContentLoadedEventStart?: number;
-  domInteractive?: number;
-  encodedBodySize?: number;
-  fetchStart?: number;
-  loadEventEnd?: number;
-  loadEventStart?: number;
-  redirectCount?: number;
-  redirectEnd?: number;
-  redirectStart?: number;
-  requestStart?: number;
-  responseEnd?: number;
-  responseStart?: number;
-  secureConnectionStart?: number;
-  transferSize?: number;
 };

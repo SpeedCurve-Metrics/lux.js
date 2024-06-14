@@ -1,8 +1,32 @@
-import { NavigationTimingData } from "../beacon";
 import { getNavigationEntry } from "../performance";
 import { processTimeMetric } from "../timing";
 
 let currentNavigation: PerformanceNavigationTiming;
+
+export type NavigationTimingData = {
+  activationStart: number;
+  connectEnd: number;
+  connectStart: number;
+  decodedBodySize?: number;
+  domainLookupEnd: number;
+  domainLookupStart: number;
+  domComplete?: number;
+  domContentLoadedEventEnd?: number;
+  domContentLoadedEventStart?: number;
+  domInteractive?: number;
+  encodedBodySize?: number;
+  fetchStart: number;
+  loadEventEnd?: number;
+  loadEventStart?: number;
+  redirectCount: number;
+  redirectEnd?: number;
+  redirectStart?: number;
+  requestStart?: number;
+  responseEnd?: number;
+  responseStart?: number;
+  secureConnectionStart?: number;
+  transferSize?: number;
+};
 
 export function processEntry(entry: PerformanceNavigationTiming): void {
   currentNavigation = entry;
