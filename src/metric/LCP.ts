@@ -1,4 +1,4 @@
-import { MetricData } from "../beacon";
+import { BeaconMetricData } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
 import { getNavigationEntry, timing } from "../performance";
@@ -16,7 +16,7 @@ export function reset(): void {
   lcpEntry = undefined;
 }
 
-export function getData(): MetricData["lcp"] | undefined {
+export function getData(): BeaconMetricData["lcp"] | undefined {
   if (!lcpEntry) {
     return undefined;
   }

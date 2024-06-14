@@ -50,7 +50,7 @@ export class Beacon {
   sessionId: string;
   isRecording = true;
   isSent = false;
-  metricData: Partial<MetricData>;
+  metricData: Partial<BeaconMetricData>;
   maxMeasureTimeout = 0;
 
   constructor(opts: BeaconOptions) {
@@ -75,7 +75,7 @@ export class Beacon {
     this.logger.logEvent(LogEvent.PostBeaconStopRecording);
   }
 
-  setMetricData<K extends keyof MetricData>(metric: K, data: MetricData[K]) {
+  setMetricData<K extends keyof BeaconMetricData>(metric: K, data: BeaconMetricData[K]) {
     if (!this.isRecording) {
       this.logger.logEvent(LogEvent.PostBeaconMetricRejected, [metric]);
       return;
@@ -133,9 +133,9 @@ export class Beacon {
   }
 }
 
-type BeaconPayload = BeaconMetaData & Partial<MetricData>;
+export type BeaconPayload = BeaconMetaData & Partial<BeaconMetricData>;
 
-type BeaconMetaData = {
+export type BeaconMetaData = {
   customerId: string;
   pageId: string;
   sessionId: string;
@@ -147,7 +147,7 @@ type BeaconMetaData = {
   measureDuration: number;
 };
 
-export interface MetricData extends Record<string, Metric> {
+export type BeaconMetricData = {
   lcp: Metric & {
     attribution: MetricAttribution | null;
 
@@ -178,7 +178,7 @@ export interface MetricData extends Record<string, Metric> {
     } | null;
     sources: CLSAttribution[] | null;
   };
-}
+};
 
 export type CLSAttribution = MetricAttribution & {
   value: number;

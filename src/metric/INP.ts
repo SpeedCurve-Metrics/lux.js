@@ -1,4 +1,4 @@
-import { MetricData } from "../beacon";
+import { BeaconMetricData } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor } from "../math";
 import { performance } from "../performance";
@@ -103,7 +103,7 @@ export function getHighPercentileInteraction(): Interaction | undefined {
   return slowestEntries[index];
 }
 
-export function getData(): MetricData["inp"] | undefined {
+export function getData(): BeaconMetricData["inp"] | undefined {
   const interaction = getHighPercentileInteraction();
 
   if (!interaction) {
