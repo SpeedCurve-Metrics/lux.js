@@ -1,6 +1,6 @@
 import { ConfigObject } from "./config";
 import Logger, { LogEvent } from "./logger";
-import { msSincePageInit } from "./timing";
+import { getZeroTime, msSincePageInit } from "./timing";
 import { VERSION } from "./version";
 
 const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
@@ -40,6 +40,7 @@ type BeaconOptions = {
   customerId: string;
   sessionId: string;
   pageId: string;
+  startTime?: number;
 };
 
 export class Beacon {
@@ -53,11 +54,13 @@ export class Beacon {
   pageId: string;
   sessionId: string;
 
+  startTime: number;
   metricData: Partial<BeaconMetricData>;
 
   onBeforeSendCbs: Array<() => void> = [];
 
   constructor(opts: BeaconOptions) {
+    this.startTime = opts.startTime || getZeroTime();
     this.config = opts.config;
     this.logger = opts.logger;
     this.customerId = opts.customerId;
@@ -135,6 +138,7 @@ export class Beacon {
         pageId: this.pageId,
         scriptVersion: VERSION,
         sessionId: this.sessionId,
+        startTime: this.startTime,
       },
       this.metricData,
     );
@@ -151,6 +155,9 @@ export type BeaconMetaData = {
   customerId: string;
   pageId: string;
   sessionId: string;
+
+  /** When this beacon started measuring */
+  startTime: number;
 
   /** The lux.js version that sent the beacon */
   scriptVersion: string;
