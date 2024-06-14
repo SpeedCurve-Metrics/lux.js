@@ -24,6 +24,7 @@ BeaconStore.open().then(async (store) => {
         "cache-control": `public, max-age=${parsedUrl.query.maxAge || 0}`,
         "content-type": contentType,
         "server-timing": parsedUrl.query.serverTiming || "",
+        "timing-allow-origin": "*",
       };
 
       if (!parsedUrl.query.keepAlive) {
@@ -95,7 +96,7 @@ BeaconStore.open().then(async (store) => {
 
       sendResponse(200, headers("image/webp"));
     } else if (pathname === "/v2/store/") {
-      sendResponse(200, headers("text/plain"), "OK");
+      sendResponse(204, {}, "");
     } else if (existsSync(filePath)) {
       try {
         let contents = await readFile(filePath);
