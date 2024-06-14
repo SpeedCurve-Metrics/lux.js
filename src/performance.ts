@@ -5,6 +5,7 @@ import scriptStartTime from "./start-marker";
 // prevent having to make regular typeof checks.
 export const performance = window.performance || {};
 export const timing = performance.timing || {
+  activationStart: 0,
   // If performance.timing isn't available, we attempt to polyfill the navigationStart value.
   // Our first attempt is from LUX.ns, which is the time that the snippet execution began. If this
   // is not available, we fall back to the time that the current script execution began.

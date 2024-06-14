@@ -15,6 +15,7 @@ import { clamp, floor, max, round, sortNumeric } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import * as LCP from "./metric/LCP";
+import * as NT from "./metric/navigation-timing";
 import now from "./now";
 import {
   performance,
@@ -130,6 +131,11 @@ LUX = (function () {
 
   let beacon = initPostBeacon();
 
+  // Only add navigation timing data on the first beacon.
+  beacon.onBeforeSend(() => {
+    beacon.setMetricData("navigationTiming", NT.getData());
+  });
+
   const logEntry = <T extends PerformanceEntry>(entry: T) => {
     logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
   };
@@ -145,6 +151,11 @@ LUX = (function () {
     PO.observe("largest-contentful-paint", processAndLogEntry);
     PO.observe("element", processAndLogEntry);
     PO.observe("paint", processAndLogEntry);
+
+    PO.observe("navigation", (entry) => {
+      logEntry(entry);
+      NT.processEntry(entry);
+    });
 
     PO.observe("largest-contentful-paint", (entry) => {
       // Process the LCP entry for the legacy beacon

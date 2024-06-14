@@ -45,13 +45,17 @@ type BeaconOptions = {
 export class Beacon {
   config: ConfigObject;
   logger: Logger;
+  isRecording = true;
+  isSent = false;
+  maxMeasureTimeout = 0;
+
   customerId: string;
   pageId: string;
   sessionId: string;
-  isRecording = true;
-  isSent = false;
+
   metricData: Partial<BeaconMetricData>;
-  maxMeasureTimeout = 0;
+
+  onBeforeSendCbs: Array<() => void> = [];
 
   constructor(opts: BeaconOptions) {
     this.config = opts.config;
@@ -92,12 +96,20 @@ export class Beacon {
     return this.config.beaconUrlV2 || "https://dev.beacon.speedcurve.com/store";
   }
 
+  onBeforeSend(cb: () => void) {
+    this.onBeforeSendCbs.push(cb);
+  }
+
   send() {
     this.logger.logEvent(LogEvent.PostBeaconSendCalled);
 
     if (!this.config.enablePostBeacon) {
       this.logger.logEvent(LogEvent.PostBeaconDisabled);
       return;
+    }
+
+    for (const cb of this.onBeforeSendCbs) {
+      cb();
     }
 
     if (!this.hasMetricData() && !this.config.allowEmptyPostBeacon) {
@@ -148,6 +160,7 @@ export type BeaconMetaData = {
 };
 
 export type BeaconMetricData = {
+  navigationTiming: NavigationTimingData;
   lcp: Metric & {
     attribution: MetricAttribution | null;
 
@@ -192,4 +205,29 @@ type Metric = {
 type MetricAttribution = {
   elementSelector: string;
   elementType: string;
+};
+
+export type NavigationTimingData = {
+  activationStart: number;
+  connectEnd?: number;
+  connectStart?: number;
+  decodedBodySize?: number;
+  domainLookupEnd?: number;
+  domainLookupStart?: number;
+  domComplete?: number;
+  domContentLoadedEventEnd?: number;
+  domContentLoadedEventStart?: number;
+  domInteractive?: number;
+  encodedBodySize?: number;
+  fetchStart?: number;
+  loadEventEnd?: number;
+  loadEventStart?: number;
+  redirectCount?: number;
+  redirectEnd?: number;
+  redirectStart?: number;
+  requestStart?: number;
+  responseEnd?: number;
+  responseStart?: number;
+  secureConnectionStart?: number;
+  transferSize?: number;
 };
