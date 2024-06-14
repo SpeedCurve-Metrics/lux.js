@@ -51,6 +51,7 @@ export const LogEvent: Record<string, number> = {
   PostBeaconCancelled: 85,
   PostBeaconStopRecording: 86,
   PostBeaconMetricRejected: 87,
+  PostBeaconDisabled: 88,
 };
 
 export type LogEventRecord = [number, number, ...unknown[]];

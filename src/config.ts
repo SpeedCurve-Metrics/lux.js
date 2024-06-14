@@ -8,6 +8,7 @@ export interface ConfigObject {
   conversions?: UrlPatternMapping;
   cookieDomain?: string;
   customerid?: string;
+  enablePostBeacon: boolean;
   errorBeaconUrl: string;
   interactionBeaconDelay: number;
   jspagelabel?: string;
@@ -41,6 +42,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     conversions: getProperty(obj, "conversions"),
     cookieDomain: getProperty(obj, "cookieDomain"),
     customerid: getProperty(obj, "customerid"),
+    enablePostBeacon: getProperty(obj, "enablePostBeacon", true),
     errorBeaconUrl: getProperty(obj, "errorBeaconUrl", luxOrigin + "/error/"),
     interactionBeaconDelay: getProperty(obj, "interactionBeaconDelay", 200),
     jspagelabel: getProperty(obj, "jspagelabel"),

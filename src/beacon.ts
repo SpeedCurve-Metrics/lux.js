@@ -95,6 +95,11 @@ export class Beacon {
   send() {
     this.logger.logEvent(LogEvent.PostBeaconSendCalled);
 
+    if (!this.config.enablePostBeacon) {
+      this.logger.logEvent(LogEvent.PostBeaconDisabled);
+      return;
+    }
+
     if (!this.hasMetricData()) {
       // TODO: This is only required while the new beacon is supplementary. Once it's the primary
       // beacon, we should send it regardless of how much metric data it has.
