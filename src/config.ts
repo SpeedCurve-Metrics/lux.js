@@ -2,6 +2,7 @@ import { ServerTimingConfig } from "./server-timing";
 import { UrlPatternMapping } from "./url-matcher";
 
 export interface ConfigObject {
+  allowEmptyPostBeacon: boolean;
   auto: boolean;
   beaconUrl: string;
   beaconUrlV2?: string;
@@ -36,6 +37,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
   const autoMode = getProperty(obj, "auto", true);
 
   return {
+    allowEmptyPostBeacon: getProperty(obj, "allowEmptyPostBeacon", false),
     auto: autoMode,
     beaconUrl: getProperty(obj, "beaconUrl", luxOrigin + "/lux/"),
     beaconUrlV2: getProperty(obj, "beaconUrlV2"),
