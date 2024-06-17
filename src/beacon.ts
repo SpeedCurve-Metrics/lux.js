@@ -144,9 +144,13 @@ export class Beacon {
       this.metricData,
     );
 
-    sendBeacon(beaconUrl, JSON.stringify(payload));
-    this.isSent = true;
-    this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
+    try {
+      sendBeacon(beaconUrl, JSON.stringify(payload));
+      this.isSent = true;
+      this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
+    } catch (e) {
+      this.logger.logEvent(LogEvent.PostBeaconSendFailed, [e]);
+    }
   }
 }
 
