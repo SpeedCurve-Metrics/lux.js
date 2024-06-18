@@ -40,7 +40,7 @@ export function getData(): NavigationTimingData {
   function processNavTimingValue(key: string, allowZero?: boolean): number | undefined {
     let value = 0;
 
-    if (key in currentNavigation) {
+    if (currentNavigation && key in currentNavigation) {
       value = currentNavigation[key as keyof NavigationTimingData] as number;
     } else if (key in fallbackNavEntry) {
       value = fallbackNavEntry[key] as number;
