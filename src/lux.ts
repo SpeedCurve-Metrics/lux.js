@@ -21,6 +21,7 @@ import {
   timing,
   getEntriesByType,
   navigationType,
+  deliveryType,
   getNavigationEntry,
 } from "./performance";
 import * as PO from "./performance-observer";
@@ -1542,6 +1543,7 @@ LUX = (function () {
       nErrors +
       "nt" +
       navigationType() +
+      deliveryType() +
       (navigator.deviceMemory ? "dm" + round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +

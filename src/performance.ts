@@ -22,6 +22,10 @@ export function navigationType() {
 
   return "";
 }
+export function deliveryType() {
+  const navEntry = getNavigationEntry();
+  return navEntry.deliveryType || "";
+}
 
 type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> & {
   [key: string]: number | string;
