@@ -2,10 +2,10 @@ import { addListener } from "../listeners";
 
 export default function onPageLoad(callback: () => void) {
   if (document.readyState === "complete") {
-    // If onload has already passed, send the beacon now.
+    // The onload event has already fired
     callback();
   } else {
-    // Otherwise send the beacon slightly after onload.
+    // Listen for the onload event and run the callback after a short delay
     addListener("load", () => {
       setTimeout(callback, 200);
     });

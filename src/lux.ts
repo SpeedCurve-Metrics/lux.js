@@ -57,10 +57,6 @@ LUX = (function () {
   const encodeURIComponent = window.encodeURIComponent;
   const thisScript = (document.currentScript as HTMLScriptElement) || {};
 
-  onLayoutStable(5000, () => {
-    console.log("Layout has been stable for 5 seconds");
-  });
-
   // Log JS errors.
   let nErrors = 0;
   function errorHandler(e: ErrorEvent): void {
