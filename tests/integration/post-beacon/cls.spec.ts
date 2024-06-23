@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { BeaconPayload } from "../../../src/beacon";
+import { getNavigationTimingMs } from "../../helpers/lux";
 import RequestInterceptor from "../../request-interceptor";
 
 test.describe("POST beacon CLS", () => {
@@ -15,8 +16,9 @@ test.describe("POST beacon CLS", () => {
     await luxRequests.waitForMatchingRequest();
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
 
+    const responseEnd = await getNavigationTimingMs(page, "responseEnd");
     expect(b.cls!.value).toBeGreaterThan(0);
-    expect(b.cls!.startTime).toBeGreaterThan(b.navigationTiming!.domInteractive);
+    expect(b.cls!.startTime).toBeGreaterThanOrEqual(responseEnd);
   });
 
   test("CLS is reset between SPA page transitions", async ({ page }) => {
@@ -25,8 +27,9 @@ test.describe("POST beacon CLS", () => {
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
+    const responseEnd = await getNavigationTimingMs(page, "responseEnd");
     expect(b.cls!.value).toBeGreaterThan(0);
-    expect(b.cls!.startTime).toBeGreaterThan(b.navigationTiming!.domInteractive);
+    expect(b.cls!.startTime).toBeGreaterThanOrEqual(responseEnd);
 
     await page.evaluate(() => LUX.init());
     await page.waitForTimeout(200);
