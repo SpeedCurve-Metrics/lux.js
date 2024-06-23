@@ -14,13 +14,15 @@ export function processEntry(entry: LayoutShift): void {
     const firstEntry = sessionEntries[0];
     const latestEntry = sessionEntries[sessionEntries.length - 1];
     const sources = entry.sources
-      .filter((source) => source.node)
-      .map((source) => ({
-        value: entry.value,
-        startTime: processTimeMetric(entry.startTime),
-        elementSelector: getNodeSelector(source.node!),
-        elementType: source.node!.nodeName,
-      }));
+      ? entry.sources
+          .filter((source) => source.node)
+          .map((source) => ({
+            value: entry.value,
+            startTime: processTimeMetric(entry.startTime),
+            elementSelector: getNodeSelector(source.node!),
+            elementType: source.node!.nodeName,
+          }))
+      : [];
 
     if (
       sessionEntries.length &&
