@@ -1,8 +1,8 @@
 import { Beacon, fitUserTimingEntries } from "./beacon";
-import { onLayoutStable } from "./beacon-triggers/layout-stable";
 import onPageLoad from "./beacon-triggers/page-load";
 import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
+import { SESSION_COOKIE_NAME } from "./cookie";
 import * as CustomData from "./custom-data";
 import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document";
 import { getNodeSelector } from "./dom";
@@ -1793,7 +1793,7 @@ LUX = (function () {
   // If there is NOT a UID then set it to the new value (which is the same as the "sync ID" for this page).
   // Refresh its expiration date and return its value.
   function refreshUniqueId(newValue: string): string {
-    let uid = _getCookie("lux_uid");
+    let uid = _getCookie(SESSION_COOKIE_NAME);
     if (!uid || uid.length < 11) {
       uid = newValue;
     } else {
@@ -1813,7 +1813,7 @@ LUX = (function () {
   }
 
   function setUniqueId(uid: string): string {
-    _setCookie("lux_uid", uid, gSessionTimeout);
+    _setCookie(SESSION_COOKIE_NAME, uid, gSessionTimeout);
 
     return uid;
   }

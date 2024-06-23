@@ -78,6 +78,12 @@ export class Beacon {
     this.logger.logEvent(LogEvent.PostBeaconInitialised);
   }
 
+  isBeingSampled() {
+    const bucket = parseInt(String(this.sessionId).slice(-2));
+
+    return bucket < this.config.samplerate;
+  }
+
   stopRecording() {
     this.isRecording = false;
     this.logger.logEvent(LogEvent.PostBeaconStopRecording);
@@ -114,6 +120,10 @@ export class Beacon {
 
     for (const cb of this.onBeforeSendCbs) {
       cb();
+    }
+
+    if (!this.isBeingSampled()) {
+      return;
     }
 
     if (!this.hasMetricData() && !this.config.allowEmptyPostBeacon) {
