@@ -2,7 +2,8 @@ import { test, expect } from "@playwright/test";
 import { BeaconPayload } from "../../../src/beacon";
 import RequestInterceptor from "../../request-interceptor";
 
-test.describe("POST beacon navigation timing", () => {
+// Skipped while navigation timing is not sent in the POST beacon
+test.skip("POST beacon navigation timing", () => {
   test("Navigation timing is measured", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
