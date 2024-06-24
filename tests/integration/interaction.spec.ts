@@ -162,8 +162,8 @@ test.describe("LUX interaction", () => {
       const INPPresentationDelay = parseInt(getSearchParam(ixBeacon, "INPd"));
       const allSubParts = INPInputDelay + INPProcessingTime + INPPresentationDelay;
 
-      // The subparts are floored, so they can add up to 1ms less than the INP duration
-      expect(allSubParts).toBeGreaterThanOrEqual(INP - 1);
+      // The subparts are floored, so they can add up to 3ms less than the INP duration
+      expect(allSubParts).toBeGreaterThanOrEqual(INP - 3);
       expect(allSubParts).toBeLessThanOrEqual(INP);
 
       const INPSelector = getSearchParam(ixBeacon, "INPs");

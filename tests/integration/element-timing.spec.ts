@@ -1,24 +1,25 @@
 import { test, expect } from "@playwright/test";
+import { entryTypeSupported } from "../helpers/browsers";
 import { getElapsedMs, getSearchParam, parseUserTiming } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
 
 test.describe("LUX element timing", () => {
-  test.skip(
-    ({ browserName }) => browserName !== "chromium",
-    "Element timing is only supported in Chromium",
-  );
-
   test("element timing is collected in auto mode", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/element-timing.html?injectScript=LUX.minMeasureTime=1000;");
     await luxRequests.waitForMatchingRequest();
     const beacon = luxRequests.getUrl(0)!;
-    const ET = parseUserTiming(getSearchParam(beacon, "ET"));
+    const elementTimingSupported = await entryTypeSupported(page, "element");
 
-    expect(Object.values(ET).length).toEqual(2);
-    expect(ET["eve-image"].startTime).toBeGreaterThan(0);
-    expect(ET["eve-image-delayed"].startTime).toBeGreaterThan(ET["eve-image"].startTime);
-    expect(ET["eve-image-delayed"].startTime).toBeGreaterThan(100);
+    if (elementTimingSupported) {
+      const ET = parseUserTiming(getSearchParam(beacon, "ET"));
+      expect(Object.values(ET).length).toEqual(2);
+      expect(ET["eve-image"].startTime).toBeGreaterThan(0);
+      expect(ET["eve-image-delayed"].startTime).toBeGreaterThan(ET["eve-image"].startTime);
+      expect(ET["eve-image-delayed"].startTime).toBeGreaterThan(100);
+    } else {
+      expect(beacon.searchParams.get("ET")).toBeNull();
+    }
   });
 
   test("element timing is collected in a SPA", async ({ page }) => {
@@ -61,15 +62,24 @@ test.describe("LUX element timing", () => {
 
     const firstBeacon = luxRequests.getUrl(0)!;
     const secondBeacon = luxRequests.getUrl(1)!;
-    const firstET = parseUserTiming(getSearchParam(firstBeacon, "ET"));
-    const secondET = parseUserTiming(getSearchParam(secondBeacon, "ET"));
+    const elementTimingSupported = await entryTypeSupported(page, "element");
 
-    expect(Object.keys(firstET).length).toEqual(2);
-    expect(firstET["eve-image"].startTime).toBeGreaterThan(0);
-    expect(firstET["eve-image-delayed"].startTime).toBeGreaterThan(firstET["eve-image"].startTime);
+    if (elementTimingSupported) {
+      const firstET = parseUserTiming(getSearchParam(firstBeacon, "ET"));
+      const secondET = parseUserTiming(getSearchParam(secondBeacon, "ET"));
 
-    expect(Object.keys(secondET).length).toEqual(1);
-    expect(secondET["spa-image"].startTime).toBeLessThan(timeBeforeImage);
-    expect(secondET["spa-image"].startTime).toBeGreaterThan(30);
+      expect(Object.keys(firstET).length).toEqual(2);
+      expect(firstET["eve-image"].startTime).toBeGreaterThan(0);
+      expect(firstET["eve-image-delayed"].startTime).toBeGreaterThan(
+        firstET["eve-image"].startTime,
+      );
+
+      expect(Object.keys(secondET).length).toEqual(1);
+      expect(secondET["spa-image"].startTime).toBeLessThan(timeBeforeImage);
+      expect(secondET["spa-image"].startTime).toBeGreaterThan(30);
+    } else {
+      expect(firstBeacon.searchParams.get("ET")).toBeNull();
+      expect(secondBeacon.searchParams.get("ET")).toBeNull();
+    }
   });
 });
