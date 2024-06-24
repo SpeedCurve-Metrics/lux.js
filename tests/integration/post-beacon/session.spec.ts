@@ -50,7 +50,7 @@ test.describe("LUX user sessions", () => {
       waitUntil: "networkidle",
     });
     await page.evaluate(
-      ([uid, sessionId]) => (document.cookie = `${uid}=${sessionId}; max-age=2`),
+      ([uid, sessionId]) => (document.cookie = `${uid}=${sessionId}; max-age=1`),
       [uid, sessionId],
     );
     await page.goto("/");
@@ -58,7 +58,7 @@ test.describe("LUX user sessions", () => {
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
     expect(b.sessionId).toEqual(sessionId);
 
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1500);
     await page.goto("/images.html", { waitUntil: "networkidle" });
     await page.goto("/");
 

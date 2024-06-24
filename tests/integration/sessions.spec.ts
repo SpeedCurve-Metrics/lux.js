@@ -46,14 +46,14 @@ test.describe("LUX user sessions", () => {
       waitUntil: "networkidle",
     });
     await page.evaluate(
-      ([uid, sessionId]) => (document.cookie = `${uid}=${sessionId}; max-age=2`),
+      ([uid, sessionId]) => (document.cookie = `${uid}=${sessionId}; max-age=1`),
       [uid, sessionId],
     );
 
     let beacon = luxRequests.getUrl(0)!;
     expect(getSearchParam(beacon, "uid")).toEqual(sessionId);
 
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1500);
     await page.goto("/default.html", { waitUntil: "networkidle" });
 
     beacon = luxRequests.getUrl(1)!;
