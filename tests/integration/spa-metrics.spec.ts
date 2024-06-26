@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import Flags, { hasFlag } from "../../src/flags";
+import { entryTypeSupported } from "../helpers/browsers";
 import { getElapsedMs, getNavTiming, getNavigationTimingMs, getSearchParam } from "../helpers/lux";
 import * as Shared from "../helpers/shared-tests";
 import RequestInterceptor from "../request-interceptor";
@@ -72,7 +73,7 @@ test.describe("LUX SPA", () => {
     expect(NT.largestContentfulPaint).toBeUndefined();
   });
 
-  test("calling LUX.init before LUX.send does not lose data", async ({ page, browserName }) => {
+  test("calling LUX.init before LUX.send does not lose data", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await page.evaluate(() => LUX.init());
@@ -80,11 +81,12 @@ test.describe("LUX SPA", () => {
 
     const beacon = luxRequests.getUrl(0)!;
     const NT = getNavTiming(beacon);
+    const lcpSupported = await entryTypeSupported(page, "largest-contentful-paint");
 
+    expect(NT.startRender).toBeGreaterThan(0);
     expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
-    if (browserName === "chromium") {
-      expect(NT.startRender).toBeGreaterThan(0);
+    if (lcpSupported) {
       expect(NT.largestContentfulPaint).toBeGreaterThanOrEqual(0);
     } else {
       expect(NT.largestContentfulPaint).toBeUndefined();

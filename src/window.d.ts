@@ -106,7 +106,7 @@ declare global {
     size: number;
     id: string;
     url: string;
-    element: Element;
+    element?: Element;
   }
 
   declare const LargestContentfulPaint: {

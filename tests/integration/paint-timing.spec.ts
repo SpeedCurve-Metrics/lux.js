@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { entryTypeSupported } from "../helpers/browsers";
 import { getNavTiming } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
 
 test.describe("LUX paint timing", () => {
-  test("paint times are recorded", async ({ page, browserName }) => {
+  test("paint times are recorded", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/images.html");
     await luxRequests.waitForMatchingRequest();
@@ -14,8 +15,9 @@ test.describe("LUX paint timing", () => {
     expect(startRender).toBeGreaterThan(0);
     expect(NT.firstContentfulPaint).toBeGreaterThanOrEqual(startRender);
 
-    if (browserName === "chromium") {
-      // LCP is only supported in Chromium
+    const lcpSupported = await entryTypeSupported(page, "largest-contentful-paint");
+
+    if (lcpSupported) {
       expect(NT.largestContentfulPaint).toBeGreaterThanOrEqual(startRender);
     } else {
       expect(NT.largestContentfulPaint).toBeUndefined();

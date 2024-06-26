@@ -45,3 +45,10 @@ export function getPageHiddenScript(hidden: boolean): string {
 export async function setPageHidden(page: Page, hidden: boolean) {
   await page.evaluate(getPageHiddenScript(hidden));
 }
+
+export async function entryTypeSupported(page: Page, entryType: string): Promise<boolean> {
+  return page.evaluate(
+    (entryType) => PerformanceObserver.supportedEntryTypes.includes(entryType),
+    entryType,
+  );
+}

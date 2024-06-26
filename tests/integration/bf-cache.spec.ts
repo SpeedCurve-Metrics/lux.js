@@ -1,4 +1,4 @@
-import { test, expect, chromium, Page, Browser } from "@playwright/test";
+import { test, expect, chromium, Browser } from "@playwright/test";
 import Flags from "../../src/flags";
 import BeaconStore from "../helpers/beacon-store";
 import {
@@ -16,7 +16,7 @@ test.describe("BF cache integration", () => {
     "bfcache tests only work reliably in Chromium",
   );
 
-  let browser: Browser, page: Page, store: BeaconStore, browserName: string;
+  let browser: Browser, browserName: string;
 
   test.beforeAll(async () => {
     browser = await chromium.launch({
@@ -24,15 +24,17 @@ test.describe("BF cache integration", () => {
       ignoreDefaultArgs: ["--disable-back-forward-cache"],
     });
     browserName = browser.browserType().name();
-    page = await browser.newPage();
-    store = await BeaconStore.open();
   });
 
   test.afterAll(async () => {
-    await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   });
 
   test("a beacon is sent on BF cache restore when LUX.newBeaconOnPageShow=true", async () => {
+    const page = await browser.newPage();
+    const store = await BeaconStore.open();
     const MAX_MEASURE_TIME = 1200;
     const IMAGE_DELAY = 1200;
 
@@ -119,6 +121,8 @@ test.describe("BF cache integration", () => {
   });
 
   test("a beacon is not sent on BF cache restore by default", async () => {
+    const page = await browser.newPage();
+    const store = await BeaconStore.open();
     const MAX_MEASURE_TIME = 500;
     await page.goto(
       `/element-timing.html?useBeaconStore=${store.id}&injectScript=LUX.maxMeasureTime=${MAX_MEASURE_TIME}`,
@@ -134,6 +138,8 @@ test.describe("BF cache integration", () => {
   });
 
   test("redirect time is not counted for BF cache restores", async () => {
+    const page = await browser.newPage();
+    const store = await BeaconStore.open();
     const MAX_MEASURE_TIME = 1200;
     const IMAGE_DELAY = 1200;
 

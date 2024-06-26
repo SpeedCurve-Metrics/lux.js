@@ -2,11 +2,14 @@ import { ServerTimingConfig } from "./server-timing";
 import { UrlPatternMapping } from "./url-matcher";
 
 export interface ConfigObject {
+  allowEmptyPostBeacon: boolean;
   auto: boolean;
   beaconUrl: string;
+  beaconUrlV2?: string;
   conversions?: UrlPatternMapping;
   cookieDomain?: string;
   customerid?: string;
+  enablePostBeacon: boolean;
   errorBeaconUrl: string;
   interactionBeaconDelay: number;
   jspagelabel?: string;
@@ -15,14 +18,15 @@ export interface ConfigObject {
   maxBeaconUTEntries: number;
   maxErrors: number;
   maxMeasureTime: number;
+  measureUntil: "onload" | "pagehidden";
   minMeasureTime: number;
   newBeaconOnPageShow: boolean;
+  pagegroups?: UrlPatternMapping;
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   serverTiming?: ServerTimingConfig;
   trackErrors: boolean;
   trackHiddenPages: boolean;
-  pagegroups?: UrlPatternMapping;
 }
 
 export type UserConfig = Partial<ConfigObject>;
@@ -33,11 +37,14 @@ export function fromObject(obj: UserConfig): ConfigObject {
   const autoMode = getProperty(obj, "auto", true);
 
   return {
+    allowEmptyPostBeacon: getProperty(obj, "allowEmptyPostBeacon", false),
     auto: autoMode,
     beaconUrl: getProperty(obj, "beaconUrl", luxOrigin + "/lux/"),
+    beaconUrlV2: getProperty(obj, "beaconUrlV2"),
     conversions: getProperty(obj, "conversions"),
     cookieDomain: getProperty(obj, "cookieDomain"),
     customerid: getProperty(obj, "customerid"),
+    enablePostBeacon: getProperty(obj, "enablePostBeacon", true),
     errorBeaconUrl: getProperty(obj, "errorBeaconUrl", luxOrigin + "/error/"),
     interactionBeaconDelay: getProperty(obj, "interactionBeaconDelay", 200),
     jspagelabel: getProperty(obj, "jspagelabel"),
@@ -46,14 +53,15 @@ export function fromObject(obj: UserConfig): ConfigObject {
     maxBeaconUTEntries: getProperty(obj, "maxBeaconUTEntries", 20),
     maxErrors: getProperty(obj, "maxErrors", 5),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
+    measureUntil: getProperty(obj, "measureUntil", "onload"),
     minMeasureTime: getProperty(obj, "minMeasureTime", 0),
     newBeaconOnPageShow: getProperty(obj, "newBeaconOnPageShow", false),
+    pagegroups: getProperty(obj, "pagegroups"),
     samplerate: getProperty(obj, "samplerate", 100),
     sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
     serverTiming: getProperty(obj, "serverTiming"),
     trackErrors: getProperty(obj, "trackErrors", true),
     trackHiddenPages: getProperty(obj, "trackHiddenPages", false),
-    pagegroups: getProperty(obj, "pagegroups"),
   };
 }
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LUX layout shif test page</title>
+    <title>LUX layout shift test page</title>
     <script>/*INJECT_SCRIPT*/</script>
     <script src="/js/lux.js?id=10001" async crossorigin="anonymous"></script>
 </head>
@@ -11,15 +11,19 @@
     <div id="container"></div>
     <p>This is text that will be shifted by the images.</p>
     <script>
+        const qs = new URLSearchParams(location.search);
+        const noShiftDelay = qs.get("noShiftDelay") !== undefined;
         const container = document.getElementById("container");
 
         function createLayoutShifts(count = 20) {
             for (let i = 0; i < count; i++) {
-                const el = document.createElement("img");
-                el.src = `eve.jpg?delay=${i * 10}&ts=${performance.now()}`;
-                el.width = i * 30;
+                setTimeout(() => {
+                    const el = document.createElement("img");
+                    el.src = `eve.jpg?delay=${i * 10}&ts=${performance.now()}`;
+                    el.width = i * 30;
 
-                container.appendChild(el);
+                    container.appendChild(el);
+                }, noShiftDelay ? 0 : i * 100);
             }
         }
 

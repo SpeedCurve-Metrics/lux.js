@@ -73,7 +73,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return "LUX.forceSample()";
 
     case LogEvent.DataCollectionStart:
-      return "Preparing to send main beacon. Any metrics received after this point may be ignored.";
+      return "Preparing to send main beacon. Metrics received after this point may be ignored.";
 
     case LogEvent.UnloadHandlerTriggered:
       return "Unload handler was triggered.";
@@ -128,6 +128,34 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       }
 
       return message;
+
+    case LogEvent.PostBeaconInitialised:
+      return "POST beacon initialised.";
+
+    case LogEvent.PostBeaconSendCalled:
+      return "POST beacon send() called.";
+
+    case LogEvent.PostBeaconTimeoutReached:
+      return "POST beacon maximum measure timeout reached.";
+
+    case LogEvent.PostBeaconSent:
+      if (filters.includes("beaconUrl")) {
+        return `POST beacon sent: ${args[0]}`;
+      }
+
+      return "POST beacon sent.";
+
+    case LogEvent.PostBeaconAlreadySent:
+      return "POST beacon cancelled (already sent).";
+
+    case LogEvent.PostBeaconCancelled:
+      return "POST beacon cancelled.";
+
+    case LogEvent.PostBeaconStopRecording:
+      return "POST beacon is no longer recording metrics. Metrics received after this point may be ignored.";
+
+    case LogEvent.PostBeaconMetricRejected:
+      return `POST beacon metric rejected: ${args[0]}`;
 
     case LogEvent.NavigationStart:
       return "";

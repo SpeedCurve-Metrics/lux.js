@@ -85,7 +85,7 @@ test.describe("LUX beacon request", () => {
     // The URL length limit is about 8KB. We create multiple long UT marks to go over the limit
     const longString = new Array(3500).fill("A").join("");
 
-    await page.goto("/default.html?injectScript=LUX.auto=false;");
+    await page.goto("/default.html?injectScript=LUX.auto=false;&delay=20");
     await page.evaluate((longString) => {
       performance.mark(`${longString}-1`, { startTime: performance.now() - 20 });
       performance.mark(`${longString}-2`, { startTime: performance.now() - 15 });

@@ -24,6 +24,7 @@ BeaconStore.open().then(async (store) => {
         "cache-control": `public, max-age=${parsedUrl.query.maxAge || 0}`,
         "content-type": contentType,
         "server-timing": parsedUrl.query.serverTiming || "",
+        "timing-allow-origin": "*",
       };
 
       if (!parsedUrl.query.keepAlive) {
@@ -64,12 +65,17 @@ BeaconStore.open().then(async (store) => {
       }, parsedUrl.query.redirectDelay || 0);
     } else if (pathname === "/") {
       sendResponse(200, headers("text/plain"), "OK");
+    } else if (pathname === "/js/lux.min.js.map") {
+      const contents = await readFile(path.join(distDir, "lux.min.js.map"));
+      sendResponse(200, headers("application/json"), contents);
     } else if (pathname === "/js/lux.js") {
       const contents = await readFile(path.join(distDir, "lux.min.js"));
       let preamble = [
         "LUX=window.LUX||{}",
+        "LUX.allowEmptyPostBeacon=true;",
         `LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/'`,
         `LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/'`,
+        `LUX.beaconUrlV2='http://localhost:${SERVER_PORT}/v2/store/'`,
       ].join(";");
 
       sendResponse(200, headers(contentType), `${preamble};${contents}`);
@@ -90,6 +96,8 @@ BeaconStore.open().then(async (store) => {
       }
 
       sendResponse(200, headers("image/webp"));
+    } else if (pathname === "/v2/store/") {
+      sendResponse(204, {}, "");
     } else if (existsSync(filePath)) {
       try {
         let contents = await readFile(filePath);

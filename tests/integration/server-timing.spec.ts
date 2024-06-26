@@ -5,13 +5,13 @@ import RequestInterceptor from "../request-interceptor";
 
 test.describe("Server timing", () => {
   const serverTimingMetrics = [
-    "cache;dur=0;desc='Cache lookup time'",
+    'cache;dur=0;desc="Cache lookup time"',
     "cacheMiss",
-    "db;dur=320;desc='Query duration'",
+    'db;dur=320;desc="Query duration"',
     "fastly-pop;desc=AMS",
     "hit-state;desc=PASS",
     "invalidNumericDescription;desc=not-123-numeric",
-    "loggedIn;desc='User is logged in'",
+    'loggedIn;desc="User is logged in"',
     "phpMemory;desc=92.4MB",
     "render;dur=0.0435;desc='Render time in seconds'",
     "responseSize;desc=10492",
