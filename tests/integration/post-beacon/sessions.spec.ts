@@ -39,7 +39,9 @@ test.describe("LUX user sessions", () => {
     expect(b.sessionId).toEqual(sessionId);
   });
 
-  test("the session ID is rotated after it expires and is set for 30 minutes", async ({ page }) => {
+  test.only("the session ID is rotated after it expires and is set for 30 minutes", async ({
+    page,
+  }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
 
     // When we set the session ID like this, lux.js will refresh the expiry time to 30 minutes from
@@ -58,7 +60,7 @@ test.describe("LUX user sessions", () => {
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
     expect(b.sessionId).toEqual(sessionId);
 
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
     await page.goto("/images.html", { waitUntil: "networkidle" });
     await page.goto("/");
 

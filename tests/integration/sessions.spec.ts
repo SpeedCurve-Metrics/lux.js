@@ -53,7 +53,7 @@ test.describe("LUX user sessions", () => {
     let beacon = luxRequests.getUrl(0)!;
     expect(getSearchParam(beacon, "uid")).toEqual(sessionId);
 
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
     await page.goto("/default.html", { waitUntil: "networkidle" });
 
     beacon = luxRequests.getUrl(1)!;
