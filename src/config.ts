@@ -5,7 +5,7 @@ export interface ConfigObject {
   allowEmptyPostBeacon: boolean;
   auto: boolean;
   beaconUrl: string;
-  beaconUrlV2?: string;
+  beaconUrlV2: string;
   conversions?: UrlPatternMapping;
   cookieDomain?: string;
   customerid?: string;
@@ -40,7 +40,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     allowEmptyPostBeacon: getProperty(obj, "allowEmptyPostBeacon", false),
     auto: autoMode,
     beaconUrl: getProperty(obj, "beaconUrl", luxOrigin + "/lux/"),
-    beaconUrlV2: getProperty(obj, "beaconUrlV2"),
+    beaconUrlV2: getProperty(obj, "beaconUrlV2", "https://beacon.speedcurve.com/store"),
     conversions: getProperty(obj, "conversions"),
     cookieDomain: getProperty(obj, "cookieDomain"),
     customerid: getProperty(obj, "customerid"),

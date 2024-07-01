@@ -103,7 +103,7 @@ export class Beacon {
   }
 
   beaconUrl() {
-    return this.config.beaconUrlV2 || "https://dev.beacon.speedcurve.com/store";
+    return this.config.beaconUrlV2;
   }
 
   onBeforeSend(cb: () => void) {
