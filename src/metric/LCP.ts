@@ -1,7 +1,7 @@
 import { BeaconMetricData } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
-import { getNavigationEntry, timing } from "../performance";
+import { getEntriesByType, getNavigationEntry, timing } from "../performance";
 import { processTimeMetric } from "../timing";
 
 let lcpEntry: LargestContentfulPaint | undefined;
@@ -24,9 +24,9 @@ export function getData(): BeaconMetricData["lcp"] | undefined {
   let subParts = null;
 
   if (lcpEntry.url) {
-    const lcpResource = performance
-      .getEntriesByType("resource")
-      .find((resource) => resource.name === lcpEntry!.url) as PerformanceResourceTiming;
+    const lcpResource = getEntriesByType("resource").find(
+      (resource) => resource.name === lcpEntry!.url,
+    ) as PerformanceResourceTiming;
 
     if (lcpResource) {
       const navEntry = getNavigationEntry();

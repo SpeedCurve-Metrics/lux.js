@@ -1,7 +1,7 @@
 import { START_MARK } from "./constants";
 import { clamp, floor, max } from "./math";
 import now from "./now";
-import { getEntriesByName, getNavigationEntry, timing } from "./performance";
+import { getEntriesByName, getNavigationEntry, performance, timing } from "./performance";
 
 /**
  * Milliseconds since navigationStart representing when the page was restored from the bfcache
