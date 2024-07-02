@@ -1,5 +1,15 @@
 # lux.js changelog
 
+## 2024-07-01: v4
+
+🎉 Version 4 of lux.js signifies a major change in the way metrics will be collected moving forward.
+
+Prior to v4, lux.js collected metrics until the `onload` event was fired (or until `LUX.minMeasureTime` elapsed, whichever occurred later), and a beacon was sent immediately afterwards. Any metrics that occurred after the beacon was sent were ignored. This mainly affected metrics that could change throughout the lifecycle of a page, for example Largest Contentful Paint (LCP), Interaction to Next Paint (INP), and Cumulative Layout Shift (CLS).
+
+With lux.js v4, the original beacon will still be sent. However a second beacon will continue to collect LCP, INP, and CLS until the `pagehide` event or until 60 seconds after the page load began - whichever happens first. This will bring SpeedCurve RUM in line with other tools like the Chrome User Experience Report (CrUX) and the web-vitals JavaScript library.
+
+The first release of lux.js v4 is v4.0.20.
+
 ## 2024-05-15: v316
 
 ### Bug fixes
