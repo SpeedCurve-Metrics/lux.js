@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2024-07-03: v4.0.21
+
+### Bug fixes
+
+- Attempt to fix `ReferenceError: Can't find variable: performance` errors in some older browsers.
+
 ## 2024-07-01: v4
 
 🎉 Version 4 of lux.js signifies a major change in the way metrics will be collected moving forward.
