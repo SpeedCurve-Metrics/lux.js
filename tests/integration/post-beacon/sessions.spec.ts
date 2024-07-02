@@ -39,9 +39,7 @@ test.describe("LUX user sessions", () => {
     expect(b.sessionId).toEqual(sessionId);
   });
 
-  test.only("the session ID is rotated after it expires and is set for 30 minutes", async ({
-    page,
-  }) => {
+  test("the session ID is rotated after it expires and is set for 30 minutes", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
 
     // When we set the session ID like this, lux.js will refresh the expiry time to 30 minutes from
