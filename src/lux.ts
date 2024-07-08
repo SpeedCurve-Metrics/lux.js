@@ -1191,7 +1191,11 @@ LUX = (function () {
       LUX.customerid = thisScript.src.match(/id=(\d+)/)!.pop();
     }
 
-    return LUX.customerid || "";
+    if (!LUX.customerid) {
+      return "";
+    }
+
+    return String(LUX.customerid);
   }
 
   function avgDomDepth() {
