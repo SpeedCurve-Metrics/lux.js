@@ -1517,6 +1517,7 @@ LUX = (function () {
       nErrors +
       "nt" +
       navigationType() +
+      "dt" +
       deliveryType() +
       (navigator.deviceMemory ? "dm" + round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
