@@ -28,6 +28,7 @@ test.describe("POST beacon request", () => {
 
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
     expect(b.customerId).toEqual("10001");
+    expect(b.flags).toBeGreaterThan(0);
     expect(b.pageId).toBeTruthy();
     expect(b.sessionId).toBeTruthy();
     expect(b.measureDuration).toBeGreaterThan(0);
@@ -51,6 +52,7 @@ test.describe("POST beacon request", () => {
 
     const b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
     expect(b.customerId).toEqual("10001");
+    expect(b.flags).toBeGreaterThan(0);
     expect(b.pageId).toBeTruthy();
     expect(b.sessionId).toBeTruthy();
     expect(b.measureDuration).toBeGreaterThan(0);

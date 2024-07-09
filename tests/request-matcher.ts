@@ -15,7 +15,13 @@ export default class RequestMatcher {
   }
 
   requestMatches(url: string) {
-    return url.search(this.searchString) > -1;
+    if (this.searchString.indexOf("?") > -1 || this.searchString.indexOf("#") > -1) {
+      // Only match against the whole string if the searchString contains a query or hash
+      return url.search(this.searchString) > -1;
+    }
+
+    // Otherwise match against the pathname
+    return new URL(url).pathname.search(this.searchString) > -1;
   }
 
   /**

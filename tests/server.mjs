@@ -31,6 +31,10 @@ BeaconStore.open().then(async (store) => {
         h.connection = "close";
       }
 
+      if (parsedUrl.query.csp) {
+        h["content-security-policy"] = parsedUrl.query.csp;
+      }
+
       return h;
     };
 
@@ -74,8 +78,9 @@ BeaconStore.open().then(async (store) => {
         "LUX=window.LUX||{}",
         "LUX.allowEmptyPostBeacon=true;",
         `LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/'`,
-        `LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/'`,
+        `LUX.beaconUrlFallback='http://localhost:${SERVER_PORT}/csp-approved/store/'`,
         `LUX.beaconUrlV2='http://localhost:${SERVER_PORT}/v2/store/'`,
+        `LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/'`,
       ].join(";");
 
       sendResponse(200, headers(contentType), `${preamble};${contents}`);
@@ -96,7 +101,7 @@ BeaconStore.open().then(async (store) => {
       }
 
       sendResponse(200, headers("image/webp"));
-    } else if (pathname === "/v2/store/") {
+    } else if (pathname === "/v2/store/" || pathname === "/csp-approved/store/") {
       sendResponse(204, {}, "");
     } else if (existsSync(filePath)) {
       try {

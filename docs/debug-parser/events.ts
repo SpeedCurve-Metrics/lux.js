@@ -145,6 +145,13 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
 
       return "POST beacon sent.";
 
+    case LogEvent.PostBeaconSendFailed:
+      if (filters.includes("beaconUrl")) {
+        return `POST beacon send failed: ${args[0]}`;
+      }
+
+      return "POST beacon send failed.";
+
     case LogEvent.PostBeaconAlreadySent:
       return "POST beacon cancelled (already sent).";
 
@@ -156,6 +163,9 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
 
     case LogEvent.PostBeaconMetricRejected:
       return `POST beacon metric rejected: ${args[0]}`;
+
+    case LogEvent.PostBeaconCSPViolation:
+      return "POST beacon cancelled due to CSP violation.";
 
     case LogEvent.NavigationStart:
       return "";
