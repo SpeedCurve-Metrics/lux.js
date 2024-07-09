@@ -224,6 +224,7 @@ LUX = (function () {
   if (!performance.timing) {
     logger.logEvent(LogEvent.NavTimingNotSupported);
     gFlags = addFlag(gFlags, Flags.NavTimingNotSupported);
+    beacon.addFlag(Flags.NavTimingNotSupported);
   }
 
   logger.logEvent(LogEvent.NavigationStart, [timing.navigationStart]);
@@ -343,6 +344,7 @@ LUX = (function () {
 
       gaMarks.push(entry);
       gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
+      beacon.addFlag(Flags.UserTimingNotSupported);
 
       return entry;
     }
@@ -452,6 +454,7 @@ LUX = (function () {
 
       gaMeasures.push(entry);
       gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
+      beacon.addFlag(Flags.UserTimingNotSupported);
 
       return entry;
     }
@@ -870,6 +873,7 @@ LUX = (function () {
     if (clearFlags) {
       gFlags = 0;
       gFlags = addFlag(gFlags, Flags.InitCalled);
+      beacon.addFlag(Flags.InitCalled);
     }
 
     // Reset the maximum measure timeout
@@ -1371,6 +1375,7 @@ LUX = (function () {
     clearMaxMeasureTimeout();
     gMaxMeasureTimeout = setTimeout(() => {
       gFlags = addFlag(gFlags, Flags.BeaconSentAfterTimeout);
+      beacon.addFlag(Flags.BeaconSentAfterTimeout);
       _sendLux();
     }, globalConfig.maxMeasureTime - msSincePageInit());
   }
@@ -1458,10 +1463,12 @@ LUX = (function () {
 
     if (!isVisible()) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
+      beacon.addFlag(Flags.VisibilityStateNotVisible);
     }
 
     if (wasPrerendered()) {
       gFlags = addFlag(gFlags, Flags.PageWasPrerendered);
+      beacon.addFlag(Flags.PageWasPrerendered);
     }
 
     if (globalConfig.serverTiming) {
@@ -1726,6 +1733,7 @@ LUX = (function () {
   function _addUnloadHandlers() {
     const onunload = () => {
       gFlags = addFlag(gFlags, Flags.BeaconSentFromUnloadHandler);
+      beacon.addFlag(Flags.BeaconSentFromUnloadHandler);
       logger.logEvent(LogEvent.UnloadHandlerTriggered);
       _sendLux();
       _sendIx();
@@ -1817,6 +1825,7 @@ LUX = (function () {
   function _getPageLabel() {
     if (LUX.label) {
       gFlags = addFlag(gFlags, Flags.PageLabelFromLabelProp);
+      beacon.addFlag(Flags.PageLabelFromLabelProp);
       return LUX.label;
     }
 
@@ -1830,6 +1839,7 @@ LUX = (function () {
 
       if (label) {
         gFlags = addFlag(gFlags, Flags.PageLabelFromUrlPattern);
+        beacon.addFlag(Flags.PageLabelFromUrlPattern);
         return label;
       }
     }
@@ -1842,6 +1852,7 @@ LUX = (function () {
 
         if (label) {
           gFlags = addFlag(gFlags, Flags.PageLabelFromGlobalVariable);
+          beacon.addFlag(Flags.PageLabelFromGlobalVariable);
           return label;
         }
       } catch (e) {
@@ -1851,6 +1862,7 @@ LUX = (function () {
 
     // default to document.title
     gFlags = addFlag(gFlags, Flags.PageLabelFromDocumentTitle);
+    beacon.addFlag(Flags.PageLabelFromDocumentTitle);
     return document.title;
   }
 
@@ -1942,6 +1954,7 @@ LUX = (function () {
 
           // Flag the current page as a bfcache restore
           gFlags = addFlag(gFlags, Flags.PageWasBfCacheRestored);
+          beacon.addFlag(Flags.PageWasBfCacheRestored);
         }, 0);
       }
     });

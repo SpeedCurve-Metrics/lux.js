@@ -1,4 +1,5 @@
 import { ConfigObject } from "./config";
+import Flags, { addFlag } from "./flags";
 import Logger, { LogEvent } from "./logger";
 import { NavigationTimingData } from "./metric/navigation-timing";
 import { getZeroTime, msSincePageInit } from "./timing";
@@ -54,6 +55,7 @@ export class Beacon {
   customerId: string;
   pageId: string;
   sessionId: string;
+  flags = 0;
 
   startTime: number;
   metricData: Partial<BeaconMetricData>;
@@ -96,6 +98,10 @@ export class Beacon {
     }
 
     this.metricData[metric] = data;
+  }
+
+  addFlag(flag: number) {
+    this.flags = addFlag(this.flags, flag);
   }
 
   hasMetricData() {
@@ -145,6 +151,7 @@ export class Beacon {
     const payload: BeaconPayload = Object.assign(
       {
         customerId: this.customerId,
+        flags: this.flags,
         measureDuration: msSincePageInit(),
         pageId: this.pageId,
         scriptVersion: VERSION,
@@ -170,6 +177,7 @@ export type BeaconMetaData = {
   customerId: string;
   pageId: string;
   sessionId: string;
+  flags: number;
 
   /** When this beacon started measuring */
   startTime: number;
