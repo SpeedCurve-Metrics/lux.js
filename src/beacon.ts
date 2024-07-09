@@ -1,5 +1,6 @@
 import { ConfigObject } from "./config";
 import Flags, { addFlag } from "./flags";
+import { addListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
 import { NavigationTimingData } from "./metric/navigation-timing";
 import { getZeroTime, msSincePageInit } from "./timing";
@@ -10,6 +11,8 @@ const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
   xhr.open("POST", url, true);
   xhr.setRequestHeader("content-type", "application/json");
   xhr.send(String(data));
+
+  return true;
 };
 
 const sendBeacon =
@@ -50,6 +53,7 @@ export class Beacon {
   logger: Logger;
   isRecording = true;
   isSent = false;
+  sendRetries = 0;
   maxMeasureTimeout = 0;
 
   customerId: string;
@@ -76,6 +80,37 @@ export class Beacon {
       this.stopRecording();
       this.send();
     }, this.config.maxMeasureTime);
+
+    addListener("securitypolicyviolation", (e: SecurityPolicyViolationEvent) => {
+      if (e.blockedURI === this.config.beaconUrlV2 && "URL" in self) {
+        // Some websites might have CSP rules that allow the GET beacon, but not the POST beacon.
+        // We can detect this here and attempt to send the beacon to a fallback endpoint.
+        //
+        // If the fallback endpoint has not been provided in the config, we will fall back to using
+        // the POST beacon pathname on the GET beacon origin.
+        if (!this.config.beaconUrlFallback) {
+          const getOrigin = new URL(this.config.beaconUrl).origin;
+          const postPathname = new URL(this.config.beaconUrlV2).pathname;
+          this.config.beaconUrlFallback = getOrigin + postPathname;
+        }
+
+        // Update the V2 beacon URL
+        this.config.beaconUrlV2 = this.config.beaconUrlFallback!;
+        this.logger.logEvent(LogEvent.PostBeaconCSPViolation, [this.config.beaconUrlV2]);
+        this.addFlag(Flags.BeaconBlockedByCsp);
+
+        // Not all browsers return false if sendBeacon fails. In this case, `this.isSent` will be
+        // true, even though the beacon wasn't sent. We need to reset this flag to ensure we can
+        // retry sending the beacon.
+        this.isSent = false;
+
+        // Try to send the beacon again
+        if (this.sendRetries < 1) {
+          this.sendRetries++;
+          this.send();
+        }
+      }
+    });
 
     this.logger.logEvent(LogEvent.PostBeaconInitialised);
   }
@@ -162,11 +197,16 @@ export class Beacon {
     );
 
     try {
-      sendBeacon(beaconUrl, JSON.stringify(payload));
-      this.isSent = true;
-      this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
+      if (sendBeacon(beaconUrl, JSON.stringify(payload))) {
+        this.isSent = true;
+        this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
+      }
     } catch (e) {
-      this.logger.logEvent(LogEvent.PostBeaconSendFailed, [e]);
+      // Intentionally empty; handled below
+    }
+
+    if (!this.isSent) {
+      this.logger.logEvent(LogEvent.PostBeaconSendFailed, [beaconUrl, payload]);
     }
   }
 }

@@ -11,6 +11,7 @@ const Flags = {
   PageLabelFromUrlPattern: 1 << 9,
   PageWasPrerendered: 1 << 10,
   PageWasBfCacheRestored: 1 << 11,
+  BeaconBlockedByCsp: 1 << 12,
 };
 
 export function addFlag(flags: number, flag: number): number {
