@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2024-07-11: v4.0.22
+
+### Improvements
+
+- CSP violations caused by the new beacon are automatically caught, and the beacon is retried on the same domain as the original beacon.
+
 ## 2024-07-03: v4.0.21
 
 ### Bug fixes
