@@ -32,7 +32,10 @@ BeaconStore.open().then(async (store) => {
       }
 
       if (parsedUrl.query.csp) {
-        h["content-security-policy"] = parsedUrl.query.csp;
+        const cspHeader = parsedUrl.query.cspReportOnly
+          ? "content-security-policy-report-only"
+          : "content-security-policy";
+        h[cspHeader] = parsedUrl.query.csp;
       }
 
       return h;

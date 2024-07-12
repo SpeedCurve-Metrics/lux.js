@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2024-07-12: v4.0.23
+
+### Bug fixes
+
+- Fix a bug where the beacon is retried on report-only CSP violations.
+
 ## 2024-07-11: v4.0.22
 
 ### Improvements

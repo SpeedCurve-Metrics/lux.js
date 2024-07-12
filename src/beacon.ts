@@ -82,7 +82,7 @@ export class Beacon {
     }, this.config.maxMeasureTime);
 
     addListener("securitypolicyviolation", (e: SecurityPolicyViolationEvent) => {
-      if (e.blockedURI === this.config.beaconUrlV2 && "URL" in self) {
+      if (e.disposition !== "report" && e.blockedURI === this.config.beaconUrlV2 && "URL" in self) {
         // Some websites might have CSP rules that allow the GET beacon, but not the POST beacon.
         // We can detect this here and attempt to send the beacon to a fallback endpoint.
         //
