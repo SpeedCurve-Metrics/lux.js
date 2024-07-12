@@ -1,6 +1,6 @@
 {
   "name": "@speedcurve/lux",
-  "version": "4.0.22",
+  "version": "4.0.23",
   "main": "dist/lux.js",
   "scripts": {
     "build": "npm run rollup",
