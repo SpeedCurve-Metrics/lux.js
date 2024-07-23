@@ -732,9 +732,9 @@ LUX = (function () {
   }
 
   // Track how long it took lux.js to load via Resource Timing.
-  function selfLoading() {
+  function selfLoading(): string {
     let sLuxjs = "";
-    if (performance.getEntriesByName) {
+    if (gbFirstPV && performance.getEntriesByName) {
       // Get the lux script URL (including querystring params).
       const aResources = performance.getEntriesByName(thisScript.src);
       if (aResources && aResources.length) {
@@ -771,6 +771,9 @@ LUX = (function () {
           "";
       }
     }
+
+    // How long data was collected before the beacon was sent
+    sLuxjs += "m" + msSincePageInit();
 
     return sLuxjs;
   }
@@ -1501,7 +1504,8 @@ LUX = (function () {
     const metricsQueryString =
       // only send Nav Timing and lux.js metrics on initial pageload (not for SPA page views)
       (gbNavSent ? "" : "&NT=" + getNavTiming()) +
-      (gbFirstPV ? "&LJS=" + sLuxjs : "") +
+      "&LJS=" +
+      sLuxjs +
       // Page Stats
       "&PS=ns" +
       numScripts() +
