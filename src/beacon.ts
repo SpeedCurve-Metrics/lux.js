@@ -79,7 +79,7 @@ export class Beacon {
       this.logger.logEvent(LogEvent.PostBeaconTimeoutReached);
       this.stopRecording();
       this.send();
-    }, this.config.maxMeasureTime);
+    }, this.config.maxMeasureTime - msSincePageInit());
 
     addListener("securitypolicyviolation", (e: SecurityPolicyViolationEvent) => {
       if (e.disposition !== "report" && e.blockedURI === this.config.beaconUrlV2 && "URL" in self) {
