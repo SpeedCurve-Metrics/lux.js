@@ -1,4 +1,4 @@
-import { Beacon, fitUserTimingEntries } from "./beacon";
+import { Beacon, fitUserTimingEntries, shouldReportValue } from "./beacon";
 import onPageLoad from "./beacon-triggers/page-load";
 import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
@@ -205,13 +205,6 @@ LUX = (function () {
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
-
-  /**
-   * Some values should only be reported if they are non-zero. The exception to this is when the page
-   * was prerendered or restored from BF cache
-   */
-  const shouldReportValue = (value: number) =>
-    value > 0 || getPageRestoreTime() || wasPrerendered();
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);

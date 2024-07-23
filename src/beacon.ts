@@ -1,9 +1,10 @@
 import { ConfigObject } from "./config";
+import { wasPrerendered } from "./document";
 import Flags, { addFlag } from "./flags";
 import { addListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
 import { NavigationTimingData } from "./metric/navigation-timing";
-import { getZeroTime, msSincePageInit } from "./timing";
+import { getPageRestoreTime, getZeroTime, msSincePageInit } from "./timing";
 import { VERSION } from "./version";
 
 const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
@@ -17,6 +18,14 @@ const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
 
 const sendBeacon =
   "sendBeacon" in navigator ? navigator.sendBeacon.bind(navigator) : sendBeaconFallback;
+
+/**
+ * Some values should only be reported if they are non-zero. The exception to this is when the page
+ * was prerendered or restored from BF cache
+ */
+export function shouldReportValue(value: number) {
+  return value > 0 || getPageRestoreTime() || wasPrerendered();
+}
 
 /**
  * Fit an array of user timing delimited strings into a URL and return both the entries that fit and
