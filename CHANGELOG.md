@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2024-07-23: v4.0.24
+
+### Bug fixes
+
+- Fix POST beacon counting `maxMeasureTime` from beacon initialization time, rather than navigation start.
+
 ## 2024-07-12: v4.0.23
 
 ### Bug fixes
