@@ -843,6 +843,12 @@ LUX = (function () {
 
     logger.logEvent(LogEvent.InitCalled);
 
+    // This is an edge case where LUX.auto = true but LUX.init() has been called. In this case, the
+    // POST beacon will not be sent automatically, so we need to send it here.
+    if (globalConfig.auto && !beacon.isSent) {
+      beacon.send();
+    }
+
     // Clear all interactions from the previous "page".
     _clearIx();
 
