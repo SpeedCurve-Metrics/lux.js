@@ -1,5 +1,12 @@
 # lux.js changelog
 
+## 2024-07-24: v4.0.25
+
+### Bug fixes
+
+- Ensure POST beacon is sent when `LUX.init()` is called on pages where `LUX.auto = true`.
+- Prevent zero LCP values from being sent in the POST beacon.
+
 ## 2024-07-23: v4.0.24
 
 ### Bug fixes
