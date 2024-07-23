@@ -863,6 +863,7 @@ LUX = (function () {
     gbFirstPV = 0;
     gSyncId = createSyncId();
     gUid = refreshUniqueId(gSyncId);
+    LCP.reset();
     CLS.reset();
     INP.reset();
     nErrors = 0;
