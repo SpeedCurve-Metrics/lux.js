@@ -138,7 +138,6 @@ LUX = (function () {
 
   try {
     PO.observe("longtask", processAndLogEntry);
-    PO.observe("largest-contentful-paint", processAndLogEntry);
     PO.observe("element", processAndLogEntry);
     PO.observe("paint", processAndLogEntry);
 
