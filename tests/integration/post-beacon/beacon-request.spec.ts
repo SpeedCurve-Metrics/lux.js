@@ -60,12 +60,32 @@ test.describe("POST beacon request", () => {
     expect(b.startTime).toBeGreaterThanOrEqual(timeBeforeInit);
   });
 
+  test("the beacon is sent when LUX.init() is called", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
+    await page.goto("/images.html", { waitUntil: "networkidle" });
+    await page.evaluate(() => LUX.init());
+
+    expect(luxRequests.count()).toEqual(1);
+  });
+
   test("the beacon is not sent when LUX.auto is false", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
     await page.goto("/images.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
 
     expect(luxRequests.count()).toEqual(0);
+  });
+
+  test("the beacon is sent when LUX.auto is false and LUX.sendBeaconOnPageHidden is true", async ({
+    page,
+  }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
+    await page.goto("/images.html?injectScript=LUX.auto=false;LUX.sendBeaconOnPageHidden=true;", {
+      waitUntil: "networkidle",
+    });
+    await page.goto("/images.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+
+    expect(luxRequests.count()).toEqual(1);
   });
 
   test("the beacon can be disabled by setting LUX.enablePostBeacon = false", async ({ page }) => {

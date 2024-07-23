@@ -1,4 +1,4 @@
-import { Beacon, fitUserTimingEntries } from "./beacon";
+import { Beacon, fitUserTimingEntries, shouldReportValue } from "./beacon";
 import onPageLoad from "./beacon-triggers/page-load";
 import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
@@ -138,7 +138,6 @@ LUX = (function () {
 
   try {
     PO.observe("longtask", processAndLogEntry);
-    PO.observe("largest-contentful-paint", processAndLogEntry);
     PO.observe("element", processAndLogEntry);
     PO.observe("paint", processAndLogEntry);
 
@@ -205,13 +204,6 @@ LUX = (function () {
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
-
-  /**
-   * Some values should only be reported if they are non-zero. The exception to this is when the page
-   * was prerendered or restored from BF cache
-   */
-  const shouldReportValue = (value: number) =>
-    value > 0 || getPageRestoreTime() || wasPrerendered();
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);
@@ -851,6 +843,12 @@ LUX = (function () {
 
     logger.logEvent(LogEvent.InitCalled);
 
+    // This is an edge case where LUX.auto = true but LUX.init() has been called. In this case, the
+    // POST beacon will not be sent automatically, so we need to send it here.
+    if (globalConfig.auto && !beacon.isSent) {
+      beacon.send();
+    }
+
     // Clear all interactions from the previous "page".
     _clearIx();
 
@@ -865,6 +863,7 @@ LUX = (function () {
     gbFirstPV = 0;
     gSyncId = createSyncId();
     gUid = refreshUniqueId(gSyncId);
+    LCP.reset();
     CLS.reset();
     INP.reset();
     nErrors = 0;

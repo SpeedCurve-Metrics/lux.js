@@ -1,4 +1,4 @@
-import { BeaconMetricData } from "../beacon";
+import { BeaconMetricData, shouldReportValue } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
 import { getEntriesByType, getNavigationEntry, timing } from "../performance";
@@ -47,8 +47,16 @@ export function getData(): BeaconMetricData["lcp"] | undefined {
     }
   }
 
+  const value = processTimeMetric(lcpEntry.startTime);
+
+  if (!shouldReportValue(value)) {
+    // It's possible the LCP entry we have occurred before the current page was initialised. In
+    // this case, we don't want to report the LCP value.
+    return undefined;
+  }
+
   return {
-    value: processTimeMetric(lcpEntry.startTime),
+    value,
     subParts,
     attribution: lcpEntry.element
       ? {
