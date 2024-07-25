@@ -114,6 +114,10 @@ LUX = (function () {
   let gCustomDataTimeout: number | undefined; // setTimeout timer for sending a Custom data beacon after onload
   let gMaxMeasureTimeout: number | undefined; // setTimeout timer for sending the beacon after a maximum measurement time
 
+  // Storing the customer ID in a local variable makes it possible to run multiple instances of lux.js
+  // on the same page.
+  let _thisCustomerId = LUX.customerid;
+
   const initPostBeacon = () => {
     return new Beacon({
       config: globalConfig,
@@ -1193,15 +1197,15 @@ LUX = (function () {
   }
 
   function getCustomerId() {
-    if (!LUX.customerid) {
-      LUX.customerid = thisScript.src.match(/id=(\d+)/)!.pop();
+    if (!_thisCustomerId) {
+      _thisCustomerId = thisScript.src.match(/id=(\d+)/)!.pop();
     }
 
-    if (!LUX.customerid) {
+    if (!_thisCustomerId) {
       return "";
     }
 
-    return String(LUX.customerid);
+    return String(_thisCustomerId);
   }
 
   function avgDomDepth() {
