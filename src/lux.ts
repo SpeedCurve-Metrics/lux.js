@@ -1467,7 +1467,6 @@ LUX = (function () {
     const sCPU = cpuTimes();
     const CLS = getCLS();
     const sLuxjs = selfLoading();
-    const dt = deliveryType();
 
     if (!isVisible()) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
@@ -1505,6 +1504,9 @@ LUX = (function () {
 
     const is = inlineTagSize("script");
     const ic = inlineTagSize("style");
+    const ds = docSize();
+    const ct = connectionType();
+    const dt = deliveryType();
 
     // Note some page stat values (the `PS` query string) are non-numeric. To make extracting these
     // values easier, we append an underscore "_" to the value. Values this is used for include
@@ -1542,8 +1544,8 @@ LUX = (function () {
       docHeight(document) +
       "dw" +
       docWidth(document) +
-      (docSize() ? "ds" + docSize() : "") + // document HTTP transfer size (bytes)
-      (connectionType() ? "ct" + connectionType() + "_" : "") +
+      (ds ? "ds" + ds : "") + // document HTTP transfer size (bytes)
+      (ct ? "ct" + ct + "_" : "") +
       (typeof dt !== "undefined" ? "dt" + dt + "_" : "") + // delivery type
       "er" +
       nErrors +
