@@ -21,6 +21,7 @@ import {
   timing,
   getEntriesByType,
   navigationType,
+  deliveryType,
   getNavigationEntry,
 } from "./performance";
 import * as PO from "./performance-observer";
@@ -1503,6 +1504,13 @@ LUX = (function () {
 
     const is = inlineTagSize("script");
     const ic = inlineTagSize("style");
+    const ds = docSize();
+    const ct = connectionType();
+    const dt = deliveryType();
+
+    // Note some page stat values (the `PS` query string) are non-numeric. To make extracting these
+    // values easier, we append an underscore "_" to the value. Values this is used for include
+    // connection type (ct) and delivery type (dt).
 
     const metricsQueryString =
       // only send Nav Timing and lux.js metrics on initial pageload (not for SPA page views)
@@ -1536,8 +1544,9 @@ LUX = (function () {
       docHeight(document) +
       "dw" +
       docWidth(document) +
-      (docSize() ? "ds" + docSize() : "") + // document HTTP transfer size (bytes)
-      (connectionType() ? "ct" + connectionType() + "_" : "") + // delimit with "_" since values can be non-numeric so need a way to extract with regex in VCL
+      (ds ? "ds" + ds : "") + // document HTTP transfer size (bytes)
+      (ct ? "ct" + ct + "_" : "") +
+      (typeof dt !== "undefined" ? "dt" + dt + "_" : "") + // delivery type
       "er" +
       nErrors +
       "nt" +

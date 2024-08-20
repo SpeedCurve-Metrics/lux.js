@@ -31,7 +31,8 @@ declare global {
   }
 
   interface PerformanceNavigationTiming {
-    activationStart: number;
+    activationStart?: number;
+    deliveryType?: string;
   }
 
   /**

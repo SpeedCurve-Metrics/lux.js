@@ -23,6 +23,24 @@ export function navigationType() {
   return "";
 }
 
+/**
+ * Returns the delivery type for the current document. To differentiate between the valid empty
+ * string value and browsers that don't support PerformanceResourceTiming.deliveryType, we convert
+ * the empty string value to "(empty string)". Browsers that don't support deliveryType will return
+ * null. Despite straying from the spec, this allows us to differentiate between the two cases.
+ *
+ * @see https://w3c.github.io/resource-timing/#dom-performanceresourcetiming-deliverytype
+ */
+export function deliveryType(): string | undefined {
+  const navEntry = getNavigationEntry();
+
+  if ("deliveryType" in navEntry) {
+    return navEntry.deliveryType || "(empty string)";
+  }
+
+  return undefined;
+}
+
 type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> & {
   [key: string]: number | string;
   navigationStart: number;
