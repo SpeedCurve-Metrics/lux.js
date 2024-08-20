@@ -49,10 +49,17 @@ export function testPageStats({ page, browserName, beacon }: SharedTestArgs, has
   // Connection type
   const ct = getSearchParam(beacon, "PS")?.match(/ct([^_]+)/) || [];
 
+  // Delivery type
+  const dt = getSearchParam(beacon, "PS")?.match(/dt([^_]+)/);
+
   if (browserName === "chromium") {
     expect(ct[1]).toEqual("4G");
+    expect(dt![1]).toEqual("(empty string)");
+    expect(getPageStat(beacon, "dm")).toBeGreaterThan(0);
   } else {
     expect(ct.length).toEqual(0);
+    expect(dt).toBeNull();
+    expect(getPageStat(beacon, "dm")).toBeNull();
   }
 
   // No errors
@@ -60,13 +67,6 @@ export function testPageStats({ page, browserName, beacon }: SharedTestArgs, has
 
   // "Normal" navigation type
   expect(getPageStat(beacon, "nt")).toEqual(0);
-
-  // Device memory
-  if (browserName === "chromium") {
-    expect(getPageStat(beacon, "dm")).toBeGreaterThan(0);
-  } else {
-    expect(getPageStat(beacon, "dm")).toBeNull();
-  }
 }
 
 export function testNavigationTiming({ browserName, beacon }: SharedTestArgs) {

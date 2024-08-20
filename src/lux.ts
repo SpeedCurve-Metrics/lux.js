@@ -1467,6 +1467,7 @@ LUX = (function () {
     const sCPU = cpuTimes();
     const CLS = getCLS();
     const sLuxjs = selfLoading();
+    const dt = deliveryType();
 
     if (!isVisible()) {
       gFlags = addFlag(gFlags, Flags.VisibilityStateNotVisible);
@@ -1505,6 +1506,10 @@ LUX = (function () {
     const is = inlineTagSize("script");
     const ic = inlineTagSize("style");
 
+    // Note some page stat values (the `PS` query string) are non-numeric. To make extracting these
+    // values easier, we append an underscore "_" to the value. Values this is used for include
+    // connection type (ct) and delivery type (dt).
+
     const metricsQueryString =
       // only send Nav Timing and lux.js metrics on initial pageload (not for SPA page views)
       (gbNavSent ? "" : "&NT=" + getNavTiming()) +
@@ -1538,13 +1543,12 @@ LUX = (function () {
       "dw" +
       docWidth(document) +
       (docSize() ? "ds" + docSize() : "") + // document HTTP transfer size (bytes)
-      (connectionType() ? "ct" + connectionType() + "_" : "") + // delimit with "_" since values can be non-numeric so need a way to extract with regex in VCL
+      (connectionType() ? "ct" + connectionType() + "_" : "") +
+      (typeof dt !== "undefined" ? "dt" + dt + "_" : "") + // delivery type
       "er" +
       nErrors +
       "nt" +
       navigationType() +
-      "dt" +
-      deliveryType() +
       (navigator.deviceMemory ? "dm" + round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
