@@ -1,5 +1,15 @@
 # lux.js changelog
 
+## 2024-08-26: v4.0.26
+
+### New features
+
+- Capture the [`deliveryType`](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/deliveryType) of the document.
+
+### Bug fixes
+
+- Fix bug that prevented multiple lux.js instances from running on the same page.
+
 ## 2024-07-24: v4.0.25
 
 ### Bug fixes
