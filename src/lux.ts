@@ -1545,7 +1545,7 @@ LUX = (function () {
       "dw" +
       docWidth(document) +
       (ds ? "ds" + ds : "") + // document HTTP transfer size (bytes)
-      (ct ? "ct" + ct + "_" : "") +
+      (ct ? "ct" + ct + "_" : "") + // connection type
       (typeof dt !== "undefined" ? "dt" + dt + "_" : "") + // delivery type
       "er" +
       nErrors +
