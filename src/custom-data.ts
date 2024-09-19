@@ -5,8 +5,9 @@ let updatedCustomData: CustomDataDict = {};
 
 export function addCustomDataValue(name: string, value: unknown): void {
   const typeV = typeof value;
+  const valueIsEmpty = typeV === "undefined" || value === null;
 
-  if (customDataValues[name] !== value) {
+  if (!valueIsEmpty && customDataValues[name] !== value) {
     // If the value is new or different to the previous value, record it so that later we can send
     // only the values that have changed.
     updatedCustomData[name] = value;
@@ -16,7 +17,7 @@ export function addCustomDataValue(name: string, value: unknown): void {
     customDataValues[name] = value;
   }
 
-  if (typeV === "undefined" || value === null) {
+  if (valueIsEmpty) {
     delete customDataValues[name];
   }
 }
