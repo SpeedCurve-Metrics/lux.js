@@ -120,14 +120,16 @@ test.describe("LUX custom data", () => {
       page.evaluate(() => {
         LUX.addData("var1", "hello");
         LUX.addData("var2", "world");
+        LUX.addData("var3", "and others");
         LUX.send();
       }),
     );
 
-    // Custom data baecon 1
+    // Custom data beacon 1
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
         LUX.addData("var2", "doggo");
+        LUX.addData("var3", null);
       }),
     );
 
@@ -163,7 +165,7 @@ test.describe("LUX custom data", () => {
 
     expect(mainBeacon1Data["var1"]).toEqual("hello");
     expect(mainBeacon1Data["var2"]).toEqual("world");
-    expect(mainBeacon1Data["var3"]).toBeUndefined();
+    expect(mainBeacon1Data["var3"]).toEqual("and others");
 
     expect(cdBeacon1Data["var1"]).toBeUndefined();
     expect(cdBeacon1Data["var2"]).toEqual("doggo");
