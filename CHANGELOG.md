@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2024-09-19: v4.0.27
+
+### Bug fixes
+
+- Fix bug where custom data values that were changed to `null` after previously being non-null were not being removed from the beacon.
+
 ## 2024-08-26: v4.0.26
 
 ### New features
