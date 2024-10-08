@@ -47,7 +47,7 @@ export function getData(): BeaconMetricData["lcp"] | undefined {
     }
   }
 
-  const value = processTimeMetric(lcpEntry.startTime);
+  const value = lcpEntry.startTime;
 
   if (!shouldReportValue(value)) {
     // It's possible the LCP entry we have occurred before the current page was initialised. In
@@ -56,7 +56,7 @@ export function getData(): BeaconMetricData["lcp"] | undefined {
   }
 
   return {
-    value,
+    value: processTimeMetric(value),
     subParts,
     attribution: lcpEntry.element
       ? {
