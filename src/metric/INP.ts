@@ -43,6 +43,11 @@ export function processEntry(entry: PerformanceEventTiming): void {
   if (entry.interactionId || (entry.entryType === "first-input" && !entryExists(entry))) {
     const { duration, startTime, interactionId, name, processingStart, processingEnd, target } =
       entry;
+
+    if (duration < 0) {
+      return;
+    }
+
     const processingTime = processingEnd - processingStart;
     const existingEntry = slowestEntriesMap[interactionId!];
     const selector = target ? getNodeSelector(target) : null;

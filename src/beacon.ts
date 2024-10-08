@@ -24,7 +24,11 @@ const sendBeacon =
  * was prerendered or restored from BF cache
  */
 export function shouldReportValue(value: number) {
-  return value > 0 || getPageRestoreTime() || wasPrerendered();
+  if (getPageRestoreTime() || wasPrerendered()) {
+    return value >= 0;
+  }
+
+  return value > 0;
 }
 
 /**
