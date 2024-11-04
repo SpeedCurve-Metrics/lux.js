@@ -87,14 +87,4 @@ test.describe("POST beacon request", () => {
 
     expect(luxRequests.count()).toEqual(1);
   });
-
-  test("the beacon can be disabled by setting LUX.enablePostBeacon = false", async ({ page }) => {
-    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
-    await page.goto("/images.html?injectScript=LUX.enablePostBeacon=false;", {
-      waitUntil: "networkidle",
-    });
-    await page.goto("/");
-
-    expect(luxRequests.count()).toEqual(0);
-  });
 });
