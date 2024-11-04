@@ -167,11 +167,6 @@ export class Beacon {
   send() {
     this.logger.logEvent(LogEvent.PostBeaconSendCalled);
 
-    if (!this.config.enablePostBeacon) {
-      this.logger.logEvent(LogEvent.PostBeaconDisabled);
-      return;
-    }
-
     for (const cb of this.onBeforeSendCbs) {
       cb();
     }

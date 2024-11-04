@@ -51,7 +51,7 @@ export const LogEvent: Record<string, number> = {
   PostBeaconCancelled: 85,
   PostBeaconStopRecording: 86,
   PostBeaconMetricRejected: 87,
-  PostBeaconDisabled: 88,
+  // PostBeaconDisabled: 88, // Not used
   PostBeaconSendFailed: 89,
   PostBeaconCSPViolation: 90,
 };
