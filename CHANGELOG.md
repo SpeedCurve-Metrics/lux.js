@@ -1,14 +1,16 @@
 # lux.js changelog
 
+## 2025-01-13: v4.0.29
+
+### Other
+
+- Remove `LUX.enablePostBeacon` configuration item.
+
 ## 2024-11-04: v4.0.28
 
 ### Bug fixes
 
 - Fix bug where in some rare cases a negative INP or LCP value could be reported.
-
-### Other
-
-- Remove `LUX.enablePostBeacon` configuration item.
 
 ## 2024-09-19: v4.0.27
 
