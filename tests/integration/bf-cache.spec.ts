@@ -20,7 +20,7 @@ test.describe("BF cache integration", () => {
 
   test.beforeAll(async () => {
     browser = await chromium.launch({
-      args: ["--headless=new"],
+      headless: false,
       ignoreDefaultArgs: ["--disable-back-forward-cache"],
     });
     browserName = browser.browserType().name();
