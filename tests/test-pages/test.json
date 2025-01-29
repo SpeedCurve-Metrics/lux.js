@@ -1,0 +1,15 @@
+{
+    "status": "OK",
+    "data": [
+        {
+            "type": "dog",
+            "name": "Charlie",
+            "colour": "white"
+        },
+        {
+            "type": "dog",
+            "name": "Eve",
+            "colour": "black"
+        }
+    ]
+}
