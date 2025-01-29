@@ -1,4 +1,9 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices, expect } from "@playwright/test";
+import { toBeBetween } from "./tests/helpers/expect-to-be-between";
+
+expect.extend({
+  toBeBetween,
+});
 
 export default defineConfig({
   testDir: "./tests/integration",

@@ -21,7 +21,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ["src/*"],
+      files: ["src/**/*"],
       rules: {
         "no-restricted-syntax": ["error", "TemplateLiteral"],
       },
