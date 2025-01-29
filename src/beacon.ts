@@ -172,18 +172,14 @@ export class Beacon {
     const metricData: Partial<BeaconMetricData> = {};
     for (const metric in this.metricCollectors) {
       const key = metric as BeaconMetricKey;
-      const collector = this.metricCollectors[key]!;
-
-      if (collector) {
-        const data = collector();
-
-        if (data) {
-          metricData[metric as BeaconMetricKey] = data;
-        }
+      const data = this.metricCollectors[key]!();
+      this.logger.logEvent(LogEvent.PostBeaconCollector, [key, !!data]);
+      if (data) {
+        metricData[metric as BeaconMetricKey] = data;
       }
     }
 
-    if (Object.keys(metricData).length > 0 && !this.config.allowEmptyPostBeacon) {
+    if (!Object.keys(metricData).length && !this.config.allowEmptyPostBeacon) {
       // TODO: This is only required while the new beacon is supplementary. Once it's the primary
       // beacon, we should send it regardless of how much metric data it has.
       this.logger.logEvent(LogEvent.PostBeaconCancelled);

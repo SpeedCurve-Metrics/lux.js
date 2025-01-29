@@ -79,7 +79,6 @@ BeaconStore.open().then(async (store) => {
       const contents = await readFile(path.join(distDir, "lux.min.js"));
       let preamble = [
         "LUX=window.LUX||{}",
-        "LUX.allowEmptyPostBeacon=true;",
         `LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/'`,
         `LUX.beaconUrlFallback='http://localhost:${SERVER_PORT}/csp-approved/store/'`,
         `LUX.beaconUrlV2='http://localhost:${SERVER_PORT}/v2/store/'`,

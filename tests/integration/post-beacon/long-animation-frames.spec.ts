@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { BeaconPayload } from "../../../src/beacon";
 import { entryTypeSupported } from "../../helpers/browsers";
-import { getNavigationTimingMs } from "../../helpers/lux";
 import RequestInterceptor from "../../request-interceptor";
 
 test.describe("POST beacon LoAF", () => {
