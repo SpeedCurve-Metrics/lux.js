@@ -1,4 +1,4 @@
-import { BeaconMetricData, shouldReportValue } from "../beacon";
+import { BeaconMetricData, BeaconMetricKey, shouldReportValue } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
 import { getEntriesByType, getNavigationEntry, timing } from "../performance";
@@ -16,7 +16,7 @@ export function reset(): void {
   lcpEntry = undefined;
 }
 
-export function getData(): BeaconMetricData["lcp"] | undefined {
+export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
   if (!lcpEntry) {
     return undefined;
   }

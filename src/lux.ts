@@ -1,4 +1,4 @@
-import { Beacon, fitUserTimingEntries, shouldReportValue } from "./beacon";
+import { Beacon, BeaconMetricKey, fitUserTimingEntries, shouldReportValue } from "./beacon";
 import onPageLoad from "./beacon-triggers/page-load";
 import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
@@ -16,6 +16,7 @@ import { clamp, floor, max, round, sortNumeric } from "./math";
 import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import * as LCP from "./metric/LCP";
+import * as LoAF from "./metric/LoAF";
 import now from "./now";
 import {
   performance,
@@ -147,29 +148,39 @@ LUX = (function () {
     PO.observe("element", processAndLogEntry);
     PO.observe("paint", processAndLogEntry);
 
-    PO.observe("largest-contentful-paint", (entry) => {
-      // Process the LCP entry for the legacy beacon
-      processAndLogEntry(entry);
+    if (
+      PO.observe("largest-contentful-paint", (entry) => {
+        // Process the LCP entry for the legacy beacon
+        processAndLogEntry(entry);
 
-      // Process the LCP entry for the new beacon
-      LCP.processEntry(entry);
-      beacon.setMetricData("lcp", LCP.getData()!);
-    });
+        // Process the LCP entry for the new beacon
+        LCP.processEntry(entry);
+      })
+    ) {
+      beacon.addCollector(BeaconMetricKey.LCP, LCP.getData);
+    }
 
-    PO.observe("layout-shift", (entry) => {
-      CLS.processEntry(entry);
-      beacon.setMetricData("cls", CLS.getData());
-      logEntry(entry);
-    });
+    if (
+      PO.observe("layout-shift", (entry) => {
+        CLS.processEntry(entry);
+        logEntry(entry);
+      })
+    ) {
+      beacon.addCollector(BeaconMetricKey.CLS, CLS.getData);
+    }
+
+    if (
+      PO.observe("long-animation-frame", (entry) => {
+        LoAF.processEntry(entry);
+        logEntry(entry);
+      })
+    ) {
+      beacon.addCollector(BeaconMetricKey.LoAF, LoAF.getData);
+    }
 
     const handleINPEntry = (entry: PerformanceEventTiming) => {
       INP.processEntry(entry);
-
-      const data = INP.getData();
-
-      if (data) {
-        beacon.setMetricData("inp", data);
-      }
+      logEntry(entry);
     };
 
     PO.observe("first-input", (entry) => {
@@ -188,25 +199,29 @@ LUX = (function () {
     // TODO: Set durationThreshold to 40 once performance.interactionCount is widely supported.
     // Right now we have to count every event to get the total interaction count so that we can
     // estimate a high percentile value for INP.
-    PO.observe(
-      "event",
-      (entry: PerformanceEventTiming) => {
-        handleINPEntry(entry);
+    if (
+      PO.observe(
+        "event",
+        (entry: PerformanceEventTiming) => {
+          handleINPEntry(entry);
 
-        // It's useful to log the interactionId, but it is not serialised by default. Annoyingly, we
-        // need to manually serialize our own object with the keys we want.
-        logEntry({
-          interactionId: entry.interactionId,
-          name: entry.name,
-          entryType: entry.entryType,
-          startTime: entry.startTime,
-          duration: entry.duration,
-          processingStart: entry.processingStart,
-          processingEnd: entry.processingEnd,
-        } as PerformanceEventTiming);
-      },
-      { durationThreshold: 0 },
-    );
+          // It's useful to log the interactionId, but it is not serialised by default. Annoyingly, we
+          // need to manually serialize our own object with the keys we want.
+          logEntry({
+            interactionId: entry.interactionId,
+            name: entry.name,
+            entryType: entry.entryType,
+            startTime: entry.startTime,
+            duration: entry.duration,
+            processingStart: entry.processingStart,
+            processingEnd: entry.processingEnd,
+          } as PerformanceEventTiming);
+        },
+        { durationThreshold: 0 },
+      )
+    ) {
+      beacon.addCollector(BeaconMetricKey.INP, INP.getData);
+    }
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
@@ -872,6 +887,7 @@ LUX = (function () {
     LCP.reset();
     CLS.reset();
     INP.reset();
+    LoAF.reset();
     nErrors = 0;
     gFirstInputDelay = undefined;
 
