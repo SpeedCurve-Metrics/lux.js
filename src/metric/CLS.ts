@@ -1,4 +1,4 @@
-import { CLSAttribution, BeaconMetricData } from "../beacon";
+import { CLSAttribution, BeaconMetricData, BeaconMetricKey } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { max } from "../math";
 import { processTimeMetric } from "../timing";
@@ -56,7 +56,7 @@ export function reset(): void {
   largestEntry = undefined;
 }
 
-export function getData(): BeaconMetricData["cls"] {
+export function getData(): BeaconMetricData[BeaconMetricKey.CLS] {
   return {
     value: maximumSessionValue,
     startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0].startTime) : null,

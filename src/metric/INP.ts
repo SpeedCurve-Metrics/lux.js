@@ -1,8 +1,9 @@
-import { BeaconMetricData } from "../beacon";
+import { BeaconMetricData, BeaconMetricKey } from "../beacon";
 import { getNodeSelector } from "../dom";
-import { clamp, floor } from "../math";
+import { clamp, floor, max } from "../math";
 import { performance } from "../performance";
 import { processTimeMetric } from "../timing";
+import { getEntries as getLoAFEntries, summarizeLoAFScripts } from "./LoAF";
 
 /**
  * This implementation is based on the web-vitals implementation, however it is stripped back to the
@@ -22,6 +23,12 @@ export interface Interaction {
   selector: string | null;
   startTime: number;
   target: Node | null;
+}
+
+export enum INPPhase {
+  InputDelay = "ID",
+  ProcessingTime = "PT",
+  PresentationDelay = "PD",
 }
 
 // A list of the slowest interactions
@@ -108,29 +115,62 @@ export function getHighPercentileInteraction(): Interaction | undefined {
   return slowestEntries[index];
 }
 
-export function getData(): BeaconMetricData["inp"] | undefined {
+export function getData(): BeaconMetricData[BeaconMetricKey.INP] | undefined {
   const interaction = getHighPercentileInteraction();
 
   if (!interaction) {
     return undefined;
   }
 
+  const { startTime, processingStart } = interaction;
+
+  const inpScripts = getLoAFEntries()
+    .flatMap((entry) => entry.scripts)
+    // Only include scripts that started after the interaction
+    .filter((script) => script.startTime + script.duration >= startTime)
+    .map((_script) => {
+      const script = JSON.parse(JSON.stringify(_script));
+
+      // Clamp the script duration to the time of the interaction
+      script.duration = script.startTime + script.duration - max(startTime, script.startTime);
+      script.inpPhase = getINPPhase(script, interaction);
+
+      return script as PerformanceScriptTiming;
+    });
+
+  const loafScripts = summarizeLoAFScripts(inpScripts);
+
   return {
     value: interaction.duration,
-    startTime: processTimeMetric(interaction.startTime),
+    startTime: processTimeMetric(startTime),
+    duration: interaction.duration,
     subParts: {
-      inputDelay: clamp(floor(interaction.processingStart - interaction.startTime)),
+      inputDelay: clamp(floor(processingStart - startTime)),
+      processingStart: processTimeMetric(processingStart),
+      processingEnd: processTimeMetric(interaction.processingEnd),
       processingTime: clamp(floor(interaction.processingTime)),
-      presentationDelay: clamp(
-        floor(interaction.startTime + interaction.duration - interaction.processingEnd),
-      ),
+      presentationDelay: clamp(floor(startTime + interaction.duration - interaction.processingEnd)),
     },
     attribution: {
       eventType: interaction.name,
       elementSelector: interaction.selector || null,
       elementType: interaction.target?.nodeName || null,
+      loafScripts,
     },
   };
+}
+
+export function getINPPhase(script: PerformanceScriptTiming, interaction: Interaction): INPPhase {
+  const { processingStart, processingTime, startTime } = interaction;
+  const inputDelay = processingStart - startTime;
+
+  if (script.startTime < startTime + inputDelay) {
+    return INPPhase.InputDelay;
+  } else if (script.startTime >= startTime + inputDelay + processingTime) {
+    return INPPhase.PresentationDelay;
+  }
+
+  return INPPhase.ProcessingTime;
 }
 
 function getInteractionCount(): number {

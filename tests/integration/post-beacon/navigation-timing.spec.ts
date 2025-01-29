@@ -7,8 +7,7 @@ test.skip("POST beacon navigation timing", () => {
   test("Navigation timing is measured", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.goto("/default.html");
-    await luxRequests.waitForMatchingRequest();
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
     const nt = b.navigationTiming!;
 

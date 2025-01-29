@@ -1,9 +1,5 @@
-export function floor(x: number): number {
-  return Math.floor(x);
-}
-
 export const max = Math.max;
-
+export const floor = Math.floor;
 export const round = Math.round;
 
 /**
