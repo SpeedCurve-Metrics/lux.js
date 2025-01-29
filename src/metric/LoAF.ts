@@ -1,5 +1,3 @@
-import { BeaconMetricData, BeaconMetricKey } from "../beacon";
-
 export type LoAFSummary = {
   totalEntries: number;
   totalDuration: number;
@@ -19,7 +17,7 @@ export type LoAFEntry = {
 };
 
 export type LoAFScriptSummary = {
-  sourceURL: string;
+  sourceUrl: string;
   sourceFunctionName: string;
   totalDuration: number;
   totalForcedStyleAndLayoutDuration: number;
@@ -70,7 +68,7 @@ export function getData(): LoAFSummary {
       const key = script.invoker + ":" + script.sourceURL + ":" + script.sourceFunctionName;
       if (!scripts[key]) {
         scripts[key] = {
-          sourceURL: script.sourceURL,
+          sourceUrl: script.sourceURL,
           sourceFunctionName: script.sourceFunctionName,
           totalDuration: 0,
           totalForcedStyleAndLayoutDuration: 0,
