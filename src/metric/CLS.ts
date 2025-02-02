@@ -9,6 +9,8 @@ let sessionAttributions: CLSAttribution[] = [];
 let largestEntry: LayoutShift | undefined;
 let maximumSessionValue = 0;
 
+export const MAX_CLS_SOURCES = 50;
+
 export function processEntry(entry: LayoutShift): void {
   if (!entry.hadRecentInput) {
     const firstEntry = sessionEntries[0];
@@ -64,6 +66,6 @@ export function getData(): BeaconMetricData["cls"] {
           startTime: processTimeMetric(largestEntry.startTime),
         }
       : null,
-    sources: sessionAttributions.length ? sessionAttributions : null,
+    sources: sessionAttributions.length ? sessionAttributions.slice(0, MAX_CLS_SOURCES) : null,
   };
 }
