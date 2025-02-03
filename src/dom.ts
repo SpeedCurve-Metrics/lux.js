@@ -15,6 +15,10 @@ export function hasParentNode(el: Element): el is ElementWithParentNode {
 const MAX_SELECTOR_LENGTH = 100;
 
 export function getNodeSelector(node: Node, selector = ""): string {
+  return _getNodeSelector(node, selector).slice(0, MAX_SELECTOR_LENGTH);
+}
+
+function _getNodeSelector(node: Node, selector = ""): string {
   try {
     if (
       selector &&

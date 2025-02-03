@@ -156,4 +156,20 @@ describe("DOM", () => {
     const buttonSelector = DOM.getNodeSelector(button);
     expect(buttonSelector).toEqual("button.btn.btn-primary");
   });
+
+  test(".getNodeSelector() when the node's ID is very long", () => {
+    const longId = "aBcDeFgHiJkLmNoPqRsTuVwXyZ".repeat(100);
+
+    document.body.innerHTML = `
+      <div class="body-wrapper-y4195VjkmAgT5ZVvGD0Q">
+        <div class="container">
+          <button id="${longId}" class="btn btn-primary">Click me</button>
+        </div>
+      </div>
+    `;
+
+    const button = document.querySelector("button")!;
+    const buttonSelector = DOM.getNodeSelector(button);
+    expect(buttonSelector).toEqual("#" + longId.slice(0, 99));
+  });
 });

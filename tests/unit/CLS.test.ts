@@ -29,6 +29,17 @@ describe("CLS", () => {
     // Score didn't change because the biggest window was still the previous window
     expect(CLS.getData().value).toBeCloseTo(1.1);
   });
+
+  test("The number of sources is limited", () => {
+    const entry1 = makeEntry(100, 0.1);
+    entry1.sources = new Array(CLS.MAX_CLS_SOURCES * 1.2).fill({
+      node: document.createElement("div"),
+    });
+
+    CLS.processEntry(entry1);
+
+    expect(CLS.getData().sources).toHaveLength(CLS.MAX_CLS_SOURCES);
+  });
 });
 
 function makeEntry(startTime: number, value: number, hadRecentInput = false): LayoutShift {
