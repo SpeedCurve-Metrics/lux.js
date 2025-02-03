@@ -1,5 +1,12 @@
 # lux.js changelog
 
+## 2025-02-10: v4.0.30
+
+### Bug fixes
+
+- Limit the number of CLS attribution sources to prevent large beacon payloads.
+- Prevent generating element selectors that are longer than the maximum size.
+
 ## 2025-01-13: v4.0.29
 
 ### Other
