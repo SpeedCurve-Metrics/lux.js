@@ -17,8 +17,10 @@ export type LoAFEntry = {
 };
 
 export type LoAFScriptSummary = {
-  sourceUrl: string;
+  sourceUrlOrigin: string | null;
+  sourceUrlPathname: string | null;
   sourceFunctionName: string;
+  totalEntries: number;
   totalDuration: number;
   totalForcedStyleAndLayoutDuration: number;
   invoker: string;
@@ -67,15 +69,29 @@ export function getData(): LoAFSummary {
     entry.scripts.forEach((script) => {
       const key = script.invoker + ":" + script.sourceURL + ":" + script.sourceFunctionName;
       if (!scripts[key]) {
+        let sourceUrlOrigin = null;
+        let sourceUrlPathname = null;
+
+        try {
+          const url = new URL(script.sourceURL);
+          sourceUrlOrigin = url.origin;
+          sourceUrlPathname = url.pathname;
+        } catch (_) {
+          // Invalid source URL
+        }
+
         scripts[key] = {
-          sourceUrl: script.sourceURL,
+          sourceUrlOrigin,
+          sourceUrlPathname,
           sourceFunctionName: script.sourceFunctionName,
+          totalEntries: 0,
           totalDuration: 0,
           totalForcedStyleAndLayoutDuration: 0,
           invoker: script.invoker,
         };
       }
 
+      scripts[key].totalEntries++;
       scripts[key].totalDuration += script.duration;
       scripts[key].totalForcedStyleAndLayoutDuration += script.forcedStyleAndLayoutDuration;
     });
