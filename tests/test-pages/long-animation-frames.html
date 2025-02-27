@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LUX long animation frames test page</title>
+    <script>/*INJECT_SCRIPT*/</script>
+    <script src="/js/lux.js?id=10001" async crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>LUX long animation frames test page</h1>
+
+    <script src="external-long-task.js" onload="externalLongTask(50)"></script>
+
+    <img src="eve.jpg" elementtiming="eve-image">
+
+    <button id="create-long-task" type="button">Make a delayed paint</button>
+
+    <div style="margin-top: 2000px;">
+        <p id="scroll-anchor">This element can be scrolled to.</p>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.getElementById("create-long-task").addEventListener("click", globalClickHandler);
+
+        function globalClickHandler() {
+            const script = document.createElement("script");
+            script.src = "external-long-task.js";
+            script.onload = () => externalLongTask(50);
+            document.body.appendChild(script);
+
+            const firstImage = document.querySelector("img");
+            const newImage = firstImage.cloneNode();
+            firstImage.insertAdjacentElement("afterend", newImage);
+        }
+
+        App(() => {
+            const qs = new URLSearchParams(location.search);
+            const blockFor = Number(qs.get("blockFor")) || 50;
+            let scrolling = false;
+
+            document.addEventListener("scroll", () => {
+                if (!scrolling) {
+                    createLongTask(blockFor);
+                    scrolling = false;
+                }
+
+                scrolling = true;
+            });
+
+            function internalLongTask() {
+                createLongTask(blockFor);
+            }
+
+            internalLongTask();
+            externalLongTask(50);
+
+            fetch("/test.json").then((res) => res.json()).then(() => {
+                internalLongTask();
+            });
+        });
+        console.log("App done");
+    </script>
+</body>
+</html>

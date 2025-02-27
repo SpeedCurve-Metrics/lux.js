@@ -170,6 +170,9 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
     case LogEvent.PostBeaconCSPViolation:
       return "POST beacon cancelled due to CSP violation.";
 
+    case LogEvent.PostBeaconCollector:
+      return `POST beacon metric collector: ${args[0]} (has data: ${args[1]})`;
+
     case LogEvent.NavigationStart:
       return "";
 
