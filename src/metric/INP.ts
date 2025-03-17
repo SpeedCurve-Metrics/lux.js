@@ -125,13 +125,11 @@ export function getData(): BeaconMetricData["inp"] | undefined {
         floor(interaction.startTime + interaction.duration - interaction.processingEnd),
       ),
     },
-    attribution: interaction.selector
-      ? {
-          elementSelector: interaction.selector,
-          elementType: interaction.target?.nodeName || "",
-          eventType: interaction.name,
-        }
-      : null,
+    attribution: {
+      eventType: interaction.name,
+      elementSelector: interaction.selector || null,
+      elementType: interaction.target?.nodeName || null,
+    },
   };
 }
 

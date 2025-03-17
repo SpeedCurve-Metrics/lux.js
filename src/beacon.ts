@@ -281,6 +281,6 @@ type Metric = {
 };
 
 type MetricAttribution = {
-  elementSelector: string;
-  elementType: string;
+  elementSelector: string | null;
+  elementType: string | null;
 };
