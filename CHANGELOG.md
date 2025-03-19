@@ -1,5 +1,15 @@
 # lux.js changelog
 
+## 2025-03-20: v4.0.31
+
+### New features
+
+- Automatically send UTM parameters as custom data. The variable names are: `_utm_source`, `_utm_campaign`, `_utm_medium`, `_utm_term`, and `_utm_content`. These must be configured as **Custom Data Dimensions** in your [SpeedCurve Settings](https://app.speedcurve.com/settings/custom-data/) to show in your dashboards.
+
+### Bug fixes
+
+- Ensure the event type is always present for INP attribution.
+
 ## 2025-02-10: v4.0.30
 
 ### Bug fixes
