@@ -22,21 +22,26 @@ describe("INP", () => {
 
     // The first-input entry should be ignored, so the high percentile value is one of the first
     // 50 interactions.
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(100);
+    expect(INP.getData()!.value).toEqual(100);
 
     // Now create a unique first-input entry that becomes the high percentile value
     INP.processEntry(makeEntry({ interationId: 61, duration: 200, entryType: "first-input" }));
 
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
+    expect(INP.getData()!.value).toEqual(200);
   });
 
   test("INP is calculated correctly for small sets of interactions", () => {
-    INP.processEntry(makeEntry({ interactionId: 1, duration: 100 }));
-    INP.processEntry(makeEntry({ interactionId: 2, duration: 200 }));
-    INP.processEntry(makeEntry({ interactionId: 3, duration: 300 }));
-    INP.processEntry(makeEntry({ interactionId: 0, duration: 400 }));
+    INP.processEntry(makeEntry({ interactionId: 1, startTime: 10, duration: 100 }));
+    INP.processEntry(makeEntry({ interactionId: 2, startTime: 20, duration: 200 }));
+    INP.processEntry(makeEntry({ interactionId: 3, startTime: 30, duration: 300 }));
+    INP.processEntry(makeEntry({ interactionId: 0, startTime: 40, duration: 400 }));
 
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(300);
+    const data = INP.getData()!;
+
+    console.log(data);
+    expect(data.value).toEqual(300);
+    expect(data.startTime).toEqual(30);
+    expect(data.attribution!.eventType).toEqual("pointerdown");
   });
 
   test("INP is calculated correctly for small sets of interactions with duplicate IDs", () => {
@@ -50,7 +55,7 @@ describe("INP", () => {
     INP.processEntry(makeEntry({ interactionId: 0, duration: 990 }));
     INP.processEntry(makeEntry({ interactionId: 0, duration: 400 }));
 
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(300);
+    expect(INP.getData()!.value).toEqual(300);
   });
 
   test("INP is calculated correctly for large sets of interactions", () => {
@@ -68,7 +73,7 @@ describe("INP", () => {
       INP.processEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(400);
+    expect(INP.getData()!.value).toEqual(400);
 
     // The logic to estimate the high percentile is basically to use the Nth slowest interaction,
     // where N is the interaction count divided by 50. So at 100 interactions we should use the
@@ -78,7 +83,7 @@ describe("INP", () => {
       INP.processEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
+    expect(INP.getData()!.value).toEqual(200);
   });
 
   test("INP is calculated correctly for large sets of interactions with duplicate IDs", () => {
@@ -93,7 +98,7 @@ describe("INP", () => {
     INP.processEntry(makeEntry({ interactionId: 3, duration: 200 }));
     INP.processEntry(makeEntry({ interactionId: 3, duration: 200 }));
 
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(600);
+    expect(INP.getData()!.value).toEqual(600);
 
     let interactions = 3;
 
@@ -104,7 +109,7 @@ describe("INP", () => {
       INP.processEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(400);
+    expect(INP.getData()!.value).toEqual(400);
 
     // The logic to estimate the high percentile is basically to use the Nth slowest interaction,
     // where N is the interaction count divided by 50. So at 100 interactions we should use the
@@ -114,7 +119,7 @@ describe("INP", () => {
       INP.processEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
-    expect(INP.getHighPercentileInteraction()!.duration).toEqual(200);
+    expect(INP.getData()!.value).toEqual(200);
   });
 
   test("Entries with a longer processing time are preferred", () => {
@@ -135,6 +140,7 @@ function makeEntry(props: Partial<PerformanceEventTiming>): PerformanceEventTimi
     interactionId: 0,
     duration: 0,
     entryType: "event",
+    name: "pointerdown",
     startTime: 0,
     processingStart: 0,
     processingEnd: 0,
