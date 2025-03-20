@@ -1,5 +1,12 @@
 # lux.js changelog
 
+## 2025-03-21: v4.0.32
+
+### Bug fixes
+
+- Prevent legacy browsers throwing `URLSearchParams is undefined`
+- Avoid cross frame property access errors
+
 ## 2025-03-20: v4.0.31
 
 ### New features
