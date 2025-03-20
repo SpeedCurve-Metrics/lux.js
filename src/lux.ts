@@ -1354,14 +1354,19 @@ LUX = (function () {
 
   // Return an array containing the top & left coordinates of the element.
   // from http://www.quirksmode.org/js/findpos.html
-  function findPos(e: HTMLElement | null): [number, number] {
+  function findPos(el: HTMLElement | null): [number, number] {
     let curleft = 0;
     let curtop = 0;
 
-    while (e) {
-      curleft += e.offsetLeft;
-      curtop += e.offsetTop;
-      e = e.offsetParent as HTMLElement | null;
+    while (el) {
+      try {
+        curleft += el.offsetLeft;
+        curtop += el.offsetTop;
+        el = el.offsetParent as HTMLElement | null;
+      } catch (e) {
+        // If we get an exception, just return the current values.
+        return [curleft, curtop];
+      }
     }
 
     return [curleft, curtop];
