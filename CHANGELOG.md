@@ -10,7 +10,7 @@
 
 - Ensure the event type is always present for INP attribution.
 
-## 2025-02-10: v4.0.30
+## 2025-02-04: v4.0.30
 
 ### Bug fixes
 
