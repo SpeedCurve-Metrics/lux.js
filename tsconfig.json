@@ -23,5 +23,5 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true
   },
-  "include": ["src/**/*", "docs/**/*", "tests/**/*"],
+  "include": ["src/**/*", "docs/**/*"],
 }
