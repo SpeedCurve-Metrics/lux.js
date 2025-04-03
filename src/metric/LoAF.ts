@@ -1,4 +1,4 @@
-import { floor } from "../math";
+import { clamp, floor } from "../math";
 import { INPPhase } from "./INP";
 
 export type LoAFSummary = {
@@ -58,7 +58,7 @@ export function getData(): LoAFSummary {
     totalDuration += duration;
     totalBlockingDuration += blockingDuration;
     totalStyleAndLayoutDuration += styleAndLayoutStart
-      ? startTime + duration - styleAndLayoutStart
+      ? clamp(startTime + duration - styleAndLayoutStart)
       : 0;
     totalWorkDuration += renderStart ? renderStart - startTime : duration;
 
