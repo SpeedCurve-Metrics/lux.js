@@ -1,5 +1,15 @@
 # lux.js changelog
 
+## 2025-04-08: v4.1.0
+
+### New features
+
+- Long Animation Frame (LoAF) data is now collected, including script attribution for INP.
+
+### Improvements
+
+- LCP, CLS, and INP are now calculated right before the beacon is sent rather than when events are received.
+
 ## 2025-03-21: v4.0.32
 
 ### Bug fixes
