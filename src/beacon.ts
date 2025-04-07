@@ -3,7 +3,9 @@ import { wasPrerendered } from "./document";
 import Flags, { addFlag } from "./flags";
 import { addListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
+import { LoAFScriptSummary, LoAFSummary } from "./metric/LoAF";
 import { NavigationTimingData } from "./metric/navigation-timing";
+import now from "./now";
 import { getPageRestoreTime, getZeroTime, msSincePageInit } from "./timing";
 import { VERSION } from "./version";
 
@@ -75,7 +77,7 @@ export class Beacon {
   flags = 0;
 
   startTime: number;
-  metricData: Partial<BeaconMetricData>;
+  metricCollectors: { [k in BeaconMetricKey]?: CallableFunction } = {};
 
   onBeforeSendCbs: Array<() => void> = [];
 
@@ -86,7 +88,6 @@ export class Beacon {
     this.customerId = opts.customerId;
     this.sessionId = opts.sessionId;
     this.pageId = opts.pageId;
-    this.metricData = {};
 
     this.maxMeasureTimeout = window.setTimeout(() => {
       this.logger.logEvent(LogEvent.PostBeaconTimeoutReached);
@@ -139,21 +140,15 @@ export class Beacon {
     this.logger.logEvent(LogEvent.PostBeaconStopRecording);
   }
 
-  setMetricData<K extends keyof BeaconMetricData>(metric: K, data: BeaconMetricData[K]) {
-    if (!this.isRecording) {
-      this.logger.logEvent(LogEvent.PostBeaconMetricRejected, [metric]);
-      return;
-    }
-
-    this.metricData[metric] = data;
+  addCollector<K extends BeaconMetricKey>(
+    metric: K,
+    collector: () => BeaconMetricData[K] | undefined,
+  ) {
+    this.metricCollectors[metric] = collector;
   }
 
   addFlag(flag: number) {
     this.flags = addFlag(this.flags, flag);
-  }
-
-  hasMetricData() {
-    return Object.keys(this.metricData).length > 0;
   }
 
   beaconUrl() {
@@ -175,7 +170,17 @@ export class Beacon {
       return;
     }
 
-    if (!this.hasMetricData() && !this.config.allowEmptyPostBeacon) {
+    const collectionStart = now();
+    const metricData: Partial<BeaconMetricData> = {};
+    for (const metric in this.metricCollectors) {
+      const data = this.metricCollectors[metric as BeaconMetricKey]!();
+      this.logger.logEvent(LogEvent.PostBeaconCollector, [metric, !!data]);
+      if (data) {
+        metricData[metric as BeaconMetricKey] = data;
+      }
+    }
+
+    if (!Object.keys(metricData).length && !this.config.allowEmptyPostBeacon) {
       // TODO: This is only required while the new beacon is supplementary. Once it's the primary
       // beacon, we should send it regardless of how much metric data it has.
       this.logger.logEvent(LogEvent.PostBeaconCancelled);
@@ -196,12 +201,13 @@ export class Beacon {
         customerId: this.customerId,
         flags: this.flags,
         measureDuration: msSincePageInit(),
+        collectionDuration: now() - collectionStart,
         pageId: this.pageId,
         scriptVersion: VERSION,
         sessionId: this.sessionId,
         startTime: this.startTime,
       },
-      this.metricData,
+      metricData,
     );
 
     try {
@@ -235,11 +241,22 @@ export type BeaconMetaData = {
 
   /** How long in milliseconds did this beacon capture page data for */
   measureDuration: number;
+
+  /** How long in milliseconds did the collection process take */
+  collectionDuration: number;
 };
 
+export enum BeaconMetricKey {
+  CLS = "cls",
+  INP = "inp",
+  LCP = "lcp",
+  LoAF = "loaf",
+  NavigationTiming = "navigationTiming",
+}
+
 export type BeaconMetricData = {
-  navigationTiming: NavigationTimingData;
-  lcp: Metric & {
+  [BeaconMetricKey.NavigationTiming]: NavigationTimingData;
+  [BeaconMetricKey.LCP]: MetricWithValue & {
     attribution: MetricAttribution | null;
 
     /** LCP sub-parts can be null if the LCP element was not loaded by a resource */
@@ -250,17 +267,22 @@ export type BeaconMetricData = {
     } | null;
   };
 
-  inp: Metric & {
+  [BeaconMetricKey.LoAF]: LoAFSummary | undefined;
+
+  [BeaconMetricKey.INP]: MetricWithValue & {
     startTime: number;
-    attribution: (MetricAttribution & { eventType: string }) | null;
+    duration: number;
+    attribution: INPAttribution | null;
     subParts: {
       inputDelay: number;
       processingTime: number;
       presentationDelay: number;
+      processingStart: number;
+      processingEnd: number;
     };
   };
 
-  cls: Metric & {
+  [BeaconMetricKey.CLS]: MetricWithValue & {
     startTime: number | null;
     /** Largest entry can be null if there were no layout shifts (value will be 0) */
     largestEntry: {
@@ -276,7 +298,12 @@ export type CLSAttribution = MetricAttribution & {
   startTime: number;
 };
 
-type Metric = {
+export type INPAttribution = MetricAttribution & {
+  eventType: string;
+  loafScripts: LoAFScriptSummary[];
+};
+
+type MetricWithValue = {
   value: number;
 };
 

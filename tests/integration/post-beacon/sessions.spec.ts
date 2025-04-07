@@ -7,7 +7,7 @@ test.describe("LUX user sessions", () => {
   test("the session ID is the same across multiple page views", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.goto("/");
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
     const sessionId = b.sessionId;
 
@@ -15,7 +15,7 @@ test.describe("LUX user sessions", () => {
     expect(b.pageId.length).toBeGreaterThan(0);
 
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.goto("/");
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
 
     expect(b.sessionId).toEqual(sessionId);
@@ -27,13 +27,13 @@ test.describe("LUX user sessions", () => {
     await page.goto(`/images.html?injectScript=document.cookie="${uid}=${sessionId}";`, {
       waitUntil: "networkidle",
     });
-    await page.goto("/");
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
 
     expect(b.sessionId).toEqual(sessionId);
 
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.goto("/");
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
 
     expect(b.sessionId).toEqual(sessionId);
@@ -53,14 +53,14 @@ test.describe("LUX user sessions", () => {
       ([uid, sessionId]) => (document.cookie = `${uid}=${sessionId}; max-age=1`),
       [uid, sessionId],
     );
-    await page.goto("/");
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
 
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
     expect(b.sessionId).toEqual(sessionId);
 
     await page.waitForTimeout(2000);
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.goto("/");
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
 
     b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
     expect(b.sessionId).not.toEqual(sessionId);

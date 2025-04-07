@@ -49,6 +49,54 @@ declare global {
     interactionId?: number;
   }
 
+  // Long Animation Frames API: https://w3c.github.io/long-animation-frames/#sec-PerformanceLongAnimationFrameTiming
+  interface PerformanceLongAnimationFrameTiming extends PerformanceEntry {
+    readonly startTime: number;
+    readonly duration: number;
+    readonly name: string;
+    readonly entryType: string;
+    readonly renderStart: number;
+    readonly styleAndLayoutStart: number;
+    readonly blockingDuration: number;
+    readonly firstUIEventTimestamp: number;
+    readonly scripts: PerformanceScriptTiming[];
+  }
+
+  // https://w3c.github.io/long-animation-frames/#performancescripttiming
+  enum ScriptInvokerType {
+    "classic-script",
+    "module-script",
+    "event-listener",
+    "user-callback",
+    "resolve-promise",
+    "reject-promise",
+  }
+
+  enum ScriptWindowAttribution {
+    "self",
+    "descendant",
+    "ancestor",
+    "same-page",
+    "other",
+  }
+
+  interface PerformanceScriptTiming extends PerformanceEntry {
+    readonly startTime: number;
+    readonly duration: number;
+    readonly name: string;
+    readonly entryType: string;
+    readonly invokerType: ScriptInvokerType;
+    readonly invoker: string;
+    readonly executionStart: number;
+    readonly sourceURL: string;
+    readonly sourceFunctionName: string;
+    readonly sourceCharPosition: number;
+    readonly pauseDuration: number;
+    readonly forcedStyleAndLayoutDuration: number;
+    readonly window?: Window;
+    readonly windowAttribution: ScriptWindowAttribution;
+  }
+
   // Device Memory 1: https://w3c.github.io/device-memory/#sec-device-memory-js-api
   interface Navigator {
     connection: NetworkInformation;

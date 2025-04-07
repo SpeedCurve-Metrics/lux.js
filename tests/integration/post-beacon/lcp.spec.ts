@@ -8,8 +8,7 @@ test.describe("POST beacon LCP", () => {
   test("LCP is measured", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.goto("/default.html");
-    await luxRequests.waitForMatchingRequest();
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
     const lcpSupported = await entryTypeSupported(page, "largest-contentful-paint");
 

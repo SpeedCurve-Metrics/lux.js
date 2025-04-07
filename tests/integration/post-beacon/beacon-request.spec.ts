@@ -13,8 +13,7 @@ test.describe("POST beacon request", () => {
   test("beacon is sent with a POST request", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.goto("/");
-    await luxRequests.waitForMatchingRequest();
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
 
     expect(luxRequests.count()).toEqual(1);
     expect(luxRequests.get(0)!.method()).toEqual("POST");
@@ -23,8 +22,7 @@ test.describe("POST beacon request", () => {
   test("beacon metadata is always sent", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.goto("/");
-    await luxRequests.waitForMatchingRequest();
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
 
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
     expect(b.customerId).toEqual("10001");
@@ -63,7 +61,7 @@ test.describe("POST beacon request", () => {
   test("the beacon is sent when LUX.init() is called", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
-    await page.evaluate(() => LUX.init());
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.init()));
 
     expect(luxRequests.count()).toEqual(1);
   });
@@ -84,6 +82,7 @@ test.describe("POST beacon request", () => {
       waitUntil: "networkidle",
     });
     await page.goto("/images.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest();
 
     expect(luxRequests.count()).toEqual(1);
   });
