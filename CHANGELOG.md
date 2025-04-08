@@ -1,5 +1,12 @@
 # lux.js changelog
 
+## 2025-04-08: v4.1.1
+
+### Bug fixes
+
+- Limit the number of LoAF entries and script attribution to prevent large beacon payloads.
+- Better handling for legacy browsers that do not support `URLSearchParams`.
+
 ## 2025-04-08: v4.1.0
 
 ### New features

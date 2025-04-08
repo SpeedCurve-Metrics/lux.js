@@ -1,6 +1,6 @@
 import { padStart } from "./string";
 
-export const VERSION = "4.1.0";
+export const VERSION = "4.1.1";
 
 /**
  * Returns the version of the script as a float to be stored in legacy systems that do not support
