@@ -12,7 +12,7 @@ const KNOWN_TRACKING_PARAMS = [
 export function getTrackingParams(): Record<string, string> {
   const trackingParams: Record<string, string> = {};
 
-  if (location.search && URLSearchParams) {
+  if (location.search && typeof URLSearchParams === "function") {
     const p = new URLSearchParams(location.search);
 
     for (const key of KNOWN_TRACKING_PARAMS) {
