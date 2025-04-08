@@ -122,12 +122,15 @@ export function getData(): BeaconMetricData[BeaconMetricKey.INP] | undefined {
     return undefined;
   }
 
-  const { startTime, processingStart } = interaction;
+  const { duration, startTime, processingStart } = interaction;
 
   const inpScripts = getLoAFEntries()
     .flatMap((entry) => entry.scripts)
-    // Only include scripts that started after the interaction
-    .filter((script) => script.startTime + script.duration >= startTime)
+    // Only include scripts that started during the interaction
+    .filter(
+      (script) =>
+        script.startTime + script.duration >= startTime && script.startTime <= startTime + duration,
+    )
     .map((_script) => {
       const script = JSON.parse(JSON.stringify(_script));
 

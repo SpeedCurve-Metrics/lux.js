@@ -31,6 +31,8 @@ export type LoAFScriptSummary = {
   inpPhase?: INPPhase;
 };
 
+const MAX_LOAF_ENTRIES = 50;
+const MAX_LOAF_SCRIPTS = 50;
 let entries: PerformanceLongAnimationFrameTiming[] = [];
 
 export function processEntry(entry: PerformanceLongAnimationFrameTiming): void {
@@ -77,8 +79,11 @@ export function getData(): LoAFSummary {
     totalEntries: entries.length,
     totalStyleAndLayoutDuration: floor(totalStyleAndLayoutDuration),
     totalWorkDuration: floor(totalWorkDuration),
-    entries: summarizedEntries,
-    scripts: summarizeLoAFScripts(entries.flatMap((entry) => entry.scripts)),
+    entries: summarizedEntries.slice(0, MAX_LOAF_ENTRIES),
+    scripts: summarizeLoAFScripts(entries.flatMap((entry) => entry.scripts)).slice(
+      0,
+      MAX_LOAF_SCRIPTS,
+    ),
   };
 }
 
