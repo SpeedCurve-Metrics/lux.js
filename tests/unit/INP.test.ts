@@ -18,14 +18,14 @@ describe("INP", () => {
 
     // Create duplicate event and first-input entries
     INP.processEntry(makeEntry({ interactionId: 60, duration: 300 }));
-    INP.processEntry(makeEntry({ interationId: 0, duration: 300, entryType: "first-input" }));
+    INP.processEntry(makeEntry({ interactionId: 0, duration: 300, entryType: "first-input" }));
 
     // The first-input entry should be ignored, so the high percentile value is one of the first
     // 50 interactions.
     expect(INP.getData()!.value).toEqual(100);
 
     // Now create a unique first-input entry that becomes the high percentile value
-    INP.processEntry(makeEntry({ interationId: 61, duration: 200, entryType: "first-input" }));
+    INP.processEntry(makeEntry({ interactionId: 61, duration: 200, entryType: "first-input" }));
 
     expect(INP.getData()!.value).toEqual(200);
   });
@@ -38,7 +38,6 @@ describe("INP", () => {
 
     const data = INP.getData()!;
 
-    console.log(data);
     expect(data.value).toEqual(300);
     expect(data.startTime).toEqual(30);
     expect(data.attribution!.eventType).toEqual("pointerdown");
