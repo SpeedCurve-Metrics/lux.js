@@ -1,4 +1,4 @@
-import { clamp, floor } from "../math";
+import { clamp, floor, max } from "../math";
 import { INPPhase } from "./INP";
 
 export type LoAFSummary = {
@@ -25,6 +25,7 @@ export type LoAFScriptSummary = {
   timings: Array<[number, number]>; // [startTime, duration]
   totalEntries: number;
   totalDuration: number;
+  totalBlockingDuration: number;
   totalPauseDuration: number;
   totalForcedStyleAndLayoutDuration: number;
   invoker: string;
@@ -101,6 +102,7 @@ export function summarizeLoAFScripts(scripts: PerformanceScriptTiming[]): LoAFSc
         timings: [],
         totalEntries: 0,
         totalDuration: 0,
+        totalBlockingDuration: 0,
         totalPauseDuration: 0,
         totalForcedStyleAndLayoutDuration: 0,
         invoker: script.invoker,
@@ -110,6 +112,7 @@ export function summarizeLoAFScripts(scripts: PerformanceScriptTiming[]): LoAFSc
 
     summary[key].totalEntries++;
     summary[key].totalDuration += script.duration;
+    summary[key].totalBlockingDuration += max(0, script.duration - 50);
     summary[key].totalPauseDuration += script.pauseDuration;
     summary[key].totalForcedStyleAndLayoutDuration += script.forcedStyleAndLayoutDuration;
     summary[key].timings.push([floor(script.startTime), floor(script.duration)]);
