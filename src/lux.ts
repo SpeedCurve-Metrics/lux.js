@@ -17,6 +17,7 @@ import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import * as LCP from "./metric/LCP";
 import * as LoAF from "./metric/LoAF";
+import * as RT from "./metric/resource-timing";
 import now from "./now";
 import {
   performance,
@@ -147,6 +148,11 @@ LUX = (function () {
     PO.observe("longtask", processAndLogEntry);
     PO.observe("element", processAndLogEntry);
     PO.observe("paint", processAndLogEntry);
+
+    PO.observe("resource", (entry) => {
+      RT.processEntry(entry);
+      logEntry(entry);
+    });
 
     if (
       PO.observe("largest-contentful-paint", (entry) => {
@@ -888,6 +894,7 @@ LUX = (function () {
     CLS.reset();
     INP.reset();
     LoAF.reset();
+    RT.reset();
     nErrors = 0;
     gFirstInputDelay = undefined;
 
@@ -902,100 +909,6 @@ LUX = (function () {
 
     // Reset the maximum measure timeout
     createMaxMeasureTimeout();
-  }
-
-  // Return the number of blocking (synchronous) external scripts in the page.
-  function blockingScripts() {
-    const lastViewportElem = lastViewportElement();
-    if (!lastViewportElem) {
-      // If we can not find the last DOM element in the viewport,
-      // use the old technique of just counting sync scripts.
-      return syncScripts();
-    }
-
-    // Find all the synchronous scripts that are ABOVE the last DOM element in the
-    // viewport. (If they are BELOW then they do not block rendering of initial viewport.)
-    const aElems = document.getElementsByTagName("script");
-    let num = 0;
-    for (let i = 0, len = aElems.length; i < len; i++) {
-      const e = aElems[i];
-      if (
-        e.src &&
-        !e.async &&
-        !e.defer &&
-        0 !== (e.compareDocumentPosition(lastViewportElem) & 4)
-      ) {
-        // If the script has a SRC and async is false and it occurs BEFORE the last viewport element,
-        // then increment the counter.
-        num++;
-      }
-    }
-
-    return num;
-  }
-
-  // Return the number of blocking (synchronous) external scripts in the page.
-  function blockingStylesheets() {
-    let nBlocking = 0;
-    const aElems = document.getElementsByTagName("link");
-    for (let i = 0, len = aElems.length; i < len; i++) {
-      const e = aElems[i];
-      if (e.href && "stylesheet" === e.rel && 0 !== e.href.indexOf("data:")) {
-        if (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (e as any).onloadcssdefined ||
-          "print" === e.media ||
-          "style" === e.as ||
-          (typeof e.onload === "function" && e.media === "all")
-        ) {
-          // Not blocking
-        } else {
-          nBlocking++;
-        }
-      }
-    }
-    return nBlocking;
-  }
-
-  // Return the number of synchronous external scripts in the page.
-  function syncScripts() {
-    const aElems = document.getElementsByTagName("script");
-    let num = 0;
-    for (let i = 0, len = aElems.length; i < len; i++) {
-      const e = aElems[i];
-      if (e.src && !e.async && !e.defer) {
-        // If the script has a SRC and async is false, then increment the counter.
-        num++;
-      }
-    }
-
-    return num;
-  }
-
-  // Return the number of external scripts in the page.
-  function numScripts() {
-    const aElems = document.getElementsByTagName("script");
-    let num = 0;
-    for (let i = 0, len = aElems.length; i < len; i++) {
-      const e = aElems[i];
-      if (e.src) {
-        num++;
-      }
-    }
-    return num;
-  }
-
-  // Return the number of stylesheets in the page.
-  function numStylesheets() {
-    const aElems = document.getElementsByTagName("link");
-    let num = 0;
-    for (let i = 0, len = aElems.length; i < len; i++) {
-      const e = aElems[i];
-      if (e.href && "stylesheet" == e.rel) {
-        num++;
-      }
-    }
-    return num;
   }
 
   function inlineTagSize(tagName: string) {
@@ -1315,42 +1228,6 @@ LUX = (function () {
     return aImagesAtf;
   }
 
-  // Return the last element in the viewport.
-  function lastViewportElement(parent?: Element): Element | undefined {
-    if (!parent) {
-      // We call this function recursively passing in the parent element,
-      // but if no parent then start with BODY.
-      parent = document.body;
-    }
-
-    let lastChildInViewport;
-    if (parent) {
-      // Got errors that parent was null so testing again here.
-      // Find the last child that is in the viewport.
-      // Elements are listed in DOM order.
-      const aChildren = parent.children;
-      if (aChildren) {
-        for (let i = 0, len = aChildren.length; i < len; i++) {
-          const child = aChildren[i];
-          if (inViewport(child as HTMLElement)) {
-            // The children are in DOM order, so we just have to
-            // save the LAST child that was in the viewport.
-            lastChildInViewport = child;
-          }
-        }
-      }
-    }
-
-    if (lastChildInViewport) {
-      // See if this last child has any children in the viewport.
-      return lastViewportElement(lastChildInViewport);
-    } else {
-      // If NONE of the children are in the viewport, return the parent.
-      // This assumes that the parent is in the viewport because it was passed in.
-      return parent;
-    }
-  }
-
   // Return true if the element is in the viewport.
   function inViewport(e: HTMLElement) {
     const vh = document.documentElement.clientHeight;
@@ -1536,6 +1413,9 @@ LUX = (function () {
     const ds = docSize();
     const ct = connectionType();
     const dt = deliveryType();
+    const rt = RT.getData();
+    const bs = rt[RT.ResourceType.BLOCKING_SCRIPT];
+    const bc = rt[RT.ResourceType.BLOCKING_STYLESHEET];
 
     // Note some page stat values (the `PS` query string) are non-numeric. To make extracting these
     // values easier, we append an underscore "_" to the value. Values this is used for include
@@ -1548,14 +1428,12 @@ LUX = (function () {
       sLuxjs +
       // Page Stats
       "&PS=ns" +
-      numScripts() +
-      "bs" +
-      blockingScripts() +
+      rt[RT.ResourceType.SCRIPT] +
+      (bs > -1 ? "bs" + rt[RT.ResourceType.BLOCKING_SCRIPT] : "") +
       (is > -1 ? "is" + is : "") +
       "ss" +
-      numStylesheets() +
-      "bc" +
-      blockingStylesheets() +
+      rt[RT.ResourceType.STYLESHEET] +
+      (bc > -1 ? "bc" + rt[RT.ResourceType.BLOCKING_STYLESHEET] : "") +
       (ic > -1 ? "ic" + ic : "") +
       "ia" +
       imagesATF().length +
