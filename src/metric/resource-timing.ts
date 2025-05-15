@@ -1,4 +1,4 @@
-export enum ResourceType {
+export const enum ResourceType {
   SCRIPT,
   STYLESHEET,
   BLOCKING_SCRIPT,
