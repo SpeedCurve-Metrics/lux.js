@@ -94,18 +94,18 @@ export function summarizeLoAFScripts(scripts: PerformanceScriptTiming[]): LoAFSc
   const summary: Record<string, LoAFScriptSummary> = {};
 
   scripts.forEach((script) => {
-    const key = script.invoker + ":" + script.sourceURL + ":" + script.sourceFunctionName;
+    const key = script.sourceURL;
     if (!summary[key]) {
       summary[key] = {
         sourceUrl: script.sourceURL,
-        sourceFunctionName: script.sourceFunctionName,
+        sourceFunctionName: "",
         timings: [],
         totalEntries: 0,
         totalDuration: 0,
         totalBlockingDuration: 0,
         totalPauseDuration: 0,
         totalForcedStyleAndLayoutDuration: 0,
-        invoker: script.invoker,
+        invoker: "",
         inpPhase: (script as ScriptWithINPPhase).inpPhase,
       };
     }

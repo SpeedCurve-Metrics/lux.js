@@ -33,7 +33,9 @@ test.describe("POST beacon INP", () => {
         expect(loafScripts[0].totalPauseDuration).toBeLessThanOrEqual(0);
         expect(loafScripts[0].totalForcedStyleAndLayoutDuration).toBeLessThanOrEqual(0);
         expect(new URL(loafScripts[0].sourceUrl).pathname).toEqual("/interaction.html");
-        expect(loafScripts[0].invoker).toEqual("BUTTON#button-with-js.onpointerdown");
+        // Invoker has been removed to try and reduce the number of LoAF entries
+        // expect(loafScripts[0].invoker).toEqual("BUTTON#button-with-js.onpointerdown");
+        expect(loafScripts[0].invoker).toEqual("");
       }
     } else {
       expect(b.inp).toBeUndefined();
