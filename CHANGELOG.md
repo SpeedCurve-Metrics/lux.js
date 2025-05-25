@@ -1,10 +1,14 @@
 # lux.js changelog
 
-## 2025-??-??: v4.1.2
+## 2025-05-26: v4.1.2
 
-### New features
+### Improvements
 
-- JS and CSS requests are now counted using the resource timing API. Blocking requests are determined using `PerformanceResourceTiming.renderBlockingStatus` (Chromium-only).
+- Minification optimizations have reduced the output size.
+
+### Other
+
+- Invoker and source function name have been removed from LoAF entries to reduce payload size.
 
 ## 2025-04-08: v4.1.1
 
