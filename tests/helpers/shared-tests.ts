@@ -5,30 +5,22 @@ type SharedTestArgs = {
   page: Page;
   browserName: string;
   beacon: URL;
-  isSoftNavigation?: boolean;
 };
 
-export function testPageStats(args: SharedTestArgs, hasImages = false) {
-  const { page, browserName, beacon, isSoftNavigation = false } = args;
-
+export function testPageStats({ page, browserName, beacon }: SharedTestArgs, hasImages = false) {
   // There is a single external script: lux.js.
-  expect(getPageStat(beacon, "ns")).toEqual(isSoftNavigation ? 0 : 1);
+  expect(getPageStat(beacon, "ns")).toEqual(1);
+
+  // No blocking scripts
+  expect(getPageStat(beacon, "bs")).toEqual(0);
 
   // The LUX inline script
   expect(getPageStat(beacon, "is")).toBeGreaterThan(0);
 
   // No stylesheets
   expect(getPageStat(beacon, "ss")).toEqual(0);
+  expect(getPageStat(beacon, "bc")).toEqual(0);
   expect(getPageStat(beacon, "ic")).toEqual(0);
-
-  // No blocking scripts or stylesheets
-  if (browserName === "chromium") {
-    expect(getPageStat(beacon, "bs")).toEqual(0);
-    expect(getPageStat(beacon, "bc")).toEqual(0);
-  } else {
-    expect(getPageStat(beacon, "bs")).toBeNull();
-    expect(getPageStat(beacon, "bc")).toBeNull();
-  }
 
   if (hasImages) {
     expect(getPageStat(beacon, "ia")).toBeGreaterThan(0);

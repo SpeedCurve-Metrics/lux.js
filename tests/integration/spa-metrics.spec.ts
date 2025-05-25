@@ -34,25 +34,17 @@ test.describe("LUX SPA", () => {
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.auto=false;", { waitUntil: "networkidle" });
-
-    // The delays here are to try and simulate how lux.js is implemented in the real world. It's not
-    // common for customers to call LUX.send() immediately before LUX.init().
-    //
-    // Send the hard navigation beacon
-    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
-
-    // Simulate the remaining hard navigation
-    await page.waitForTimeout(50);
-
-    // Begin a new soft navigation
-    await page.evaluate(() => LUX.init());
-
-    // Simulate the remaining soft navigation before sending the beacon
+    await luxRequests.waitForMatchingRequest(() =>
+      page.evaluate(() => {
+        LUX.send();
+        LUX.init();
+      }),
+    );
     await page.waitForTimeout(50);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const beacon = luxRequests.getUrl(1)!;
 
-    Shared.testPageStats({ page, browserName, beacon, isSoftNavigation: true });
+    Shared.testPageStats({ page, browserName, beacon });
 
     const NT = getNavTiming(beacon);
 

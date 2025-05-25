@@ -80,12 +80,6 @@ declare global {
     "other",
   }
 
-  // https://w3c.github.io/resource-timing/#sec-performanceresourcetiming
-  interface PerformanceResourceTiming {
-    // https://w3c.github.io/resource-timing/#sec-render-blocking-status-types
-    renderBlockingStatus: "blocking" | "non-blocking";
-  }
-
   interface PerformanceScriptTiming extends PerformanceEntry {
     readonly startTime: number;
     readonly duration: number;

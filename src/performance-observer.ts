@@ -8,7 +8,6 @@ type PerformanceEntryMap = {
   "long-animation-frame": PerformanceLongAnimationFrameTiming;
   navigation: PerformanceNavigationTiming;
   paint: PerformancePaintTiming;
-  resource: PerformanceResourceTiming;
 };
 
 export const ALL_ENTRIES: PerformanceEntry[] = [];

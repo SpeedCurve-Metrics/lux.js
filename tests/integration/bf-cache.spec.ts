@@ -74,7 +74,7 @@ test.describe("BF cache integration", () => {
 
     // Test the page stats are correct for both beacons
     Shared.testPageStats({ beacon: firstBeacon, page, browserName }, true);
-    Shared.testPageStats({ beacon: bfcBeacon, page, browserName, isSoftNavigation: true }, true);
+    Shared.testPageStats({ beacon: bfcBeacon, page, browserName }, true);
 
     // Test the metrics look correct for the BF cache beacon
     const bfcNT = getNavTiming(bfcBeacon);
