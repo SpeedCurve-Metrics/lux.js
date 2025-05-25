@@ -5,7 +5,7 @@ function argsAsString(args: any[]): string {
   return args.map((v) => JSON.stringify(v)).join(", ");
 }
 
-export function isBeaconEvent(event: number) {
+export function isBeaconEvent(event: LogEvent) {
   return [
     LogEvent.MainBeaconSent,
     LogEvent.CustomDataBeaconSent,
@@ -15,12 +15,11 @@ export function isBeaconEvent(event: number) {
 }
 
 export function getMessageForEvent(event: LogEventRecord, filters: string[]): string {
-  const eventName = Object.keys(LogEvent).find((k) => LogEvent[k] === event[1]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const args = event[2] as any[];
 
   // Fallback message is the raw event name and any arguments
-  let message = eventName || "Unknown Event";
+  let message = getEventName(event[1]);
 
   if (args.length) {
     message += ` (${argsAsString(args)})`;
@@ -243,4 +242,95 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
   }
 
   return message;
+}
+
+function getEventName(event: LogEvent) {
+  switch (event) {
+    case LogEvent.EvaluationStart:
+      return "EvaluationStart";
+    case LogEvent.EvaluationEnd:
+      return "EvaluationEnd";
+    case LogEvent.InitCalled:
+      return "InitCalled";
+    case LogEvent.MarkCalled:
+      return "MarkCalled";
+    case LogEvent.MeasureCalled:
+      return "MeasureCalled";
+    case LogEvent.AddDataCalled:
+      return "AddDataCalled";
+    case LogEvent.SendCalled:
+      return "SendCalled";
+    case LogEvent.ForceSampleCalled:
+      return "ForceSampleCalled";
+    case LogEvent.DataCollectionStart:
+      return "DataCollectionStart";
+    case LogEvent.UnloadHandlerTriggered:
+      return "UnloadHandlerTriggered";
+    case LogEvent.OnloadHandlerTriggered:
+      return "OnloadHandlerTriggered";
+    case LogEvent.MarkLoadTimeCalled:
+      return "MarkLoadTimeCalled";
+    case LogEvent.SendCancelledPageHidden:
+      return "SendCancelledPageHidden";
+    case LogEvent.SessionIsSampled:
+      return "SessionIsSampled";
+    case LogEvent.SessionIsNotSampled:
+      return "SessionIsNotSampled";
+    case LogEvent.MainBeaconSent:
+      return "MainBeaconSent";
+    case LogEvent.UserTimingBeaconSent:
+      return "UserTimingBeaconSent";
+    case LogEvent.InteractionBeaconSent:
+      return "InteractionBeaconSent";
+    case LogEvent.CustomDataBeaconSent:
+      return "CustomDataBeaconSent";
+    case LogEvent.NavigationStart:
+      return "NavigationStart";
+    case LogEvent.PerformanceEntryReceived:
+      return "PerformanceEntryReceived";
+    case LogEvent.PerformanceEntryProcessed:
+      return "PerformanceEntryProcessed";
+    case LogEvent.TrackingParamAdded:
+      return "TrackingParamAdded";
+    case LogEvent.PerformanceObserverError:
+      return "PerformanceObserverError";
+    case LogEvent.InputEventPermissionError:
+      return "InputEventPermissionError";
+    case LogEvent.InnerHtmlAccessError:
+      return "InnerHtmlAccessError";
+    case LogEvent.EventTargetAccessError:
+      return "EventTargetAccessError";
+    case LogEvent.CookieReadError:
+      return "CookieReadError";
+    case LogEvent.CookieSetError:
+      return "CookieSetError";
+    case LogEvent.PageLabelEvaluationError:
+      return "PageLabelEvaluationError";
+    case LogEvent.NavTimingNotSupported:
+      return "NavTimingNotSupported";
+    case LogEvent.PaintTimingNotSupported:
+      return "PaintTimingNotSupported";
+    case LogEvent.PostBeaconInitialised:
+      return "PostBeaconInitialised";
+    case LogEvent.PostBeaconSendCalled:
+      return "PostBeaconSendCalled";
+    case LogEvent.PostBeaconTimeoutReached:
+      return "PostBeaconTimeoutReached";
+    case LogEvent.PostBeaconSent:
+      return "PostBeaconSent";
+    case LogEvent.PostBeaconAlreadySent:
+      return "PostBeaconAlreadySent";
+    case LogEvent.PostBeaconCancelled:
+      return "PostBeaconCancelled";
+    case LogEvent.PostBeaconStopRecording:
+      return "PostBeaconStopRecording";
+    case LogEvent.PostBeaconMetricRejected:
+      return "PostBeaconMetricRejected";
+    case LogEvent.PostBeaconSendFailed:
+      return "PostBeaconSendFailed";
+    case LogEvent.PostBeaconCSPViolation:
+      return "PostBeaconCSPViolation";
+    case LogEvent.PostBeaconCollector:
+      return "PostBeaconCollector";
+  }
 }

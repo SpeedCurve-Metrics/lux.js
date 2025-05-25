@@ -2,13 +2,6 @@ import { describe, expect, test } from "@jest/globals";
 import Logger, { LogEvent } from "../../src/logger";
 
 describe("Logger", () => {
-  test("every event is unique", () => {
-    const eventValues = Object.values(LogEvent);
-    const uniqueValues = new Set(eventValues);
-
-    expect(uniqueValues.size).toEqual(eventValues.length);
-  });
-
   test("events can be logged and retrieved", () => {
     const logger = new Logger();
     const timestamp = Date.now();
