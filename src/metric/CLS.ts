@@ -1,4 +1,5 @@
 import { CLSAttribution, BeaconMetricData, BeaconMetricKey } from "../beacon";
+import { UserConfig } from "../config";
 import { getNodeSelector } from "../dom";
 import { max } from "../math";
 import { processTimeMetric } from "../timing";
@@ -8,8 +9,6 @@ let sessionEntries: LayoutShift[] = [];
 let sessionAttributions: CLSAttribution[] = [];
 let largestEntry: LayoutShift | undefined;
 let maximumSessionValue = 0;
-
-export const MAX_CLS_SOURCES = 50;
 
 export function processEntry(entry: LayoutShift): void {
   if (!entry.hadRecentInput) {
@@ -56,7 +55,11 @@ export function reset(): void {
   largestEntry = undefined;
 }
 
-export function getData(): BeaconMetricData[BeaconMetricKey.CLS] {
+export function getData(config: UserConfig): BeaconMetricData[BeaconMetricKey.CLS] | undefined {
+  if (!("LayoutShift" in self)) {
+    return undefined;
+  }
+
   return {
     value: maximumSessionValue,
     startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0].startTime) : null,
@@ -66,6 +69,8 @@ export function getData(): BeaconMetricData[BeaconMetricKey.CLS] {
           startTime: processTimeMetric(largestEntry.startTime),
         }
       : null,
-    sources: sessionAttributions.length ? sessionAttributions.slice(0, MAX_CLS_SOURCES) : null,
+    sources: sessionAttributions.length
+      ? sessionAttributions.slice(0, config.maxAttributionEntries)
+      : null,
   };
 }

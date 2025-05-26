@@ -716,16 +716,6 @@ LUX = (function () {
     return { count, median, max, fci };
   }
 
-  function getCLS(): string | undefined {
-    if (!("LayoutShift" in self)) {
-      return undefined;
-    }
-
-    const clsData = CLS.getData();
-
-    return clsData.value.toFixed(6);
-  }
-
   // Return the median value from an array of integers.
   function arrayMedian(aValues: number[]): number {
     if (0 === aValues.length) {
@@ -1494,7 +1484,7 @@ LUX = (function () {
 
     const sET = elementTimingValues(); // Element Timing data
     const sCPU = cpuTimes();
-    const CLS = getCLS();
+    const clsData = CLS.getData(globalConfig);
     const sLuxjs = selfLoading();
 
     if (!isVisible()) {
@@ -1585,9 +1575,9 @@ LUX = (function () {
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
       (sET ? "&ET=" + sET : "") + // element timing
-      (typeof CLS !== "undefined" ? "&CLS=" + CLS : "") +
+      (clsData ? "&CLS=" + clsData.value.toFixed(6) : "") +
       // INP and sub-parts
-      (typeof INP !== "undefined" ? getINPString(INP) : "");
+      (INP ? getINPString(INP) : "");
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();

@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
+import * as Config from "../../src/config";
 import * as INP from "../../src/metric/INP";
 import "../../src/window.d.ts";
+
+const config = Config.fromObject({});
 
 describe("INP", () => {
   beforeEach(() => {
@@ -22,12 +25,12 @@ describe("INP", () => {
 
     // The first-input entry should be ignored, so the high percentile value is one of the first
     // 50 interactions.
-    expect(INP.getData()!.value).toEqual(100);
+    expect(INP.getData(config)!.value).toEqual(100);
 
     // Now create a unique first-input entry that becomes the high percentile value
     INP.processEntry(makeEntry({ interactionId: 61, duration: 200, entryType: "first-input" }));
 
-    expect(INP.getData()!.value).toEqual(200);
+    expect(INP.getData(config)!.value).toEqual(200);
   });
 
   test("INP is calculated correctly for small sets of interactions", () => {
@@ -36,7 +39,7 @@ describe("INP", () => {
     INP.processEntry(makeEntry({ interactionId: 3, startTime: 30, duration: 300 }));
     INP.processEntry(makeEntry({ interactionId: 0, startTime: 40, duration: 400 }));
 
-    const data = INP.getData()!;
+    const data = INP.getData(config)!;
 
     expect(data.value).toEqual(300);
     expect(data.startTime).toEqual(30);
@@ -54,7 +57,7 @@ describe("INP", () => {
     INP.processEntry(makeEntry({ interactionId: 0, duration: 990 }));
     INP.processEntry(makeEntry({ interactionId: 0, duration: 400 }));
 
-    expect(INP.getData()!.value).toEqual(300);
+    expect(INP.getData(config)!.value).toEqual(300);
   });
 
   test("INP is calculated correctly for large sets of interactions", () => {
@@ -72,7 +75,7 @@ describe("INP", () => {
       INP.processEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
-    expect(INP.getData()!.value).toEqual(400);
+    expect(INP.getData(config)!.value).toEqual(400);
 
     // The logic to estimate the high percentile is basically to use the Nth slowest interaction,
     // where N is the interaction count divided by 50. So at 100 interactions we should use the
@@ -82,7 +85,7 @@ describe("INP", () => {
       INP.processEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
-    expect(INP.getData()!.value).toEqual(200);
+    expect(INP.getData(config)!.value).toEqual(200);
   });
 
   test("INP is calculated correctly for large sets of interactions with duplicate IDs", () => {
@@ -97,7 +100,7 @@ describe("INP", () => {
     INP.processEntry(makeEntry({ interactionId: 3, duration: 200 }));
     INP.processEntry(makeEntry({ interactionId: 3, duration: 200 }));
 
-    expect(INP.getData()!.value).toEqual(600);
+    expect(INP.getData(config)!.value).toEqual(600);
 
     let interactions = 3;
 
@@ -108,7 +111,7 @@ describe("INP", () => {
       INP.processEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
-    expect(INP.getData()!.value).toEqual(400);
+    expect(INP.getData(config)!.value).toEqual(400);
 
     // The logic to estimate the high percentile is basically to use the Nth slowest interaction,
     // where N is the interaction count divided by 50. So at 100 interactions we should use the
@@ -118,7 +121,7 @@ describe("INP", () => {
       INP.processEntry(makeEntry({ interactionId: interactions, duration: 50 }));
     }
 
-    expect(INP.getData()!.value).toEqual(200);
+    expect(INP.getData(config)!.value).toEqual(200);
   });
 
   test("Entries with a longer processing time are preferred", () => {
