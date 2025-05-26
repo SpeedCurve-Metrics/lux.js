@@ -14,6 +14,7 @@ export interface ConfigObject {
   interactionBeaconDelay: number;
   jspagelabel?: string;
   label?: string;
+  maxAttributionEntries: number;
   maxBeaconUrlLength: number;
   maxBeaconUTEntries: number;
   maxErrors: number;
@@ -49,6 +50,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     interactionBeaconDelay: getProperty(obj, "interactionBeaconDelay", 200),
     jspagelabel: getProperty(obj, "jspagelabel"),
     label: getProperty(obj, "label"),
+    maxAttributionEntries: getProperty(obj, "maxAttributionEntries", 30),
     maxBeaconUrlLength: getProperty(obj, "maxBeaconUrlLength", 8190),
     maxBeaconUTEntries: getProperty(obj, "maxBeaconUTEntries", 20),
     maxErrors: getProperty(obj, "maxErrors", 5),

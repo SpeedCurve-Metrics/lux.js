@@ -1,4 +1,4 @@
-import { ConfigObject } from "./config";
+import { ConfigObject, UserConfig } from "./config";
 import { wasPrerendered } from "./document";
 import Flags, { addFlag } from "./flags";
 import { addListener } from "./listeners";
@@ -8,6 +8,18 @@ import { NavigationTimingData } from "./metric/navigation-timing";
 import now from "./now";
 import { getPageRestoreTime, getZeroTime, msSincePageInit } from "./timing";
 import { VERSION } from "./version";
+
+type BeaconOptions = {
+  config: ConfigObject;
+  logger: Logger;
+  customerId: string;
+  sessionId: string;
+  pageId: string;
+  startTime?: number;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CollectorFunction = (config: UserConfig) => any;
 
 const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
   const xhr = new XMLHttpRequest();
@@ -54,15 +66,6 @@ export function fitUserTimingEntries(utValues: string[], config: ConfigObject, u
   return [beaconUtValues, remainingUtValues];
 }
 
-type BeaconOptions = {
-  config: ConfigObject;
-  logger: Logger;
-  customerId: string;
-  sessionId: string;
-  pageId: string;
-  startTime?: number;
-};
-
 export class Beacon {
   config: ConfigObject;
   logger: Logger;
@@ -77,7 +80,7 @@ export class Beacon {
   flags = 0;
 
   startTime: number;
-  metricCollectors: { [k in BeaconMetricKey]?: CallableFunction } = {};
+  metricCollectors: { [k in BeaconMetricKey]?: CollectorFunction } = {};
 
   onBeforeSendCbs: Array<() => void> = [];
 
@@ -140,10 +143,7 @@ export class Beacon {
     this.logger.logEvent(LogEvent.PostBeaconStopRecording);
   }
 
-  addCollector<K extends BeaconMetricKey>(
-    metric: K,
-    collector: () => BeaconMetricData[K] | undefined,
-  ) {
+  addCollector<K extends BeaconMetricKey>(metric: K, collector: CollectorFunction) {
     this.metricCollectors[metric] = collector;
   }
 
@@ -173,7 +173,7 @@ export class Beacon {
     const collectionStart = now();
     const metricData: Partial<BeaconMetricData> = {};
     for (const metric in this.metricCollectors) {
-      const data = this.metricCollectors[metric as BeaconMetricKey]!();
+      const data = this.metricCollectors[metric as BeaconMetricKey]!(this.config);
       this.logger.logEvent(LogEvent.PostBeaconCollector, [metric, !!data]);
       if (data) {
         metricData[metric as BeaconMetricKey] = data;

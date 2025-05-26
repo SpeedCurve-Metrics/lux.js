@@ -1,4 +1,5 @@
 import { BeaconMetricData, BeaconMetricKey } from "../beacon";
+import { UserConfig } from "../config";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
 import { performance } from "../performance";
@@ -115,7 +116,7 @@ export function getHighPercentileInteraction(): Interaction | undefined {
   return slowestEntries[index];
 }
 
-export function getData(): BeaconMetricData[BeaconMetricKey.INP] | undefined {
+export function getData(config: UserConfig): BeaconMetricData[BeaconMetricKey.INP] | undefined {
   const interaction = getHighPercentileInteraction();
 
   if (!interaction) {
@@ -141,7 +142,7 @@ export function getData(): BeaconMetricData[BeaconMetricKey.INP] | undefined {
       return script as PerformanceScriptTiming;
     });
 
-  const loafScripts = summarizeLoAFScripts(inpScripts);
+  const loafScripts = summarizeLoAFScripts(inpScripts, config);
 
   return {
     value: interaction.duration,

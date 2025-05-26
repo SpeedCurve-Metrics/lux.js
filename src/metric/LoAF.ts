@@ -1,3 +1,4 @@
+import { UserConfig } from "../config";
 import { clamp, floor, max } from "../math";
 import { INPPhase } from "./INP";
 
@@ -32,8 +33,6 @@ export type LoAFScriptSummary = {
   inpPhase?: INPPhase;
 };
 
-const MAX_LOAF_ENTRIES = 50;
-const MAX_LOAF_SCRIPTS = 50;
 let entries: PerformanceLongAnimationFrameTiming[] = [];
 
 export function processEntry(entry: PerformanceLongAnimationFrameTiming): void {
@@ -48,7 +47,7 @@ export function getEntries(): PerformanceLongAnimationFrameTiming[] {
   return entries;
 }
 
-export function getData(): LoAFSummary {
+export function getData(config: UserConfig): LoAFSummary {
   const summarizedEntries: LoAFEntry[] = [];
   let totalDuration = 0;
   let totalBlockingDuration = 0;
@@ -80,17 +79,20 @@ export function getData(): LoAFSummary {
     totalEntries: entries.length,
     totalStyleAndLayoutDuration: floor(totalStyleAndLayoutDuration),
     totalWorkDuration: floor(totalWorkDuration),
-    entries: summarizedEntries.slice(0, MAX_LOAF_ENTRIES),
-    scripts: summarizeLoAFScripts(entries.flatMap((entry) => entry.scripts)).slice(
-      0,
-      MAX_LOAF_SCRIPTS,
+    entries: summarizedEntries.slice(0, config.maxAttributionEntries),
+    scripts: summarizeLoAFScripts(
+      entries.flatMap((entry) => entry.scripts),
+      config,
     ),
   };
 }
 
 type ScriptWithINPPhase = PerformanceScriptTiming & { inpPhase?: INPPhase };
 
-export function summarizeLoAFScripts(scripts: PerformanceScriptTiming[]): LoAFScriptSummary[] {
+export function summarizeLoAFScripts(
+  scripts: PerformanceScriptTiming[],
+  config: UserConfig,
+): LoAFScriptSummary[] {
   const summary: Record<string, LoAFScriptSummary> = {};
 
   scripts.forEach((script) => {
@@ -118,10 +120,13 @@ export function summarizeLoAFScripts(scripts: PerformanceScriptTiming[]): LoAFSc
     summary[key].timings.push([floor(script.startTime), floor(script.duration)]);
   });
 
-  return Object.values(summary).map((script) => ({
-    ...script,
-    totalDuration: floor(script.totalDuration),
-    totalPauseDuration: floor(script.totalPauseDuration),
-    totalForcedStyleAndLayoutDuration: floor(script.totalForcedStyleAndLayoutDuration),
-  }));
+  return Object.values(summary)
+    .map((script) => ({
+      ...script,
+      totalDuration: floor(script.totalDuration),
+      totalPauseDuration: floor(script.totalPauseDuration),
+      totalForcedStyleAndLayoutDuration: floor(script.totalForcedStyleAndLayoutDuration),
+    }))
+    .sort((a, b) => b.totalDuration - a.totalDuration)
+    .slice(0, config.maxAttributionEntries);
 }
