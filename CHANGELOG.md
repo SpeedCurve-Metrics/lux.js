@@ -1,5 +1,12 @@
 # lux.js changelog
 
+## 2025-05-26: v4.1.3
+
+### Improvements
+
+- Added `LUX.maxAttributionEntries` to control how many attribution entries are sent in the beacon. The default value has been reduced from 50 to 25 to reduce payload size.
+- Long animation frame attribution is sorted by total duration, so the slowest scripts are prioritised in the payload.
+
 ## 2025-05-26: v4.1.2
 
 ### Improvements
