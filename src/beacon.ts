@@ -19,7 +19,7 @@ type BeaconOptions = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type CollectorFunction = (config: UserConfig) => any;
+export type CollectorFunction = (config: UserConfig) => any;
 
 const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
   const xhr = new XMLHttpRequest();

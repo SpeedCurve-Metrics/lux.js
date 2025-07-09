@@ -25,6 +25,61 @@ test.describe("POST beacon LoAF", () => {
     }
   });
 
+  test("LoAFs are reset between SPA page transitions", async ({ page }) => {
+    const loafSupported = await entryTypeSupported(page, "long-animation-frame");
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
+    await page.goto("/long-animation-frames.html?injectScript=LUX.auto=false;", {
+      waitUntil: "networkidle",
+    });
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
+
+    // First beacon has LoAFs
+    if (loafSupported) {
+      const loaf = b.loaf!;
+      expect(loaf.totalBlockingDuration).toBeGreaterThan(0);
+      expect(loaf.totalDuration).toBeGreaterThan(0);
+      expect(loaf.totalEntries).toBeGreaterThan(0);
+      expect(loaf.totalStyleAndLayoutDuration).toBeGreaterThan(0);
+      expect(loaf.totalWorkDuration).toBeGreaterThan(0);
+      expect(loaf.entries.length).toBeGreaterThan(0);
+      expect(loaf.scripts.length).toBeGreaterThan(0);
+    } else {
+      expect(b.loaf).toBeUndefined();
+    }
+
+    // Second beacon has no LoAFs
+    await page.evaluate(() => LUX.init());
+    await page.waitForTimeout(200);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
+
+    if (loafSupported) {
+      const loaf = b.loaf!;
+      expect(loaf.totalDuration).toEqual(0);
+      expect(loaf.entries.length).toEqual(0);
+      expect(loaf.scripts.length).toEqual(0);
+    } else {
+      expect(b.loaf).toBeUndefined();
+    }
+
+    // Third beacon has LoAFs again
+    await page.evaluate(() => LUX.init());
+    await page.locator("#create-long-task").click();
+    await page.waitForTimeout(50);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    b = luxRequests.get(2)!.postDataJSON() as BeaconPayload;
+
+    if (loafSupported) {
+      const loaf = b.loaf!;
+      expect(loaf.totalDuration).toBeGreaterThan(0);
+      expect(loaf.entries.length).toBeGreaterThan(0);
+      expect(loaf.scripts.length).toBeGreaterThan(0);
+    } else {
+      expect(b.loaf).toBeUndefined();
+    }
+  });
+
   test("LoAFs are collected as INP attribution", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/long-animation-frames.html", { waitUntil: "networkidle" });

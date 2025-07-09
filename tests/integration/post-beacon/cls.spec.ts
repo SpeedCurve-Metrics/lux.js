@@ -22,11 +22,11 @@ test.describe("POST beacon CLS", () => {
   });
 
   test("CLS is reset between SPA page transitions", async ({ page }) => {
+    const layoutShiftsSupported = await entryTypeSupported(page, "layout-shift");
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/layout-shifts.html?noShiftDelay&injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
-    const layoutShiftsSupported = await entryTypeSupported(page, "layout-shift");
 
     if (layoutShiftsSupported) {
       const responseEnd = await getNavigationTimingMs(page, "responseEnd");
@@ -41,6 +41,12 @@ test.describe("POST beacon CLS", () => {
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
-    expect(b.cls).toBeUndefined();
+
+    if (layoutShiftsSupported) {
+      expect(b.cls!.value).toEqual(0);
+      expect(b.cls!.startTime).toEqual(null);
+    } else {
+      expect(b.cls).toBeUndefined();
+    }
   });
 });
