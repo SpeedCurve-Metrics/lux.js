@@ -6,6 +6,8 @@ Adding a "SPA mode" in the RUM Settings UI would be the easiest way to simplify 
 
 Adding more methods to the `LUX` API is a middle-ground kind of solution that gives implementers more control but does not significantly reduce complexity.
 
+Both solutions require updates to the inline snippet. If customers try to use the new `LUX` methods with the old snippet, there is a risk of JavaScript errors and app crashes.
+
 We should aspire to completely automate SPA implementations, possibly with the help of Chromium's soft navigation work, but mostly aiming for a generic cross-browser solution. This would be a large undertaking and require a lot of testing and validation with customers.
 
 ## The problem (high level)
@@ -14,7 +16,7 @@ We should aspire to completely automate SPA implementations, possibly with the h
 
 Much of the internal lux.js architecture is designed around full page navigations. SPA support was an afterthought, and setting `LUX.auto = false` essentially puts lux.js into "full manual control" mode.
 
-A proper lux.js implementation in a SPA requires correctly use of `LUX.auto`, `LUX.sendBeaconOnPageHidden`, `LUX.init()`, `LUX.markLoadTime()`, and `LUX.send()`. Getting just one of these wrong can throw the whole implementation off.
+A proper lux.js implementation in a SPA requires correct use of `LUX.auto`, `LUX.sendBeaconOnPageHidden`, `LUX.init()`, `LUX.markLoadTime()`, and `LUX.send()`. Getting just one of these wrong can throw the whole implementation off.
 
 ### Many implementations seem to be incorrect, resulting in lost data and mistrust in SpeedCurve's metrics
 
@@ -62,6 +64,7 @@ Once a lux.js implementation is deployed, it is difficult to get customers to ch
 ### Cons
 
 - Requires a new API method.
+- Requires an inline snippet update. Implementers using the old snippet may have JS errors.
 - Implementers are forced to choose one extreme or the other: full manual control (`LUX.auto = false`) or full autopilot.
 - Does not fix the fundamental issues with lux.js architecture.
 
@@ -139,6 +142,7 @@ This solution would also get rid of the Page Load metric for soft navigations (u
 
 - Does not allow for per-account implementation tweaks.
 - Adds at least 3 new methods to the `LUX` API, increasing risk of redundancy or deprecation.
+- Requires an inline snippet update. Implementers using the old snippet may have JS errors.
 - Some risk of misconfiguration if `LUX.enableSPAMode()` is not called at the correct time.
 
 ### Technical details
