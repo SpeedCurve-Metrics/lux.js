@@ -80,6 +80,58 @@ test.describe("POST beacon LoAF", () => {
     }
   });
 
+  test("Only the slowest LoAFs are collected", async ({ page }) => {
+    const MAX_ENTRIES = 3;
+    const loafSupported = await entryTypeSupported(page, "long-animation-frame");
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
+    await page.goto(
+      `/long-animation-frames.html?injectScript=LUX.maxAttributionEntries=${MAX_ENTRIES};`,
+      {
+        waitUntil: "networkidle",
+      },
+    );
+
+    // Create a mixture of short and long LoAFs
+    // Short
+    await page.locator("#create-long-task").click();
+    await page.locator("#create-long-task").click();
+
+    // Long
+    await page.locator("#long-task-duration").fill("100");
+    await page.locator("#create-long-task").click();
+
+    // Short
+    await page.locator("#long-task-duration").fill("50");
+    await page.locator("#create-long-task").click();
+    await page.locator("#create-long-task").click();
+
+    // Long
+    await page.locator("#long-task-duration").fill("150");
+    await page.locator("#create-long-task").click();
+    await page.locator("#create-long-task").click();
+
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
+
+    if (loafSupported) {
+      const loaf = b.loaf!;
+
+      expect(loaf.entries.length).toEqual(MAX_ENTRIES);
+
+      // The entries should all be the longer LoAFs. Note the total duration is the value from the
+      // #long-task-duration input, plus a hard-coded 50ms long task in external-long.task.js.
+      expect(loaf.entries[0].duration).toBeGreaterThanOrEqual(150);
+      expect(loaf.entries[1].duration).toBeGreaterThanOrEqual(150);
+      expect(loaf.entries[2].duration).toBeGreaterThanOrEqual(100);
+
+      // The entries should be ordered by start time
+      expect(loaf.entries[0].startTime).toBeLessThanOrEqual(loaf.entries[1].startTime);
+      expect(loaf.entries[1].startTime).toBeLessThanOrEqual(loaf.entries[2].startTime);
+    } else {
+      expect(b.loaf).toBeUndefined();
+    }
+  });
+
   test("LoAFs are collected as INP attribution", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/long-animation-frames.html", { waitUntil: "networkidle" });

@@ -79,11 +79,17 @@ export function getData(config: UserConfig): LoAFSummary {
     totalEntries: entries.length,
     totalStyleAndLayoutDuration: floor(totalStyleAndLayoutDuration),
     totalWorkDuration: floor(totalWorkDuration),
-    entries: summarizedEntries.slice(0, config.maxAttributionEntries),
+
     scripts: summarizeLoAFScripts(
       entries.flatMap((entry) => entry.scripts),
       config,
     ),
+
+    // Only keep the slowest LoAF entries
+    entries: summarizedEntries
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, config.maxAttributionEntries)
+      .sort((a, b) => a.startTime - b.startTime),
   };
 }
 
