@@ -153,32 +153,37 @@ test.describe("POST beacon LoAF", () => {
       if (loafSupported) {
         expect(loafScripts.length).toEqual(2);
 
-        const external = loafScripts[0];
-        const externalUrl = new URL(external.sourceUrl);
-        const [externalStartTime, externalDuration] = external.timings[0];
+        const documentScript = loafScripts.find((script) =>
+          script.sourceUrl.endsWith("/long-animation-frames.html"),
+        )!;
+        const externalScript = loafScripts.find((script) =>
+          script.sourceUrl.endsWith("/external-long-task.js"),
+        )!;
+
+        const externalUrl = new URL(externalScript.sourceUrl);
+        const [externalStartTime, externalDuration] = externalScript.timings[0];
         expect(externalUrl.pathname).toEqual("/external-long-task.js");
         // Invoker has been removed to try and reduce the number of LoAF entries
         // expect(external.invoker).toEqual(external.sourceUrl);
-        expect(external.invoker).toEqual("");
-        expect(external.sourceFunctionName).toEqual("");
-        expect(external.totalEntries).toEqual(1);
-        expect(external.totalDuration).toBeBetween(49, 59);
+        expect(externalScript.invoker).toEqual("");
+        expect(externalScript.sourceFunctionName).toEqual("");
+        expect(externalScript.totalEntries).toEqual(1);
+        expect(externalScript.totalDuration).toBeBetween(49, 59);
         expect(externalStartTime).toBeGreaterThanOrEqual(inp.startTime);
         expect(externalDuration).toBeBetween(49, 59);
 
-        const onload = loafScripts[1];
-        const onloadUrl = new URL(onload.sourceUrl);
-        const [onloadStartTime, onloadDuration] = onload.timings[0];
+        const documentUrl = new URL(documentScript.sourceUrl);
+        const [documentStartTime, documentDuration] = documentScript.timings[0];
 
-        expect(onloadUrl.pathname).toEqual("/long-animation-frames.html");
+        expect(documentUrl.pathname).toEqual("/long-animation-frames.html");
         // Invoker has been removed to try and reduce the number of LoAF entries
         // expect(onload.invoker).toEqual("SCRIPT[src=external-long-task.js].onload");
-        expect(onload.invoker).toEqual("");
-        expect(onload.sourceFunctionName).toEqual("");
-        expect(onload.totalEntries).toEqual(1);
-        expect(onload.totalDuration).toBeBetween(49, 59);
-        expect(onloadStartTime).toBeGreaterThanOrEqual(inp.startTime);
-        expect(onloadDuration).toBeBetween(49, 59);
+        expect(documentScript.invoker).toEqual("");
+        expect(documentScript.sourceFunctionName).toEqual("");
+        expect(documentScript.totalEntries).toEqual(1);
+        expect(documentScript.totalDuration).toBeBetween(49, 59);
+        expect(documentStartTime).toBeGreaterThanOrEqual(inp.startTime);
+        expect(documentDuration).toBeBetween(49, 59);
       } else {
         expect(loafScripts.length).toEqual(0);
       }
