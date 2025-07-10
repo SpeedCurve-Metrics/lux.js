@@ -1,5 +1,15 @@
 # lux.js changelog
 
+## 2025-07-10: v4.2.0
+
+### Improvements
+
+- Long animation frame entries are sorted by duration, so the slowest entries are prioritised in the payload.
+
+### Bug fixes
+
+- Fix metric collectors not being reattached after `LUX.init` is called.
+
 ## 2025-05-26: v4.1.3
 
 ### Improvements
