@@ -1,4 +1,10 @@
-import { Beacon, BeaconMetricKey, fitUserTimingEntries, shouldReportValue } from "./beacon";
+import {
+  Beacon,
+  BeaconMetricKey,
+  CollectorFunction,
+  fitUserTimingEntries,
+  shouldReportValue,
+} from "./beacon";
 import onPageLoad from "./beacon-triggers/page-load";
 import * as Config from "./config";
 import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
@@ -121,17 +127,7 @@ LUX = (function () {
   // on the same page.
   let _thisCustomerId = LUX.customerid;
 
-  const initPostBeacon = () => {
-    return new Beacon({
-      config: globalConfig,
-      logger,
-      customerId: getCustomerId(),
-      sessionId: gUid,
-      pageId: gSyncId,
-    });
-  };
-
-  let beacon = initPostBeacon();
+  const beaconCollectors: [BeaconMetricKey, CollectorFunction][] = [];
 
   const logEntry = <T extends PerformanceEntry>(entry: T) => {
     logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
@@ -157,7 +153,7 @@ LUX = (function () {
         LCP.processEntry(entry);
       })
     ) {
-      beacon.addCollector(BeaconMetricKey.LCP, LCP.getData);
+      beaconCollectors.push([BeaconMetricKey.LCP, LCP.getData]);
     }
 
     if (
@@ -166,7 +162,7 @@ LUX = (function () {
         logEntry(entry);
       })
     ) {
-      beacon.addCollector(BeaconMetricKey.CLS, CLS.getData);
+      beaconCollectors.push([BeaconMetricKey.CLS, CLS.getData]);
     }
 
     if (
@@ -175,7 +171,7 @@ LUX = (function () {
         logEntry(entry);
       })
     ) {
-      beacon.addCollector(BeaconMetricKey.LoAF, LoAF.getData);
+      beaconCollectors.push([BeaconMetricKey.LoAF, LoAF.getData]);
     }
 
     const handleINPEntry = (entry: PerformanceEventTiming) => {
@@ -220,11 +216,29 @@ LUX = (function () {
         { durationThreshold: 0 },
       )
     ) {
-      beacon.addCollector(BeaconMetricKey.INP, INP.getData);
+      beaconCollectors.push([BeaconMetricKey.INP, INP.getData]);
     }
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
   }
+
+  const initPostBeacon = () => {
+    const b = new Beacon({
+      config: globalConfig,
+      logger,
+      customerId: getCustomerId(),
+      sessionId: gUid,
+      pageId: gSyncId,
+    });
+
+    beaconCollectors.forEach(([metric, collector]) => {
+      b.addCollector(metric, collector);
+    });
+
+    return b;
+  };
+
+  let beacon = initPostBeacon();
 
   if (_sample()) {
     logger.logEvent(LogEvent.SessionIsSampled, [globalConfig.samplerate]);

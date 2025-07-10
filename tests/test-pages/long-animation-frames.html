@@ -13,6 +13,7 @@
 
     <img src="eve.jpg" elementtiming="eve-image">
 
+    <input type="text" id="long-task-duration" value="50">
     <button id="create-long-task" type="button">Make a delayed paint</button>
 
     <div style="margin-top: 2000px;">
@@ -21,12 +22,15 @@
 
     <script src="app.js"></script>
     <script>
+        const durationInput = document.getElementById("long-task-duration");
         document.getElementById("create-long-task").addEventListener("click", globalClickHandler);
 
         function globalClickHandler() {
+            const duration = Number(durationInput.value) || 50;
             const script = document.createElement("script");
             script.src = "external-long-task.js";
-            script.onload = () => externalLongTask(50);
+            script.onload = () => externalLongTask(duration);
+
             document.body.appendChild(script);
 
             const firstImage = document.querySelector("img");
