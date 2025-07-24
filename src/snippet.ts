@@ -2,6 +2,7 @@ import { Command, LuxGlobal } from "./global";
 import { performance } from "./performance";
 import scriptStartTime from "./start-marker";
 import { msSinceNavigationStart } from "./timing";
+import { SNIPPET_VERSION } from "./version";
 
 /**
  * This is the inline snippet that we ask customers to put at the top of their pages. It provides
@@ -19,8 +20,10 @@ LUX.getDebug = () => [[scriptStartTime, 0, []]];
 LUX.init = () => LUX.cmd(["init"]);
 LUX.mark = _mark;
 LUX.markLoadTime = () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]);
+LUX.triggerSoftNavigation = () => LUX.cmd(["triggerSoftNavigation", msSinceNavigationStart()]);
 LUX.measure = _measure;
 LUX.send = () => LUX.cmd(["send"]);
+LUX.snippetVersion = SNIPPET_VERSION;
 LUX.ns = scriptStartTime;
 
 export default LUX;
@@ -76,6 +79,5 @@ function _measure(...args: Parameters<LuxGlobal["measure"]>): ReturnType<LuxGlob
 // error handler
 window.LUX_ae = []; // array of error events
 window.addEventListener("error", function (e) {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   window.LUX_ae!.push(e);
 });

@@ -41,6 +41,23 @@ test.describe("LUX inline snippet", () => {
     expect(loadTimeMark).toBeLessThan(loadTime + 5);
   });
 
+  test("LUX.triggerSoftNavigation works before the script is loaded", async ({ page }) => {
+    const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+
+    await page.goto(
+      "/default.html?injectScript=window.initTime=performance.now();LUX.triggerSoftNavigation();",
+    );
+
+    await beaconRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    expect(beaconRequests.count()).toEqual(2);
+
+    /**
+     * Similar to how we test markLoadTime() above, we keep track of the time right before
+     * calling triggerSoftNavigation() so we can compare it to the time when the soft navigation
+     * is recorded in the beacon.
+     */
+  });
+
   test("LUX.mark works before the script is loaded", async ({ page }) => {
     const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
 

@@ -1392,8 +1392,19 @@ LUX = (function () {
     return [curleft, curtop];
   }
 
-  // Mark the load time of the current page. Intended to be used in SPAs where it is not desirable to
-  // send the beacon as soon as the page has finished loading.
+  /**
+   * Trigger a soft navigation event.
+   */
+  function _triggerSoftNavigation(time?: number): void {
+    logger.logEvent(LogEvent.TriggerSoftNavigationCalled);
+    _sendLux();
+    _init(time);
+  }
+
+  /**
+   * Mark the load time of the current page. Intended to be used in SPAs where it is not desirable
+   * to send the beacon as soon as the page has finished loading.
+   */
   function _markLoadTime(time?: number) {
     logger.logEvent(LogEvent.MarkLoadTimeCalled, [time]);
 
@@ -1434,6 +1445,10 @@ LUX = (function () {
       queryParams.push("fl=" + gFlags);
     }
 
+    if (LUX.snippetVersion) {
+      queryParams.push("sv=" + LUX.snippetVersion);
+    }
+
     const customDataValues = CustomData.valuesToString(customData);
 
     if (customDataValues) {
@@ -1468,10 +1483,17 @@ LUX = (function () {
     const startMark = _getMark(START_MARK);
     const endMark = _getMark(END_MARK);
 
-    if (!startMark || (endMark && endMark.startTime < startMark.startTime)) {
-      // Record the synthetic loadEventStart time for this page, unless it was already recorded
-      // with LUX.markLoadTime()
+    if (!startMark) {
+      // For hard navigations, set the synthetic load time when the beacon is being sent.
       _markLoadTime();
+    } else {
+      // For soft navigations, only set the synthetic load time if SPA mode is not enabled, and...
+      if (!globalConfig.spaMode) {
+        // ...there is no existing end mark, or the end mark is from a previous SPA page.
+        if (!endMark || endMark.startTime < startMark.startTime) {
+          _markLoadTime();
+        }
+      }
     }
 
     // Store any tracking parameters as custom data
@@ -2031,6 +2053,7 @@ LUX = (function () {
   globalLux.measure = _measure;
   globalLux.init = _init;
   globalLux.markLoadTime = _markLoadTime;
+  globalLux.triggerSoftNavigation = _triggerSoftNavigation;
   globalLux.send = () => {
     logger.logEvent(LogEvent.SendCalled);
     beacon.send();

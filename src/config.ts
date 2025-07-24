@@ -26,6 +26,7 @@ export interface ConfigObject {
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   serverTiming?: ServerTimingConfig;
+  spaMode: boolean;
   trackErrors: boolean;
   trackHiddenPages: boolean;
 }
@@ -62,6 +63,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     samplerate: getProperty(obj, "samplerate", 100),
     sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
     serverTiming: getProperty(obj, "serverTiming"),
+    spaMode: getProperty(obj, "spaMode", false),
     trackErrors: getProperty(obj, "trackErrors", true),
     trackHiddenPages: getProperty(obj, "trackHiddenPages", false),
   };
