@@ -49,12 +49,12 @@ test.describe("POST beacon LCP", () => {
     const beforeInsert = await getElapsedMs(page);
     await page.evaluate(() => {
       const eve = document.createElement("img");
-      eve.src = "/eve.jpg";
+      eve.src = "/eve.jpg?delay=100";
       eve.className = "new-lcp-image";
       eve.style.width = "500px";
-      document.body.prepend(eve);
+      document.querySelector("p")!.prepend(eve);
     });
-    await page.waitForTimeout(50);
+    await page.waitForTimeout(150);
     const beforeBeacon = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
@@ -63,6 +63,6 @@ test.describe("POST beacon LCP", () => {
 
     b = luxRequests.get(2)!.postDataJSON() as BeaconPayload;
     expect(b.lcp!.value).toBeBetween(insertTime, beaconTime);
-    expect(b.lcp!.attribution!.elementSelector).toEqual("html>body>img.new-lcp-image");
+    expect(b.lcp!.attribution!.elementSelector).toEqual("html>body>p>img.new-lcp-image");
   });
 });
