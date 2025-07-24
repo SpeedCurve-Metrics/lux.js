@@ -1,28 +1,25 @@
 import { Page } from "@playwright/test";
 
-export function referenceErrorMessage(browserName, reference) {
+export function referenceErrorMessage(browserName: string, reference: string) {
   switch (browserName) {
-    case "chromium":
-      return `ReferenceError: ${reference} is not defined`;
-
-    case "firefox":
-      return `ReferenceError: ${reference} is not defined`;
-
     case "webkit":
       return `ReferenceError: Can't find variable: ${reference}`;
+
+    default:
+      return `ReferenceError: ${reference} is not defined`;
   }
 }
 
-export function syntaxErrorMessage(browserName) {
+export function syntaxErrorMessage(browserName: string) {
   switch (browserName) {
-    case "chromium":
-      return "SyntaxError: Unexpected end of input";
-
     case "firefox":
       return "SyntaxError: expected expression, got end of script";
 
     case "webkit":
       return "SyntaxError: Unexpected end of script";
+
+    default:
+      return "SyntaxError: Unexpected end of input";
   }
 }
 

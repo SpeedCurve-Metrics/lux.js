@@ -1,6 +1,7 @@
 import { padStart } from "./string";
 
 export const VERSION = "4.2.1";
+export const SNIPPET_VERSION = "2.1.0";
 
 /**
  * Returns the version of the script as a float to be stored in legacy systems that do not support
