@@ -1445,8 +1445,8 @@ LUX = (function () {
   }
 
   // Beacon back the LUX data.
-  function _sendLux(): void {
-    if (!isVisible() && !globalConfig.trackHiddenPages) {
+  function _sendLux(fromUnload: boolean = false): void {
+    if (!isVisible() && !globalConfig.trackHiddenPages && !fromUnload) {
       logger.logEvent(LogEvent.SendCancelledPageHidden);
       return;
     }
@@ -1784,7 +1784,7 @@ LUX = (function () {
       gFlags = addFlag(gFlags, Flags.BeaconSentFromUnloadHandler);
       beacon.addFlag(Flags.BeaconSentFromUnloadHandler);
       logger.logEvent(LogEvent.UnloadHandlerTriggered);
-      _sendLux();
+      _sendLux(true);
       _sendIx();
       beacon.send();
     };
