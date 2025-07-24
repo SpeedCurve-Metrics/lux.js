@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import Flags from "../../src/flags";
 import { hasFlag } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
+import { setPageHidden } from "../helpers/browsers";
 
 test.describe("LUX unload behaviour", () => {
   test("not automatically sending a beacon when the user navigates away from a page with LUX.auto = false", async ({
@@ -42,9 +43,7 @@ test.describe("LUX unload behaviour", () => {
     });
     expect(luxRequests.count()).toEqual(0);
 
-    await luxRequests.waitForMatchingRequest(() =>
-      page.evaluate(() => document.dispatchEvent(new Event("pagehide"))),
-    );
+    await luxRequests.waitForMatchingRequest(() => setPageHidden(page, true));
     expect(luxRequests.count()).toEqual(1);
     expect(hasFlag(luxRequests.getUrl(0)!, Flags.BeaconSentFromUnloadHandler))!.toBe(true);
   });
