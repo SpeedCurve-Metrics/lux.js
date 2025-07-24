@@ -15,6 +15,7 @@ export const enum LogEvent {
   OnloadHandlerTriggered = 11,
   MarkLoadTimeCalled = 12,
   SendCancelledPageHidden = 13,
+  TriggerSoftNavigationCalled = 14,
 
   // Data collection events
   SessionIsSampled = 21,
