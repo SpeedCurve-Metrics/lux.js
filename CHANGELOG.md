@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2025-07-28: v4.2.1
+
+### Bug fixes
+
+- Fix case where unload handlers did not send a beacon if they fired after the page visibility had already changed to "hidden".
+
 ## 2025-07-10: v4.2.0
 
 ### Improvements
