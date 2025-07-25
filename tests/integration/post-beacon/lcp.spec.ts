@@ -61,8 +61,12 @@ test.describe("POST beacon LCP", () => {
     const insertTime = beforeInsert - beforeInit;
     const beaconTime = beforeBeacon - beforeInit;
 
-    b = luxRequests.get(2)!.postDataJSON() as BeaconPayload;
-    expect(b.lcp!.value).toBeBetween(insertTime, beaconTime);
-    expect(b.lcp!.attribution!.elementSelector).toEqual("html>body>p>img.new-lcp-image");
+    if (lcpSupported) {
+      b = luxRequests.get(2)!.postDataJSON() as BeaconPayload;
+      expect(b.lcp!.value).toBeBetween(insertTime, beaconTime);
+      expect(b.lcp!.attribution!.elementSelector).toEqual("html>body>p>img.new-lcp-image");
+    } else {
+      expect(b.lcp).toBeUndefined();
+    }
   });
 });
