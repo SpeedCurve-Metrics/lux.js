@@ -2,7 +2,7 @@
 import { test, expect } from "@playwright/test";
 import Flags from "../../src/flags";
 import { getPageHiddenScript, setPageHidden } from "../helpers/browsers";
-import { hasFlag } from "../helpers/lux";
+import { getLuxJsStat, hasFlag } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
 
 test.describe("Page visibility", () => {
@@ -24,15 +24,22 @@ test.describe("Page visibility", () => {
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    const pageHiddenScript = getPageHiddenScript(true).replace(/\n/g, "");
+    const minMeasureTime = 300;
+    const waitTime = minMeasureTime + 50;
 
-    await page.goto(`/default.html?injectScript=LUX.minMeasureTime=300;`);
-    await setPageHidden(page, true);
-    await page.waitForTimeout(350);
+    await page.goto(
+      `/default.html?injectBeforeSnippet=${pageHiddenScript}&injectScript=LUX.minMeasureTime=${minMeasureTime};`,
+    );
+    await page.waitForTimeout(waitTime);
     await setPageHidden(page, false);
     await page.waitForLoadState("networkidle");
 
     expect(luxRequests.count()).toEqual(1);
-    expect(hasFlag(luxRequests.getUrl(0)!, Flags.VisibilityStateNotVisible)).toBe(false);
+
+    const beacon = luxRequests.getUrl(0)!;
+    expect(hasFlag(beacon, Flags.VisibilityStateNotVisible)).toBe(false);
+    expect(getLuxJsStat(beacon, "m")).toBeGreaterThan(waitTime);
   });
 
   test("sending a beacon when a hidden page is shown before the beacon is sent", async ({
