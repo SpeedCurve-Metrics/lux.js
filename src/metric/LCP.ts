@@ -1,4 +1,5 @@
 import { BeaconMetricData, BeaconMetricKey, shouldReportValue } from "../beacon";
+import * as Const from "../constants";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
 import { getEntriesByType, getNavigationEntry, timing } from "../performance";
@@ -7,7 +8,7 @@ import { processTimeMetric } from "../timing";
 let lcpEntry: LargestContentfulPaint | undefined;
 
 export function processEntry(entry: LargestContentfulPaint) {
-  if (!lcpEntry || entry.startTime > lcpEntry.startTime) {
+  if (!lcpEntry || entry[Const.startTime] > lcpEntry[Const.startTime]) {
     lcpEntry = entry;
   }
 }
@@ -25,7 +26,7 @@ export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
 
   if (lcpEntry.url) {
     const lcpResource = getEntriesByType("resource").find(
-      (resource) => resource.name === lcpEntry!.url,
+      (resource) => resource[Const.name] === lcpEntry!.url,
     ) as PerformanceResourceTiming;
 
     if (lcpResource) {
@@ -34,7 +35,7 @@ export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
       const activationStart = navEntry.activationStart;
       const ttfb = max(0, responseStart - activationStart);
 
-      const lcpStartTime = lcpResource.startTime;
+      const lcpStartTime = lcpResource[Const.startTime];
       const lcpRequestStart = (lcpResource.requestStart || lcpStartTime) - activationStart;
       const lcpResponseEnd = max(lcpRequestStart, lcpResource.responseEnd - activationStart);
       const lcpRenderTime = max(lcpResponseEnd, lcpStartTime - activationStart);
@@ -47,7 +48,7 @@ export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
     }
   }
 
-  const value = lcpEntry.startTime;
+  const value = lcpEntry[Const.startTime];
 
   if (!shouldReportValue(value)) {
     // It's possible the LCP entry we have occurred before the current page was initialised. In
