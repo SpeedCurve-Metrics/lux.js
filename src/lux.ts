@@ -58,8 +58,6 @@ LUX = (function () {
 
   // Variable aliases that allow the minifier to reduce file size.
   const document = window.document;
-  const addEventListener = window.addEventListener;
-  const removeEventListener = window.removeEventListener;
   const setTimeout = window.setTimeout;
   const clearTimeout = window.clearTimeout;
   const encodeURIComponent = window.encodeURIComponent;
@@ -105,7 +103,7 @@ LUX = (function () {
       }
     }
   }
-  addEventListener("error", errorHandler);
+  addListener("error", errorHandler);
 
   // Bitmask of flags for this session & page
   let gFlags = 0;
@@ -271,7 +269,7 @@ LUX = (function () {
 
       // remove event listeners
       gaEventTypes.forEach(function (eventType) {
-        removeEventListener(eventType, onInput, ghListenerOptions);
+        removeListener(eventType, onInput, ghListenerOptions);
       });
     }
   }
@@ -290,12 +288,12 @@ LUX = (function () {
     }
 
     function removeListeners() {
-      removeEventListener("pointerup", onPointerUp, ghListenerOptions);
-      removeEventListener("pointercancel", onPointerCancel, ghListenerOptions);
+      removeListener("pointerup", onPointerUp, ghListenerOptions);
+      removeListener("pointercancel", onPointerCancel, ghListenerOptions);
     }
 
-    addEventListener("pointerup", onPointerUp, ghListenerOptions);
-    addEventListener("pointercancel", onPointerCancel, ghListenerOptions);
+    addListener("pointerup", onPointerUp, ghListenerOptions);
+    addListener("pointercancel", onPointerCancel, ghListenerOptions);
   }
 
   // Record FID as the delta between when the event happened and when the
@@ -339,7 +337,7 @@ LUX = (function () {
 
   // Attach event listener to input events.
   gaEventTypes.forEach(function (eventType) {
-    addEventListener(eventType, onInput, ghListenerOptions);
+    addListener(eventType, onInput, ghListenerOptions);
   });
   ////////////////////// FID END
 
@@ -1984,7 +1982,7 @@ LUX = (function () {
   // bfcache. Since we have no "onload" event to hook into after a bfcache restore, we rely on the
   // unload and maxMeasureTime handlers to send the beacon.
   if (globalConfig.newBeaconOnPageShow) {
-    addEventListener("pageshow", (event) => {
+    addListener("pageshow", (event) => {
       if (event.persisted) {
         // Record the timestamp of the bfcache restore
         setPageRestoreTime(event.timeStamp);
