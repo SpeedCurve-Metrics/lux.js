@@ -10,6 +10,9 @@ type PerformanceEntryMap = {
   paint: PerformancePaintTiming;
 };
 
+// Local alias to aid minification.
+const PerformanceObserver = window.PerformanceObserver;
+
 export const ALL_ENTRIES: PerformanceEntry[] = [];
 
 export function observe<K extends keyof PerformanceEntryMap>(

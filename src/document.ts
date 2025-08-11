@@ -1,3 +1,4 @@
+import { addListener, removeListener } from "./listeners";
 import { getNavigationEntry, timing } from "./performance";
 
 export function isVisible(): boolean {
@@ -17,11 +18,11 @@ export function onVisible(cb: () => void): void {
       const onVisibleCallback = () => {
         if (isVisible()) {
           cb();
-          removeEventListener("visibilitychange", onVisibleCallback);
+          removeListener("visibilitychange", onVisibleCallback);
         }
       };
 
-      addEventListener("visibilitychange", onVisibleCallback, true);
+      addListener("visibilitychange", onVisibleCallback, true);
     }
   });
 }
