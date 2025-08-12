@@ -12,6 +12,7 @@ import { SESSION_COOKIE_NAME } from "./cookie";
 import * as CustomData from "./custom-data";
 import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document";
 import { getNodeSelector } from "./dom";
+import * as Events from "./events";
 import Flags, { addFlag } from "./flags";
 import { Command, LuxGlobal } from "./global";
 import { getTrackingParams } from "./integrations/tracking";
@@ -785,7 +786,9 @@ LUX = (function () {
           (typeof gLuxSnippetStart === "number" ? "l" + gLuxSnippetStart : "") +
           "s" +
           (scriptStartTime - timing.navigationStart) + // when lux.js started getting evaluated relative to navigationStart
-          "";
+          "v" +
+          (globalLux.snippetVersion || 1);
+        ("");
       }
     }
 
@@ -1689,6 +1692,8 @@ LUX = (function () {
 
   function _sendBeacon(url: string) {
     new Image().src = url;
+
+    Events.emit("beacon", url);
   }
 
   // INTERACTION METRICS
@@ -1826,12 +1831,18 @@ LUX = (function () {
   // (because they get sent at different times). Each "page view" (including SPA) should have a
   // unique gSyncId.
   function createSyncId(inSampleBucket = false): string {
+    let syncId: string;
+
     if (inSampleBucket) {
       // "00" matches all sample rates
-      return Number(new Date()) + "00000";
+      syncId = Number(new Date()) + "00000";
+    } else {
+      syncId = Number(new Date()) + padStart(String(round(100000 * Math.random())), 5, "0");
     }
 
-    return Number(new Date()) + padStart(String(round(100000 * Math.random())), 5, "0");
+    Events.emit("new_page_id", syncId);
+
+    return syncId;
   }
 
   // Unique ID (also known as Session ID)
@@ -2031,6 +2042,7 @@ LUX = (function () {
   globalLux.measure = _measure;
   globalLux.init = _init;
   globalLux.markLoadTime = _markLoadTime;
+  globalLux.on = Events.subscribe;
   globalLux.send = () => {
     logger.logEvent(LogEvent.SendCalled);
     beacon.send();

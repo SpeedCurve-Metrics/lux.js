@@ -1,8 +1,9 @@
 import { UserConfig } from "./config";
+import { Event } from "./events";
 import { LogEventRecord } from "./logger";
 
 export type Command = [CommandFunction, ...CommandArg[]];
-type CommandFunction = "addData" | "init" | "mark" | "markLoadTime" | "measure" | "send";
+type CommandFunction = "addData" | "init" | "mark" | "markLoadTime" | "measure" | "on" | "send";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CommandArg = any;
 type PerfMarkFn = typeof performance.mark;
@@ -22,8 +23,10 @@ export interface LuxGlobal extends UserConfig {
   mark: (...args: Parameters<PerfMarkFn>) => ReturnType<PerfMarkFn> | void;
   markLoadTime?: (time?: number) => void;
   measure: (...args: Parameters<PerfMeasureFn>) => ReturnType<PerfMeasureFn> | void;
+  on: (event: Event, callback: (data?: unknown) => void) => void;
   /** Timestamp representing when the LUX snippet was evaluated */
   ns?: number;
   send: () => void;
   version?: string;
+  snippetVersion?: number;
 }
