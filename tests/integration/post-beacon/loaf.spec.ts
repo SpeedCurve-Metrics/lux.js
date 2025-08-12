@@ -67,7 +67,7 @@ test.describe("POST beacon LoAF", () => {
     await page.evaluate(() => LUX.init());
     await page.locator("#long-task-duration").fill("66");
     await page.locator("#create-long-task").click();
-    await page.waitForTimeout(50);
+    await page.waitForTimeout(120);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     b = luxRequests.get(2)!.postDataJSON() as BeaconPayload;
 
