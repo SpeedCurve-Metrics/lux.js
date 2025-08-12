@@ -66,7 +66,7 @@ test.describe("POST beacon LoAF", () => {
     // Third beacon has LoAFs again
     await page.evaluate(() => LUX.init());
     await page.locator("#long-task-duration").fill("66");
-    await page.locator("#create-long-task").click();
+    await page.locator("#create-two-long-tasks").click();
     await page.waitForTimeout(120);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     b = luxRequests.get(2)!.postDataJSON() as BeaconPayload;
@@ -94,22 +94,22 @@ test.describe("POST beacon LoAF", () => {
 
     // Create a mixture of short and long LoAFs
     // Short
-    await page.locator("#create-long-task").click();
-    await page.locator("#create-long-task").click();
+    await page.locator("#create-two-long-tasks").click();
+    await page.locator("#create-two-long-tasks").click();
 
     // Long
     await page.locator("#long-task-duration").fill("100");
-    await page.locator("#create-long-task").click();
+    await page.locator("#create-two-long-tasks").click();
 
     // Short
     await page.locator("#long-task-duration").fill("50");
-    await page.locator("#create-long-task").click();
-    await page.locator("#create-long-task").click();
+    await page.locator("#create-two-long-tasks").click();
+    await page.locator("#create-two-long-tasks").click();
 
     // Long
     await page.locator("#long-task-duration").fill("150");
-    await page.locator("#create-long-task").click();
-    await page.locator("#create-long-task").click();
+    await page.locator("#create-two-long-tasks").click();
+    await page.locator("#create-two-long-tasks").click();
 
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
@@ -136,7 +136,7 @@ test.describe("POST beacon LoAF", () => {
   test("LoAFs are collected as INP attribution", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/long-animation-frames.html", { waitUntil: "networkidle" });
-    await page.locator("#create-long-task").click();
+    await page.locator("#create-two-long-tasks").click();
     await page.waitForTimeout(1000);
     await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
