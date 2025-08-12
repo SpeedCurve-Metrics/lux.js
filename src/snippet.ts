@@ -1,4 +1,4 @@
-import { Command, LuxGlobal } from "./global";
+import type { Command, LuxGlobal } from "./global";
 import { performance } from "./performance";
 import scriptStartTime from "./start-marker";
 import { msSinceNavigationStart } from "./timing";
@@ -20,6 +20,7 @@ LUX.init = () => LUX.cmd(["init"]);
 LUX.mark = _mark;
 LUX.markLoadTime = () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]);
 LUX.measure = _measure;
+LUX.on = (event, callback) => LUX.cmd(["on", event, callback]);
 LUX.send = () => LUX.cmd(["send"]);
 LUX.ns = scriptStartTime;
 
