@@ -14,7 +14,7 @@
     <img src="eve.jpg" elementtiming="eve-image">
 
     <input type="text" id="long-task-duration" value="50">
-    <button id="create-long-task" type="button">Make a delayed paint</button>
+    <button id="create-two-long-tasks" type="button">Make a delayed paint</button>
 
     <div style="margin-top: 2000px;">
         <p id="scroll-anchor">This element can be scrolled to.</p>
@@ -23,10 +23,15 @@
     <script src="app.js"></script>
     <script>
         const durationInput = document.getElementById("long-task-duration");
-        document.getElementById("create-long-task").addEventListener("click", globalClickHandler);
+        document.getElementById("create-two-long-tasks").addEventListener("pointerdown", globalClickHandler);
 
         function globalClickHandler() {
             const duration = Number(durationInput.value) || 50;
+
+            // Create one long task that is associated with the document
+            externalLongTask(duration + Math.round(Math.random() * 10));
+
+            // And another that is associated with the external script
             const script = document.createElement("script");
             script.src = "external-long-task.js";
             script.onload = () => externalLongTask(duration);
