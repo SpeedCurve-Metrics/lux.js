@@ -20,8 +20,10 @@ LUX.init = () => LUX.cmd(["init"]);
 LUX.mark = _mark;
 LUX.markLoadTime = () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]);
 LUX.measure = _measure;
+LUX.on = (event, callback) => LUX.cmd(["on", event, callback]);
 LUX.send = () => LUX.cmd(["send"]);
 LUX.ns = scriptStartTime;
+LUX.snippetVersion = 2;
 
 export default LUX;
 
