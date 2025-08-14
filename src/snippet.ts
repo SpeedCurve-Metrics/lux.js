@@ -1,4 +1,4 @@
-import { Command, LuxGlobal } from "./global";
+import type { Command, LuxGlobal } from "./global";
 import { performance } from "./performance";
 import scriptStartTime from "./start-marker";
 import { msSinceNavigationStart } from "./timing";
@@ -17,12 +17,12 @@ LUX.ac = [];
 LUX.addData = (name, value) => LUX.cmd(["addData", name, value]);
 LUX.cmd = (cmd: Command) => LUX.ac!.push(cmd);
 LUX.getDebug = () => [[scriptStartTime, 0, []]];
-LUX.init = () => LUX.cmd(["init"]);
+LUX.init = (time?: number) => LUX.cmd(["init", time || msSinceNavigationStart()]);
 LUX.mark = _mark;
 LUX.markLoadTime = () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]);
-LUX.triggerSoftNavigation = () => LUX.cmd(["triggerSoftNavigation", msSinceNavigationStart()]);
+LUX.startSoftNavigation = () => LUX.cmd(["startSoftNavigation", msSinceNavigationStart()]);
 LUX.measure = _measure;
-LUX.send = () => LUX.cmd(["send"]);
+LUX.send = (force?: boolean) => LUX.cmd(["send", force]);
 LUX.snippetVersion = SNIPPET_VERSION;
 LUX.ns = scriptStartTime;
 

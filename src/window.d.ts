@@ -1,4 +1,4 @@
-import { LuxGlobal } from "./global";
+import type { LuxGlobal } from "./global";
 
 declare global {
   declare const __ENABLE_POLYFILLS: boolean;

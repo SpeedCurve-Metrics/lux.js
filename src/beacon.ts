@@ -160,6 +160,10 @@ export class Beacon {
   }
 
   send() {
+    if (this.isSent) {
+      return;
+    }
+
     this.logger.logEvent(LogEvent.PostBeaconSendCalled);
 
     for (const cb of this.onBeforeSendCbs) {
@@ -184,11 +188,6 @@ export class Beacon {
       // TODO: This is only required while the new beacon is supplementary. Once it's the primary
       // beacon, we should send it regardless of how much metric data it has.
       this.logger.logEvent(LogEvent.PostBeaconCancelled);
-      return;
-    }
-
-    if (this.isSent) {
-      this.logger.logEvent(LogEvent.PostBeaconAlreadySent);
       return;
     }
 

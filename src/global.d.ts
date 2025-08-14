@@ -9,7 +9,7 @@ type CommandFunction =
   | "markLoadTime"
   | "measure"
   | "send"
-  | "triggerSoftNavigation";
+  | "startSoftNavigation";
 
 type CommandArg = unknown;
 type PerfMarkFn = typeof performance.mark;
@@ -23,16 +23,16 @@ export interface LuxGlobal extends UserConfig {
   /** @deprecated */
   doUpdate?: () => void;
   forceSample?: () => void;
-  getDebug?: () => LogEventRecord[];
+  getDebug: () => LogEventRecord[];
   getSessionId?: () => void;
-  init: () => void;
+  init: (time?: number) => void;
   mark: (...args: Parameters<PerfMarkFn>) => ReturnType<PerfMarkFn> | void;
-  markLoadTime?: (time?: number) => void;
+  markLoadTime: (time?: number) => void;
   measure: (...args: Parameters<PerfMeasureFn>) => ReturnType<PerfMeasureFn> | void;
   /** Timestamp representing when the LUX snippet was evaluated */
   ns?: number;
-  send: () => void;
+  send: (force?: boolean) => void;
   snippetVersion?: string;
-  triggerSoftNavigation?: (time?: number) => void;
+  startSoftNavigation: (time?: number) => void;
   version?: string;
 }

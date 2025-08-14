@@ -109,7 +109,7 @@ test.describe("LUX SPA", () => {
     expect(luxLoadEventEnd).toEqual(pageLoadEventEnd);
   });
 
-  test("load time value for subsequent pages is the time between LUX.init() and LUX.send()", async ({
+  test("load time value for soft navs is the time between LUX.init() and LUX.send()", async ({
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
@@ -130,8 +130,7 @@ test.describe("LUX SPA", () => {
     const loadEventEnd = getNavTiming(beacon, "le");
 
     // We waited 50ms between LUX.init() and LUX.send(), so the load time should
-    // be at least 50ms. 60ms is an arbitrary upper limit to make sure we're not
-    // over-reporting load time.
+    // be at least 50ms, but less than the timestamp after LUX.send() was called
     expect(loadEventStart).toBeGreaterThanOrEqual(50);
     expect(loadEventStart).toBeLessThanOrEqual(timeAfterSend - timeBeforeInit);
     expect(loadEventStart).toEqual(loadEventEnd);
@@ -147,7 +146,7 @@ test.describe("LUX SPA", () => {
     await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
-    await page.evaluate(() => LUX.init());
+    await page.evaluate(() => LUX.startPage());
     await page.waitForTimeout(10);
     await page.evaluate(() => LUX.markLoadTime());
     await page.waitForTimeout(50);
