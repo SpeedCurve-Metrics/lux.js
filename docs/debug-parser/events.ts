@@ -154,9 +154,6 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
 
       return "POST beacon send failed.";
 
-    case LogEvent.PostBeaconAlreadySent:
-      return "POST beacon cancelled (already sent).";
-
     case LogEvent.PostBeaconCancelled:
       return "POST beacon cancelled.";
 
@@ -272,6 +269,14 @@ function getEventName(event: LogEvent) {
       return "MarkLoadTimeCalled";
     case LogEvent.SendCancelledPageHidden:
       return "SendCancelledPageHidden";
+    case LogEvent.TriggerSoftNavigationCalled:
+      return "TriggerSoftNavigationCalled";
+    case LogEvent.SendTriggeredBySoftNavigation:
+      return "SendTriggeredBySoftNavigation";
+    case LogEvent.SendCancelledSpaMode:
+      return "SendCancelledSpaMode";
+    case LogEvent.BfCacheRestore:
+      return "BfCacheRestore";
     case LogEvent.SessionIsSampled:
       return "SessionIsSampled";
     case LogEvent.SessionIsNotSampled:
@@ -318,8 +323,6 @@ function getEventName(event: LogEvent) {
       return "PostBeaconTimeoutReached";
     case LogEvent.PostBeaconSent:
       return "PostBeaconSent";
-    case LogEvent.PostBeaconAlreadySent:
-      return "PostBeaconAlreadySent";
     case LogEvent.PostBeaconCancelled:
       return "PostBeaconCancelled";
     case LogEvent.PostBeaconStopRecording:
@@ -333,4 +336,6 @@ function getEventName(event: LogEvent) {
     case LogEvent.PostBeaconCollector:
       return "PostBeaconCollector";
   }
+
+  return "Unknown Event";
 }

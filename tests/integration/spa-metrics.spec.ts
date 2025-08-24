@@ -109,7 +109,7 @@ test.describe("LUX SPA", () => {
     expect(luxLoadEventEnd).toEqual(pageLoadEventEnd);
   });
 
-  test("load time value for subsequent pages is the time between LUX.init() and LUX.send()", async ({
+  test("load time value for soft navs is the time between LUX.init() and LUX.send()", async ({
     page,
   }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
@@ -130,8 +130,7 @@ test.describe("LUX SPA", () => {
     const loadEventEnd = getNavTiming(beacon, "le");
 
     // We waited 50ms between LUX.init() and LUX.send(), so the load time should
-    // be at least 50ms. 60ms is an arbitrary upper limit to make sure we're not
-    // over-reporting load time.
+    // be at least 50ms, but less than the timestamp after LUX.send() was called
     expect(loadEventStart).toBeGreaterThanOrEqual(50);
     expect(loadEventStart).toBeLessThanOrEqual(timeAfterSend - timeBeforeInit);
     expect(loadEventStart).toEqual(loadEventEnd);
@@ -142,21 +141,32 @@ test.describe("LUX SPA", () => {
     expect(hasFlag(beaconFlags, Flags.InitCalled)).toBe(true);
   });
 
-  test("load time can be marked before the beacon is sent", async ({ page }) => {
+  test("LUX.markLoadTime() can override the load time on a hard navigation", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+    await page.goto("/default.html?injectScript=LUX.auto=false;");
+    await page.evaluate(() => LUX.markLoadTime(12345));
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+
+    const beacon = luxRequests.getUrl(0)!;
+    const loadEventStart = getNavTiming(beacon, "ls");
+
+    expect(loadEventStart).not.toEqual(12345);
+  });
+
+  test("LUX.markLoadTime() can set the load time on a soft navigation", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html?injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     await page.evaluate(() => LUX.init());
-    await page.waitForTimeout(10);
-    await page.evaluate(() => LUX.markLoadTime());
-    await page.waitForTimeout(50);
+    await page.evaluate(() => LUX.markLoadTime(12345));
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(1)!;
-    const loadEventStart = getNavTiming(beacon, "le");
+    const loadEventStart = getNavTiming(beacon, "ls");
 
-    expect(loadEventStart).toBeGreaterThanOrEqual(10);
-    expect(loadEventStart).toBeLessThan(50);
+    // In a soft nav the load time will be relative to the LUX.init call.
+    expect(loadEventStart).toBeGreaterThan(12000);
+    expect(loadEventStart).toBeLessThanOrEqual(12345);
   });
 });
