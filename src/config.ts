@@ -1,3 +1,4 @@
+import { LuxGlobal } from "./global";
 import { ServerTimingConfig } from "./server-timing";
 import { UrlPatternMapping } from "./url-matcher";
 
@@ -26,6 +27,7 @@ export interface ConfigObject {
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   serverTiming?: ServerTimingConfig;
+  snippetVersion?: LuxGlobal["snippetVersion"];
   trackErrors: boolean;
   trackHiddenPages: boolean;
 }

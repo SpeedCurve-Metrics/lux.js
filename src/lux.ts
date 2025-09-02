@@ -1435,6 +1435,10 @@ LUX = (function () {
       queryParams.push("fl=" + gFlags);
     }
 
+    if (LUX.snippetVersion) {
+      queryParams.push("sv=" + LUX.snippetVersion);
+    }
+
     const customDataValues = CustomData.valuesToString(customData);
 
     if (customDataValues) {
@@ -2065,6 +2069,7 @@ LUX = (function () {
 
   // Public properties
   globalLux.version = VERSION;
+  globalLux.snippetVersion = LUX.snippetVersion;
 
   /**
    * Run a command from the command queue

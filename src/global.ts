@@ -27,5 +27,6 @@ export interface LuxGlobal extends UserConfig {
   /** Timestamp representing when the LUX snippet was evaluated */
   ns?: number;
   send: () => void;
+  snippetVersion?: string;
   version?: string;
 }

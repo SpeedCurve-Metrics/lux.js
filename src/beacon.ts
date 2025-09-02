@@ -204,6 +204,7 @@ export class Beacon {
         collectionDuration: now() - collectionStart,
         pageId: this.pageId,
         scriptVersion: VERSION,
+        snippetVersion: this.config.snippetVersion,
         sessionId: this.sessionId,
         startTime: this.startTime,
       },
@@ -238,6 +239,9 @@ export type BeaconMetaData = {
 
   /** The lux.js version that sent the beacon */
   scriptVersion: string;
+
+  /** The lux.js snippet version that sent the beacon */
+  snippetVersion?: string;
 
   /** How long in milliseconds did this beacon capture page data for */
   measureDuration: number;

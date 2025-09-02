@@ -2,6 +2,7 @@ import { LuxGlobal } from "./global";
 
 declare global {
   declare const __ENABLE_POLYFILLS: boolean;
+  declare const __SNIPPET_VERSION: string;
 
   // LUX globals
   interface Window {

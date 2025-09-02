@@ -24,7 +24,7 @@ const scriptOutput = (file, minified) => ({
   sourcemap: true,
 });
 
-const snippetOutput = (file, target) => {
+const snippetOutput = (file, target = "es5") => {
   const versionString = `${pkg.config.snippetVersion}${target === "es5" ? "" : `-${target}`}`;
   const preamble = `/* SpeedCurve RUM Snippet v${versionString} */`;
 
