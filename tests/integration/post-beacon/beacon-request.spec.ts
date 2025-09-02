@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { BeaconPayload } from "../../../src/beacon";
-import { VERSION } from "../../../src/version";
 import { getElapsedMs } from "../../helpers/lux";
+import * as Shared from "../../helpers/shared-tests";
 import RequestInterceptor from "../../request-interceptor";
 
 /**
@@ -25,13 +25,31 @@ test.describe("POST beacon request", () => {
     await luxRequests.waitForMatchingRequest(() => page.goto("/"));
 
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
-    expect(b.customerId).toEqual("10001");
-    expect(b.flags).toBeGreaterThan(0);
-    expect(b.pageId).toBeTruthy();
-    expect(b.sessionId).toBeTruthy();
-    expect(b.measureDuration).toBeGreaterThan(0);
-    expect(b.scriptVersion).toEqual(VERSION);
     expect(b.startTime).toEqual(0);
+    Shared.testPostBeacon(b);
+  });
+
+  test("beacon metadata works when the lux.js script is loaded before the snippet", async ({
+    page,
+  }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
+    await page.goto("/images.html?noInlineSnippet", { waitUntil: "networkidle" });
+    await page.addScriptTag({ url: "/js/snippet.js" });
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
+
+    const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
+    expect(b.startTime).toEqual(0);
+    Shared.testPostBeacon(b);
+  });
+
+  test("beacon metadata works when there is no snippet", async ({ page }) => {
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
+    await page.goto("/images.html?noInlineSnippet", { waitUntil: "networkidle" });
+    await luxRequests.waitForMatchingRequest(() => page.goto("/"));
+
+    const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
+    expect(b.startTime).toEqual(0);
+    Shared.testPostBeacon(b, false);
   });
 
   test("beacon metadata is sent for SPAs", async ({ page }) => {
@@ -49,21 +67,8 @@ test.describe("POST beacon request", () => {
     expect(luxRequests.count()).toEqual(2);
 
     const b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
-    expect(b.customerId).toEqual("10001");
-    expect(b.flags).toBeGreaterThan(0);
-    expect(b.pageId).toBeTruthy();
-    expect(b.sessionId).toBeTruthy();
-    expect(b.measureDuration).toBeGreaterThan(0);
-    expect(b.scriptVersion).toEqual(VERSION);
     expect(b.startTime).toBeGreaterThanOrEqual(timeBeforeInit);
-  });
-
-  test("the beacon is sent when LUX.init() is called", async ({ page }) => {
-    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
-    await page.goto("/images.html", { waitUntil: "networkidle" });
-    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.init()));
-
-    expect(luxRequests.count()).toEqual(1);
+    Shared.testPostBeacon(b);
   });
 
   test("the beacon is not sent when LUX.auto is false", async ({ page }) => {

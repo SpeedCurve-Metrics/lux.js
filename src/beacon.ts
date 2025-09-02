@@ -1,5 +1,6 @@
 import { ConfigObject, UserConfig } from "./config";
 import { wasPrerendered } from "./document";
+import * as Events from "./events";
 import Flags, { addFlag } from "./flags";
 import { addListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
@@ -160,6 +161,10 @@ export class Beacon {
   }
 
   send() {
+    if (this.isSent) {
+      return;
+    }
+
     this.logger.logEvent(LogEvent.PostBeaconSendCalled);
 
     for (const cb of this.onBeforeSendCbs) {
@@ -187,11 +192,6 @@ export class Beacon {
       return;
     }
 
-    if (this.isSent) {
-      this.logger.logEvent(LogEvent.PostBeaconAlreadySent);
-      return;
-    }
-
     // Only clear the max measure timeout if there's data to send.
     clearTimeout(this.maxMeasureTimeout);
 
@@ -215,6 +215,7 @@ export class Beacon {
       if (sendBeacon(beaconUrl, JSON.stringify(payload))) {
         this.isSent = true;
         this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
+        Events.emit("beacon", payload);
       }
     } catch (e) {
       // Intentionally empty; handled below

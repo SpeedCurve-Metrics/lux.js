@@ -9,6 +9,15 @@ import {
 } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
 
+declare global {
+  interface Window {
+    beforeMeasureTime: number;
+    loadTime: number;
+    markTime: number;
+    startSoftNavTime: number;
+  }
+}
+
 test.describe("LUX inline snippet", () => {
   test("LUX.markLoadTime works before the script is loaded", async ({ page }) => {
     const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
@@ -20,13 +29,13 @@ test.describe("LUX inline snippet", () => {
 
     const beacon = beaconRequests.getUrl(0)!;
     const loadEventStart = getNavTiming(beacon, "le") || 0;
-    const loadTime = await page.evaluate(() => window.loadTime as number);
+    const loadTime = await page.evaluate(() => Math.floor(window.loadTime));
     const loadTimeMark = await page.evaluate(
       (mark) => performance.getEntriesByName(mark)[0].startTime,
       END_MARK,
     );
 
-    expect(loadTime).toBeLessThan(loadEventStart);
+    expect(loadTime).toBeLessThanOrEqual(loadEventStart);
 
     /**
      * Calling the snippet's version of markLoadTime() should cause the load time to be marked as
@@ -37,8 +46,31 @@ test.describe("LUX inline snippet", () => {
      * so the values should be almost exactly the same. These assertions give a bit of leeway to
      * reduce flakiness on slower test machines.
      */
-    expect(loadTimeMark).toBeGreaterThanOrEqual(Math.floor(loadTime));
-    expect(loadTimeMark).toBeLessThan(loadTime + 5);
+    expect(loadTimeMark).toBeBetween(loadTime, loadTime + 5);
+  });
+
+  test("LUX.startSoftNavigation works before the script is loaded", async ({ page }) => {
+    const beaconRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
+
+    await page.goto(
+      "/default.html?injectScript=window.startSoftNavTime=performance.now();LUX.startSoftNavigation();",
+    );
+
+    await beaconRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    expect(beaconRequests.count()).toEqual(2);
+
+    /**
+     * Similar to how we test markLoadTime() above, we keep track of the time right before
+     * calling startSoftNavigation() so we can compare it to the time when the soft navigation
+     * is recorded in the beacon.
+     */
+    const hardNavBeacon = beaconRequests.getUrl(0)!;
+    const hardNavStart = getNavTiming(hardNavBeacon).navigationStart;
+    const softNavBeacon = beaconRequests.getUrl(1)!;
+    const softNavStart = getNavTiming(softNavBeacon).navigationStart;
+    const startSoftNavTime = await page.evaluate(() => Math.floor(window.startSoftNavTime));
+
+    expect(softNavStart - hardNavStart).toEqual(startSoftNavTime);
   });
 
   test("LUX.mark works before the script is loaded", async ({ page }) => {
@@ -55,7 +87,7 @@ test.describe("LUX inline snippet", () => {
     await beaconRequests.waitForMatchingRequest();
 
     const beacon = beaconRequests.getUrl(0)!;
-    const markTime = (await page.evaluate(() => window.markTime)) as number;
+    const markTime = await page.evaluate(() => Math.floor(window.markTime));
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 
     expect(UT["mark-1"].startTime).toBeGreaterThanOrEqual(Math.floor(markTime));
@@ -83,7 +115,7 @@ test.describe("LUX inline snippet", () => {
     await beaconRequests.waitForMatchingRequest();
 
     const beacon = beaconRequests.getUrl(0)!;
-    const beforeMeasureTime = await page.evaluate(() => window.beforeMeasureTime as number);
+    const beforeMeasureTime = await page.evaluate(() => Math.floor(window.beforeMeasureTime));
     const connectEnd = await getNavigationTimingMs(page, "connectEnd");
     const UT = parseUserTiming(getSearchParam(beacon, "UT"));
 

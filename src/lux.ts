@@ -14,7 +14,7 @@ import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document"
 import { getNodeSelector } from "./dom";
 import * as Events from "./events";
 import Flags, { addFlag } from "./flags";
-import { Command, LuxGlobal } from "./global";
+import type { Command, LuxGlobal } from "./global";
 import { getTrackingParams } from "./integrations/tracking";
 import { InteractionInfo } from "./interaction";
 import { addListener, removeListener } from "./listeners";
@@ -850,29 +850,12 @@ LUX = (function () {
    * beginning of a page transition, but is also called internally when the BF cache is restored.
    */
   function _init(startTime?: number, clearFlags = true): void {
-    // Some customers (incorrectly) call LUX.init on the very first page load of a SPA. This would
-    // cause some first-page-only data (like paint metrics) to be lost. To prevent this, we silently
-    // bail from this function when we detect an unnecessary LUX.init call.
-    const endMark = _getMark(END_MARK);
-
-    if (!endMark) {
-      return;
-    }
-
     // Mark the "navigationStart" for this SPA page. A start time can be passed through, for example
     // to set a page's start time as an event timestamp.
     if (startTime) {
       _mark(START_MARK, { startTime });
     } else {
       _mark(START_MARK);
-    }
-
-    logger.logEvent(LogEvent.InitCalled);
-
-    // This is an edge case where LUX.auto = true but LUX.init() has been called. In this case, the
-    // POST beacon will not be sent automatically, so we need to send it here.
-    if (globalConfig.auto && !beacon.isSent) {
-      beacon.send();
     }
 
     // Clear all interactions from the previous "page".
@@ -1038,11 +1021,7 @@ LUX = (function () {
         0 +
         "fs" +
         0 +
-        "ls" +
-        end +
-        "le" +
-        end +
-        "";
+        (end > 0 ? "ls" + end + "le" + end : "");
     } else if (performance.timing) {
       // Return the real Nav Timing metrics because this is the "main" page view (not a SPA)
       const navEntry = getNavigationEntry();
@@ -1069,8 +1048,14 @@ LUX = (function () {
         return "";
       };
 
+      // loadEventStart always comes from navigation timing
       let loadEventStartStr = prefixNTValue("loadEventStart", "ls", true);
-      let loadEventEndStr = prefixNTValue("loadEventEnd", "le", true);
+
+      // If LUX.markLoadTime() was called in SPA Mode, we allow the custom mark to override loadEventEnd
+      let loadEventEndStr =
+        globalConfig.spaMode && endMark
+          ? "le" + processTimeMetric(endMark.startTime)
+          : prefixNTValue("loadEventEnd", "le", true);
 
       if (getPageRestoreTime() && startMark && endMark) {
         // For bfcache restores, we set the load time to the time it took for the page to be restored.
@@ -1393,8 +1378,10 @@ LUX = (function () {
     return [curleft, curtop];
   }
 
-  // Mark the load time of the current page. Intended to be used in SPAs where it is not desirable to
-  // send the beacon as soon as the page has finished loading.
+  /**
+   * Mark the load time of the current page. Intended to be used in SPAs where it is not desirable
+   * to send the beacon as soon as the page has finished loading.
+   */
   function _markLoadTime(time?: number) {
     logger.logEvent(LogEvent.MarkLoadTimeCalled, [time]);
 
@@ -1435,8 +1422,8 @@ LUX = (function () {
       queryParams.push("fl=" + gFlags);
     }
 
-    if (LUX.snippetVersion) {
-      queryParams.push("sv=" + LUX.snippetVersion);
+    if (globalLux.snippetVersion) {
+      queryParams.push("sv=" + globalLux.snippetVersion);
     }
 
     const customDataValues = CustomData.valuesToString(customData);
@@ -1473,10 +1460,20 @@ LUX = (function () {
     const startMark = _getMark(START_MARK);
     const endMark = _getMark(END_MARK);
 
-    if (!startMark || (endMark && endMark.startTime < startMark.startTime)) {
-      // Record the synthetic loadEventStart time for this page, unless it was already recorded
-      // with LUX.markLoadTime()
-      _markLoadTime();
+    if (!startMark) {
+      // For hard navigations set the synthetic load time when the beacon is being sent, unless
+      // one has already been set.
+      if (!endMark) {
+        _markLoadTime();
+      }
+    } else {
+      // For soft navigations, only set the synthetic load time if SPA mode is not enabled, and...
+      if (!globalConfig.spaMode) {
+        // ...there is no existing end mark, or the end mark is from a previous SPA page.
+        if (!endMark || endMark.startTime < startMark.startTime) {
+          _markLoadTime();
+        }
+      }
     }
 
     // Store any tracking parameters as custom data
@@ -2008,6 +2005,7 @@ LUX = (function () {
         // See https://bugs.chromium.org/p/chromium/issues/detail?id=1133363
         setTimeout(() => {
           if (gbLuxSent) {
+            logger.logEvent(LogEvent.BfCacheRestore);
             // If the beacon was already sent for this page, we start a new page view and mark the
             // load time as the time it took to restore the page.
             _init(getPageRestoreTime(), false);
@@ -2040,36 +2038,91 @@ LUX = (function () {
   const globalLux = globalConfig as LuxGlobal;
 
   // Functions
+  globalLux.addData = _addData;
+  globalLux.cmd = _runCommand;
+  globalLux.getSessionId = _getUniqueId;
   globalLux.mark = _mark;
-  globalLux.measure = _measure;
-  globalLux.init = _init;
   globalLux.markLoadTime = _markLoadTime;
+  globalLux.measure = _measure;
   globalLux.on = Events.subscribe;
-  globalLux.send = () => {
-    logger.logEvent(LogEvent.SendCalled);
+  globalLux.snippetVersion = LUX.snippetVersion;
+  globalLux.version = VERSION;
+
+  globalLux.init = (time?: number) => {
+    logger.logEvent(LogEvent.InitCalled);
+
+    // Some customers (incorrectly) call LUX.init on the very first page load of a SPA. This would
+    // cause some first-page-only data (like paint metrics) to be lost. To prevent this, we silently
+    // bail from this function when we detect an unnecessary LUX.init call.
+    //
+    // Some notes about how this is compatible with SPA mode:
+    //  - For "new" implementations where SPA mode has always been enabled, we expect
+    //    LUX.startSoftNavigation() to be called instead of LUX.init(), so this code path should
+    //    never be reached.
+    //
+    //  - For "old" implementations, we expect LUX.send() is still being called. So we can rely on
+    //    there being an end mark from the previous LUX.send() call.
+    //
+    const endMark = _getMark(END_MARK);
+
+    if (!endMark) {
+      logger.logEvent(LogEvent.InitCallIgnored);
+      return;
+    }
+
+    // In SPA mode, ensure the previous page's beacon has been sent
+    if (globalConfig.spaMode) {
+      beacon.send();
+      _sendLux();
+    }
+
+    _init(time);
+  };
+
+  globalLux.startSoftNavigation = (time?: number): void => {
+    logger.logEvent(LogEvent.TriggerSoftNavigationCalled);
     beacon.send();
     _sendLux();
+    _init(time);
   };
-  globalLux.addData = _addData;
-  globalLux.getSessionId = _getUniqueId; // so customers can do their own sampling
+
+  globalLux.send = (force?: boolean) => {
+    if (globalConfig.spaMode && !force) {
+      // In SPA mode, sending the beacon manually is not necessary, and is ignored unless the `force`
+      // parameter has been specified.
+      logger.logEvent(LogEvent.SendCancelledSpaMode);
+
+      // If markLoadTime() has not already been called, we assume this send() call corresponds to a
+      // "loaded" state and mark it as the load time. This mark is important as it is used to
+      // decide whether an init() call can be ignored or not.
+      const startMark = _getMark(START_MARK);
+      const endMark = _getMark(END_MARK);
+
+      if (!endMark || (startMark && endMark.startTime < startMark.startTime)) {
+        _markLoadTime();
+      }
+    } else {
+      logger.logEvent(LogEvent.SendCalled);
+      beacon.send();
+      _sendLux();
+    }
+  };
+
   globalLux.getDebug = () => {
     console.log(
       "SpeedCurve RUM debugging documentation: https://support.speedcurve.com/docs/rum-js-api#luxgetdebug",
     );
     return logger.getEvents();
   };
+
   globalLux.forceSample = () => {
     logger.logEvent(LogEvent.ForceSampleCalled);
     setUniqueId(createSyncId(true));
   };
+
   globalLux.doUpdate = () => {
     // Deprecated, intentionally empty.
   };
-  globalLux.cmd = _runCommand;
-
-  // Public properties
-  globalLux.version = VERSION;
-  globalLux.snippetVersion = LUX.snippetVersion;
 
   /**
    * Run a command from the command queue

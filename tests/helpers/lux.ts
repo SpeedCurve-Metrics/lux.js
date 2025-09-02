@@ -2,6 +2,7 @@ import { Page } from "@playwright/test";
 import * as Flags from "../../src/flags";
 
 const navigationTimingKeys = {
+  _: "navigationStart",
   as: "activationStart",
   rs: "redirectStart",
   re: "redirectEnd",
@@ -51,7 +52,7 @@ export function getNavTiming(
     return extractCondensedValue(getSearchParam(beacon, "NT"), key);
   }
 
-  const matches = getSearchParam(beacon, "NT").match(/[a-z]+[0-9]+/g);
+  const matches = getSearchParam(beacon, "NT").match(/([a-z]+)?[0-9]+/g);
 
   if (!matches) {
     return {} as Record<NavigationTimingKey, number>;
@@ -59,8 +60,10 @@ export function getNavTiming(
 
   return Object.fromEntries(
     matches.map((str) => {
-      const key = str.match(/[a-z]+/)![0];
-      const name = navigationTimingKeys[key as keyof typeof navigationTimingKeys];
+      const keyMatch = str.match(/[a-z]+/);
+      const name = keyMatch
+        ? navigationTimingKeys[keyMatch[0] as keyof typeof navigationTimingKeys]
+        : "navigationStart";
       const val = parseFloat(str.match(/\d+/)![0]);
 
       return [name, val];

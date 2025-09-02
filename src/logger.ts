@@ -15,6 +15,11 @@ export const enum LogEvent {
   OnloadHandlerTriggered = 11,
   MarkLoadTimeCalled = 12,
   SendCancelledPageHidden = 13,
+  TriggerSoftNavigationCalled = 14,
+  SendTriggeredBySoftNavigation = 15,
+  SendCancelledSpaMode = 16,
+  BfCacheRestore = 17,
+  InitCallIgnored = 18,
 
   // Data collection events
   SessionIsSampled = 21,
@@ -48,7 +53,6 @@ export const enum LogEvent {
   PostBeaconSendCalled = 81,
   PostBeaconTimeoutReached = 82,
   PostBeaconSent = 83,
-  PostBeaconAlreadySent = 84,
   PostBeaconCancelled = 85,
   PostBeaconStopRecording = 86,
   PostBeaconMetricRejected = 87,

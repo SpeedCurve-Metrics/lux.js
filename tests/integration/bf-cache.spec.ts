@@ -110,7 +110,7 @@ test.describe("BF cache integration", () => {
     const firstET = parseUserTiming(getSearchParam(firstBeacon, "ET"));
     const bfcET = parseUserTiming(getSearchParam(bfcBeacon, "ET"));
 
-    expect(firstET["eve-image"].startTime).toBeGreaterThanOrEqual(getNavTiming(firstBeacon, "le")!);
+    expect(firstET["eve-image"].startTime).toBeGreaterThanOrEqual(getNavTiming(firstBeacon, "ls")!);
     expect(firstET["eve-image-delayed"]).toBeUndefined();
 
     expect(bfcET["eve-image"].startTime).toEqual(0);

@@ -1,4 +1,6 @@
 import { Page, expect } from "@playwright/test";
+import { BeaconPayload } from "../../src/beacon";
+import { SNIPPET_VERSION, VERSION } from "../../src/version";
 import { getNavTiming, getPageStat, getSearchParam } from "./lux";
 
 type SharedTestArgs = {
@@ -101,5 +103,21 @@ export function testNavigationTiming({ browserName, beacon }: SharedTestArgs) {
   if (browserName === "chromium") {
     // Only Chromium records LCP
     expect(NT.largestContentfulPaint).toBeGreaterThan(0);
+  }
+}
+
+export function testPostBeacon(beacon: BeaconPayload, hasSnippet = true) {
+  expect(beacon.customerId).toEqual("10001");
+  expect(beacon.flags).toBeGreaterThan(0);
+  expect(beacon.pageId).toBeTruthy();
+  expect(beacon.sessionId).toBeTruthy();
+  expect(beacon.measureDuration).toBeGreaterThan(0);
+  expect(beacon.scriptVersion).toEqual(VERSION);
+
+  if (hasSnippet) {
+    // The es2020 variant is set in tests/server.mjs
+    expect(beacon.snippetVersion).toEqual(`${SNIPPET_VERSION}-es2020`);
+  } else {
+    expect(beacon.snippetVersion).toBeUndefined();
   }
 }
