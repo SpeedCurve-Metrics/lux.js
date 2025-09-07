@@ -1,5 +1,6 @@
 import { CLSAttribution, BeaconMetricData, BeaconMetricKey } from "../beacon";
 import { UserConfig } from "../config";
+import * as Const from "../constants";
 import { getNodeSelector } from "../dom";
 import { max } from "../math";
 import { processTimeMetric } from "../timing";
@@ -18,8 +19,8 @@ export function processEntry(entry: LayoutShift): void {
       ? entry.sources
           .filter((source) => source.node)
           .map((source) => ({
-            value: entry.value,
-            startTime: processTimeMetric(entry.startTime),
+            value: entry[Const.value],
+            startTime: processTimeMetric(entry[Const.startTime]),
             elementSelector: getNodeSelector(source.node!),
             elementType: source.node!.nodeName,
           }))
@@ -27,19 +28,19 @@ export function processEntry(entry: LayoutShift): void {
 
     if (
       sessionEntries.length &&
-      (entry.startTime - latestEntry.startTime >= 1000 ||
-        entry.startTime - firstEntry.startTime >= 5000)
+      (entry[Const.startTime] - latestEntry[Const.startTime] >= 1000 ||
+        entry[Const.startTime] - firstEntry[Const.startTime] >= 5000)
     ) {
-      sessionValue = entry.value;
+      sessionValue = entry[Const.value];
       sessionEntries = [entry];
       sessionAttributions = sources;
       largestEntry = entry;
     } else {
-      sessionValue += entry.value;
+      sessionValue += entry[Const.value];
       sessionEntries.push(entry);
       sessionAttributions = sessionAttributions.concat(sources);
 
-      if (!largestEntry || entry.value > largestEntry.value) {
+      if (!largestEntry || entry[Const.value] > largestEntry[Const.value]) {
         largestEntry = entry;
       }
     }
@@ -62,11 +63,11 @@ export function getData(config: UserConfig): BeaconMetricData[BeaconMetricKey.CL
 
   return {
     value: maximumSessionValue,
-    startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0].startTime) : null,
+    startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0][Const.startTime]) : null,
     largestEntry: largestEntry
       ? {
-          value: largestEntry.value,
-          startTime: processTimeMetric(largestEntry.startTime),
+          value: largestEntry[Const.value],
+          startTime: processTimeMetric(largestEntry[Const.startTime]),
         }
       : null,
     sources: sessionAttributions.length

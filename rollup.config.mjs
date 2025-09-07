@@ -2,6 +2,14 @@ import replace from "@rollup/plugin-replace";
 import terser from "@rollup/plugin-terser";
 import typescript from "@rollup/plugin-typescript";
 
+const terserPlugin = terser({
+  mangle: {
+    properties: {
+      regex: /^#/,
+    },
+  },
+});
+
 const outputConfig = (file, polyfills, minified) => ({
   file,
   format: "iife",
@@ -9,7 +17,7 @@ const outputConfig = (file, polyfills, minified) => ({
     replace({
       __ENABLE_POLYFILLS: JSON.stringify(polyfills),
     }),
-    minified ? terser() : undefined,
+    minified ? terserPlugin : undefined,
   ],
   sourcemap: true,
 });

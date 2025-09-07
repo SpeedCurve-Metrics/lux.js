@@ -7,7 +7,7 @@ import {
 } from "./beacon";
 import onPageLoad from "./beacon-triggers/page-load";
 import * as Config from "./config";
-import { BOOLEAN_TRUE, END_MARK, START_MARK } from "./constants";
+import * as Const from "./constants";
 import { SESSION_COOKIE_NAME } from "./cookie";
 import * as CustomData from "./custom-data";
 import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document";
@@ -59,8 +59,6 @@ LUX = (function () {
 
   // Variable aliases that allow the minifier to reduce file size.
   const document = window.document;
-  const addEventListener = window.addEventListener;
-  const removeEventListener = window.removeEventListener;
   const setTimeout = window.setTimeout;
   const clearTimeout = window.clearTimeout;
   const encodeURIComponent = window.encodeURIComponent;
@@ -106,7 +104,7 @@ LUX = (function () {
       }
     }
   }
-  addEventListener("error", errorHandler);
+  addListener("error", errorHandler);
 
   // Bitmask of flags for this session & page
   let gFlags = 0;
@@ -183,7 +181,8 @@ LUX = (function () {
     PO.observe("first-input", (entry) => {
       logEntry(entry);
 
-      const entryTime = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+      const entryTime =
+        (entry as PerformanceEventTiming)[Const.processingStart] - entry[Const.startTime];
 
       if (!gFirstInputDelay || gFirstInputDelay < entryTime) {
         gFirstInputDelay = floor(entryTime);
@@ -206,12 +205,12 @@ LUX = (function () {
           // need to manually serialize our own object with the keys we want.
           logEntry({
             interactionId: entry.interactionId,
-            name: entry.name,
+            name: entry[Const.name],
             entryType: entry.entryType,
-            startTime: entry.startTime,
-            duration: entry.duration,
-            processingStart: entry.processingStart,
-            processingEnd: entry.processingEnd,
+            startTime: entry[Const.startTime],
+            duration: entry[Const.duration],
+            processingStart: entry[Const.processingStart],
+            processingEnd: entry[Const.processingEnd],
           } as PerformanceEventTiming);
         },
         { durationThreshold: 0 },
@@ -272,7 +271,7 @@ LUX = (function () {
 
       // remove event listeners
       gaEventTypes.forEach(function (eventType) {
-        removeEventListener(eventType, onInput, ghListenerOptions);
+        removeListener(eventType, onInput, ghListenerOptions);
       });
     }
   }
@@ -291,12 +290,12 @@ LUX = (function () {
     }
 
     function removeListeners() {
-      removeEventListener("pointerup", onPointerUp, ghListenerOptions);
-      removeEventListener("pointercancel", onPointerCancel, ghListenerOptions);
+      removeListener("pointerup", onPointerUp, ghListenerOptions);
+      removeListener("pointercancel", onPointerCancel, ghListenerOptions);
     }
 
-    addEventListener("pointerup", onPointerUp, ghListenerOptions);
-    addEventListener("pointercancel", onPointerCancel, ghListenerOptions);
+    addListener("pointerup", onPointerUp, ghListenerOptions);
+    addListener("pointercancel", onPointerCancel, ghListenerOptions);
   }
 
   // Record FID as the delta between when the event happened and when the
@@ -340,7 +339,7 @@ LUX = (function () {
 
   // Attach event listener to input events.
   gaEventTypes.forEach(function (eventType) {
-    addEventListener(eventType, onInput, ghListenerOptions);
+    addListener(eventType, onInput, ghListenerOptions);
   });
   ////////////////////// FID END
 
@@ -360,7 +359,7 @@ LUX = (function () {
     if (__ENABLE_POLYFILLS) {
       const name = args[0];
       const detail = args[1]?.detail || null;
-      const startTime = args[1]?.startTime || msSincePageInit();
+      const startTime = args[1]?.[Const.startTime] || msSincePageInit();
 
       const entry = {
         entryType: "mark",
@@ -396,10 +395,10 @@ LUX = (function () {
 
     if (typeof startMarkName === "undefined") {
       // Without a start mark specified, performance.measure defaults to using navigationStart
-      if (_getMark(START_MARK)) {
+      if (_getMark(Const.START_MARK)) {
         // For SPAs that have already called LUX.init(), we use our internal start mark instead of
         // navigationStart
-        startMarkName = START_MARK;
+        startMarkName = Const.START_MARK;
       } else {
         // For regular page views, we need to patch the navigationStart behaviour because IE11 throws
         // a SyntaxError without a start mark
@@ -411,7 +410,7 @@ LUX = (function () {
       if (options) {
         // If options were provided, we need to avoid specifying a start mark if an end mark and
         // duration were already specified.
-        if (!options.end || !options.duration) {
+        if (!options.end || !options[Const.duration]) {
           (args[1] as PerformanceMeasureOptions).start = startMarkName;
         }
       } else {
@@ -440,7 +439,7 @@ LUX = (function () {
       if (typeof startMarkName === "string") {
         const startMark = _getMark(startMarkName);
         if (startMark) {
-          startTime = startMark.startTime;
+          startTime = startMark[Const.startTime];
         } else if (typeof navEntry[startMarkName] === "number") {
           // the mark name can also be a property from Navigation Timing
           startTime = navEntry[startMarkName] as number;
@@ -452,7 +451,7 @@ LUX = (function () {
       if (typeof endMarkName === "string") {
         const endMark = _getMark(endMarkName);
         if (endMark) {
-          endTime = endMark.startTime;
+          endTime = endMark[Const.startTime];
         } else if (typeof navEntry[endMarkName] === "number") {
           // the mark name can also be a property from Navigation Timing
           endTime = navEntry[endMarkName] as number;
@@ -465,8 +464,8 @@ LUX = (function () {
       let detail = null;
 
       if (options) {
-        if (options.duration) {
-          duration = options.duration;
+        if (options[Const.duration]) {
+          duration = options[Const.duration];
         }
 
         detail = options.detail;
@@ -497,7 +496,7 @@ LUX = (function () {
     if (aItems) {
       for (let i = aItems.length - 1; i >= 0; i--) {
         const m = aItems[i];
-        if (name === m.name) {
+        if (name === m[Const.name]) {
           return m;
         }
       }
@@ -539,7 +538,7 @@ LUX = (function () {
     // and multiple measures with the same name. But we can only send back one value
     // for a name, so we always take the maximum value.
     const hUT: Record<string, UserTimingEntry> = {};
-    const startMark = _getMark(START_MARK);
+    const startMark = _getMark(Const.START_MARK);
 
     // For user timing values taken in a SPA page load, we need to adjust them
     // so that they're zeroed against the last LUX.init() call.
@@ -547,14 +546,14 @@ LUX = (function () {
 
     // marks
     _getMarks().forEach((mark) => {
-      const name = mark.name;
+      const name = mark[Const.name];
 
-      if (name === START_MARK || name === END_MARK) {
+      if (name === Const.START_MARK || name === Const.END_MARK) {
         // Don't include the internal marks in the beacon
         return;
       }
 
-      const startTime = floor(mark.startTime - tZero);
+      const startTime = floor(mark[Const.startTime] - tZero);
 
       if (startTime < 0) {
         // Exclude marks that were taken before the current SPA page view
@@ -564,22 +563,22 @@ LUX = (function () {
       if (typeof hUT[name] === "undefined") {
         hUT[name] = { startTime };
       } else {
-        hUT[name].startTime = max(startTime, hUT[name].startTime);
+        hUT[name][Const.startTime] = max(startTime, hUT[name][Const.startTime]);
       }
     });
 
     // measures
     _getMeasures().forEach((measure) => {
-      if (startMark && measure.startTime < startMark.startTime) {
+      if (startMark && measure[Const.startTime] < startMark[Const.startTime]) {
         // Exclude measures that were taken before the current SPA page view
         return;
       }
 
-      const name = measure.name;
-      const startTime = floor(measure.startTime - tZero);
-      const duration = floor(measure.duration);
+      const name = measure[Const.name];
+      const startTime = floor(measure[Const.startTime] - tZero);
+      const duration = floor(measure[Const.duration]);
 
-      if (typeof hUT[name] === "undefined" || startTime > hUT[name].startTime) {
+      if (typeof hUT[name] === "undefined" || startTime > hUT[name][Const.startTime]) {
         hUT[name] = { startTime, duration };
       }
     });
@@ -607,8 +606,8 @@ LUX = (function () {
     const aET: string[] = [];
 
     PO.getEntries("element").forEach((entry) => {
-      if (entry.identifier && entry.startTime) {
-        const value = processTimeMetric(entry.startTime);
+      if (entry.identifier && entry[Const.startTime]) {
+        const value = processTimeMetric(entry[Const.startTime]);
 
         if (shouldReportValue(value)) {
           logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
@@ -637,18 +636,18 @@ LUX = (function () {
       const tZero = getZeroTime();
 
       longTaskEntries.forEach((entry) => {
-        let dur = floor(entry.duration);
-        if (entry.startTime < tZero) {
+        let dur = floor(entry[Const.duration]);
+        if (entry[Const.startTime] < tZero) {
           // In a SPA it is possible that we were in the middle of a Long Task when
           // LUX.init() was called. If so, only include the duration after tZero.
-          dur -= tZero - entry.startTime;
+          dur -= tZero - entry[Const.startTime];
         }
 
         // Only process entries that we calculated to have a valid duration
         if (dur > 0) {
           logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
 
-          const type = entry.attribution[0].name;
+          const type = entry.attribution[0][Const.name];
 
           if (!hCPU[type]) {
             hCPU[type] = 0;
@@ -657,7 +656,7 @@ LUX = (function () {
 
           hCPU[type] += dur;
           // Send back the raw startTime and duration, as well as the adjusted duration.
-          hCPUDetails[type] += "," + floor(entry.startTime) + "|" + dur;
+          hCPUDetails[type] += "," + floor(entry[Const.startTime]) + "|" + dur;
         }
       });
     }
@@ -853,7 +852,7 @@ LUX = (function () {
     // Some customers (incorrectly) call LUX.init on the very first page load of a SPA. This would
     // cause some first-page-only data (like paint metrics) to be lost. To prevent this, we silently
     // bail from this function when we detect an unnecessary LUX.init call.
-    const endMark = _getMark(END_MARK);
+    const endMark = _getMark(Const.END_MARK);
 
     if (!endMark) {
       return;
@@ -862,9 +861,9 @@ LUX = (function () {
     // Mark the "navigationStart" for this SPA page. A start time can be passed through, for example
     // to set a page's start time as an event timestamp.
     if (startTime) {
-      _mark(START_MARK, { startTime });
+      _mark(Const.START_MARK, { startTime });
     } else {
-      _mark(START_MARK);
+      _mark(Const.START_MARK);
     }
 
     logger.logEvent(LogEvent.InitCalled);
@@ -1023,14 +1022,14 @@ LUX = (function () {
   function getNavTiming() {
     let s = "";
     let ns = timing.navigationStart;
-    const startMark = _getMark(START_MARK);
-    const endMark = _getMark(END_MARK);
+    const startMark = _getMark(Const.START_MARK);
+    const endMark = _getMark(Const.END_MARK);
     if (startMark && endMark && !getPageRestoreTime()) {
       // This is a SPA page view, so send the SPA marks & measures instead of Nav Timing.
       // Note: getPageRestoreTime() indicates this was a bfcache restore, which we don't want to treat as a SPA.
-      const start = floor(startMark.startTime); // the start mark is "zero"
+      const start = floor(startMark[Const.startTime]); // the start mark is "zero"
       ns += start; // "navigationStart" for a SPA is the real navigationStart plus the start mark
-      const end = floor(endMark.startTime) - start; // delta from start mark
+      const end = floor(endMark[Const.startTime]) - start; // delta from start mark
       s =
         ns +
         // fetchStart and activationStart are the same as navigationStart for a SPA
@@ -1074,7 +1073,7 @@ LUX = (function () {
 
       if (getPageRestoreTime() && startMark && endMark) {
         // For bfcache restores, we set the load time to the time it took for the page to be restored.
-        const loadTime = floor(endMark.startTime - startMark.startTime);
+        const loadTime = floor(endMark[Const.startTime] - startMark[Const.startTime]);
         loadEventStartStr = "ls" + loadTime;
         loadEventEndStr = "le" + loadTime;
       }
@@ -1108,7 +1107,7 @@ LUX = (function () {
       ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
-      const end = floor(endMark.startTime);
+      const end = floor(endMark[Const.startTime]);
       s =
         ns +
         "fs" +
@@ -1130,8 +1129,8 @@ LUX = (function () {
     for (let i = 0; i < paintEntries.length; i++) {
       const entry = paintEntries[i];
 
-      if (entry.name === "first-contentful-paint") {
-        const value = processTimeMetric(entry.startTime);
+      if (entry[Const.name] === "first-contentful-paint") {
+        const value = processTimeMetric(entry[Const.startTime]);
 
         if (shouldReportValue(value)) {
           return value;
@@ -1148,7 +1147,7 @@ LUX = (function () {
 
     if (lcpEntries.length) {
       const lastEntry = lcpEntries[lcpEntries.length - 1];
-      const value = processTimeMetric(lastEntry.startTime);
+      const value = processTimeMetric(lastEntry[Const.startTime]);
 
       if (shouldReportValue(value)) {
         logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
@@ -1167,7 +1166,7 @@ LUX = (function () {
       const paintEntries = getEntriesByType("paint");
 
       if (paintEntries.length) {
-        const paintValues = paintEntries.map((entry) => entry.startTime).sort(sortNumeric);
+        const paintValues = paintEntries.map((entry) => entry[Const.startTime]).sort(sortNumeric);
 
         // Use the earliest valid paint entry as the start render time.
         for (let i = 0; i < paintValues.length; i++) {
@@ -1210,12 +1209,15 @@ LUX = (function () {
    */
   function getINPString(details: INP.Interaction): string {
     return [
-      "&INP=" + details.duration,
+      "&INP=" + details[Const.duration],
       details.selector ? "&INPs=" + encodeURIComponent(details.selector) : "",
-      "&INPt=" + floor(details.startTime),
-      "&INPi=" + clamp(floor(details.processingStart - details.startTime)),
-      "&INPp=" + clamp(floor(details.processingTime)),
-      "&INPd=" + clamp(floor(details.startTime + details.duration - details.processingEnd)),
+      "&INPt=" + floor(details[Const.startTime]),
+      "&INPi=" + clamp(floor(details[Const.processingStart] - details[Const.startTime])),
+      "&INPp=" + clamp(floor(details[Const.processingTime])),
+      "&INPd=" +
+        clamp(
+          floor(details[Const.startTime] + details[Const.duration] - details[Const.processingEnd]),
+        ),
     ].join("");
   }
 
@@ -1399,9 +1401,9 @@ LUX = (function () {
     logger.logEvent(LogEvent.MarkLoadTimeCalled, [time]);
 
     if (time) {
-      _mark(END_MARK, { startTime: time });
+      _mark(Const.END_MARK, { startTime: time });
     } else {
-      _mark(END_MARK);
+      _mark(Const.END_MARK);
     }
   }
 
@@ -1466,10 +1468,10 @@ LUX = (function () {
 
     logger.logEvent(LogEvent.DataCollectionStart);
 
-    const startMark = _getMark(START_MARK);
-    const endMark = _getMark(END_MARK);
+    const startMark = _getMark(Const.START_MARK);
+    const endMark = _getMark(Const.END_MARK);
 
-    if (!startMark || (endMark && endMark.startTime < startMark.startTime)) {
+    if (!startMark || (endMark && endMark[Const.startTime] < startMark[Const.startTime])) {
       // Record the synthetic loadEventStart time for this page, unless it was already recorded
       // with LUX.markLoadTime()
       _markLoadTime();
@@ -1527,7 +1529,7 @@ LUX = (function () {
     if (LUX.conversions) {
       getMatchesFromPatternMap(LUX.conversions, location.hostname, location.pathname).forEach(
         (conversion) => {
-          LUX.addData(conversion, BOOLEAN_TRUE);
+          _addData(conversion, Const.BOOLEAN_TRUE);
         },
       );
     }
@@ -1993,7 +1995,7 @@ LUX = (function () {
   // bfcache. Since we have no "onload" event to hook into after a bfcache restore, we rely on the
   // unload and maxMeasureTime handlers to send the beacon.
   if (globalConfig.newBeaconOnPageShow) {
-    addEventListener("pageshow", (event) => {
+    addListener("pageshow", (event) => {
       if (event.persisted) {
         // Record the timestamp of the bfcache restore
         setPageRestoreTime(event.timeStamp);
