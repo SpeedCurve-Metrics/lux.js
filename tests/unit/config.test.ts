@@ -8,15 +8,19 @@ describe("Config.fromObject()", () => {
     expect(config.auto).toEqual(true);
     expect(config.beaconUrl).toEqual("https://lux.speedcurve.com/lux/");
     expect(config.customerid).toBeUndefined();
+    expect(config.errorBeaconUrl).toEqual("https://lux.speedcurve.com/error/");
     expect(config.jspagelabel).toBeUndefined();
     expect(config.label).toBeUndefined();
     expect(config.maxErrors).toEqual(5);
     expect(config.maxMeasureTime).toEqual(60_000);
     expect(config.measureUntil).toEqual("onload");
     expect(config.minMeasureTime).toEqual(0);
+    expect(config.newBeaconOnPageShow).toEqual(false);
     expect(config.samplerate).toEqual(100);
     expect(config.sendBeaconOnPageHidden).toEqual(true);
+    expect(config.spaMode).toEqual(false);
     expect(config.trackErrors).toEqual(true);
+    expect(config.trackHiddenPages).toEqual(false);
   });
 
   test("it uses values from the config object when they are provided", () => {
@@ -52,5 +56,27 @@ describe("Config.fromObject()", () => {
     });
 
     expect(config.sendBeaconOnPageHidden).toEqual(true);
+  });
+
+  test("it sets sensible defaults in SPA mode", () => {
+    const config = Config.fromObject({
+      spaMode: true,
+    });
+
+    expect(config.auto).toEqual(false);
+    expect(config.measureUntil).toEqual("pagehidden");
+    expect(config.sendBeaconOnPageHidden).toEqual(true);
+    expect(config.spaMode).toEqual(true);
+  });
+
+  test("SPA mode defaults can be overridden, except for auto", () => {
+    const config = Config.fromObject({
+      auto: true,
+      spaMode: true,
+      sendBeaconOnPageHidden: false,
+    });
+
+    expect(config.auto).toEqual(false);
+    expect(config.sendBeaconOnPageHidden).toEqual(false);
   });
 });

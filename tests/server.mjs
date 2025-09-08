@@ -2,10 +2,10 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
-import url from "node:url";
+import { fileURLToPath } from "node:url";
 import BeaconStore from "./helpers/beacon-store.js";
 
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const testPagesDir = path.join(__dirname, "test-pages");
 const distDir = path.join(__dirname, "..", "dist");
 
@@ -15,27 +15,27 @@ BeaconStore.open().then(async (store) => {
 
   const server = createServer(async (req, res) => {
     const reqTime = new Date();
-    const inlineSnippet = await readFile(path.join(distDir, "lux-snippet.js"));
-    const parsedUrl = url.parse(req.url, true);
-    const pathname = parsedUrl.pathname;
+    const inlineSnippet = await readFile(path.join(distDir, "lux-snippet.es2020.js"));
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const pathname = url.pathname;
 
     const headers = (contentType) => {
       const h = {
-        "cache-control": `public, max-age=${parsedUrl.query.maxAge || 0}`,
+        "cache-control": `public, max-age=${url.searchParams.get("maxAge") || 0}`,
         "content-type": contentType,
-        "server-timing": parsedUrl.query.serverTiming || "",
+        "server-timing": url.searchParams.get("serverTiming") || "",
         "timing-allow-origin": "*",
       };
 
-      if (!parsedUrl.query.keepAlive) {
+      if (!url.searchParams.get("keepAlive")) {
         h.connection = "close";
       }
 
-      if (parsedUrl.query.csp) {
-        const cspHeader = parsedUrl.query.cspReportOnly
+      if (url.searchParams.has("csp")) {
+        const cspHeader = url.searchParams.get("cspReportOnly")
           ? "content-security-policy-report-only"
           : "content-security-policy";
-        h[cspHeader] = parsedUrl.query.csp;
+        h[cspHeader] = url.searchParams.get("csp");
       }
 
       return h;
@@ -43,9 +43,7 @@ BeaconStore.open().then(async (store) => {
 
     const sendResponse = async (status, headers, body) => {
       console.log(
-        [reqTime.toISOString(), status, req.method, `${pathname}${parsedUrl.search || ""}`].join(
-          " ",
-        ),
+        [reqTime.toISOString(), status, req.method, `${pathname}${url.search || ""}`].join(" "),
       );
 
       res.writeHead(status, headers);
@@ -65,15 +63,23 @@ BeaconStore.open().then(async (store) => {
         break;
     }
 
-    if (parsedUrl.query.redirectTo) {
+    if (url.searchParams.has("redirectTo")) {
       // Send the redirect after a short delay so that the redirectStart time is measurable
-      setTimeout(() => {
-        sendResponse(302, { location: decodeURIComponent(parsedUrl.query.redirectTo) }, "");
-      }, parsedUrl.query.redirectDelay || 0);
+      const redirectLocation = decodeURIComponent(url.searchParams.get("redirectTo"));
+
+      setTimeout(
+        () => {
+          sendResponse(302, { location: redirectLocation }, "");
+        },
+        url.searchParams.get("redirectDelay") || 0,
+      );
     } else if (pathname === "/") {
       sendResponse(200, headers("text/plain"), "OK");
     } else if (pathname === "/js/lux.min.js.map") {
       const contents = await readFile(path.join(distDir, "lux.min.js.map"));
+      sendResponse(200, headers("application/json"), contents);
+    } else if (pathname === "/js/snippet.js") {
+      const contents = await readFile(path.join(distDir, "lux-snippet.es2020.js"));
       sendResponse(200, headers("application/json"), contents);
     } else if (pathname === "/js/lux.js") {
       const contents = await readFile(path.join(distDir, "lux.min.js"));
@@ -89,16 +95,16 @@ BeaconStore.open().then(async (store) => {
       sendResponse(200, headers(contentType), `${preamble};${contents}`);
     } else if (pathname === "/beacon/" || pathname === "/error/") {
       if (req.headers.referer) {
-        const referrerUrl = url.parse(req.headers.referer, true);
+        const referrerUrl = new URL(req.headers.referer);
 
-        if ("useBeaconStore" in referrerUrl.query) {
-          store.id = referrerUrl.query.useBeaconStore;
+        if (referrerUrl.searchParams.has("useBeaconStore")) {
+          store.id = referrerUrl.searchParams.get("useBeaconStore");
           store.put(
             reqTime.getTime(),
             req.headers["user-agent"],
             new URL(req.url, `http://${req.headers.host}`).href,
-            parsedUrl.query.l,
-            decodeURIComponent(parsedUrl.query.PN),
+            url.searchParams.get("l"),
+            decodeURIComponent(url.searchParams.get("PN")),
           );
         }
       }
@@ -121,25 +127,25 @@ BeaconStore.open().then(async (store) => {
           };
         `;
 
-          if (parsedUrl.query.injectBeforeSnippet) {
-            injectScript += parsedUrl.query.injectBeforeSnippet;
+          if (url.searchParams.has("injectBeforeSnippet")) {
+            injectScript += url.searchParams.get("injectBeforeSnippet");
           }
 
-          if (!parsedUrl.query.noInlineSnippet) {
+          if (!url.searchParams.has("noInlineSnippet")) {
             injectScript += inlineSnippet;
           }
 
-          if (parsedUrl.query.injectScript) {
-            injectScript += parsedUrl.query.injectScript;
+          if (url.searchParams.has("injectScript")) {
+            injectScript += url.searchParams.get("injectScript");
           }
 
           contents = contents.toString().replace("/*INJECT_SCRIPT*/", injectScript);
         }
 
-        if (parsedUrl.query.delay) {
+        if (url.searchParams.has("delay")) {
           setTimeout(
             () => sendResponse(200, headers(contentType), contents),
-            parseInt(parsedUrl.query.delay),
+            parseInt(url.searchParams.get("delay")),
           );
         } else {
           sendResponse(200, headers(contentType), contents);

@@ -1,4 +1,5 @@
 import type { Command, LuxGlobal } from "./global";
+import { LogEvent } from "./logger";
 import { performance } from "./performance";
 import scriptStartTime from "./start-marker";
 import { msSinceNavigationStart } from "./timing";
@@ -15,13 +16,15 @@ LUX = window.LUX || ({} as LuxGlobal);
 LUX.ac = [];
 LUX.addData = (name, value) => LUX.cmd(["addData", name, value]);
 LUX.cmd = (cmd: Command) => LUX.ac!.push(cmd);
-LUX.getDebug = () => [[scriptStartTime, 0, []]];
-LUX.init = () => LUX.cmd(["init"]);
+LUX.getDebug = () => [[scriptStartTime, 0 as LogEvent, []]];
+LUX.init = (time?: number) => LUX.cmd(["init", time || msSinceNavigationStart()]);
 LUX.mark = _mark;
 LUX.markLoadTime = () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]);
+LUX.startSoftNavigation = () => LUX.cmd(["startSoftNavigation", msSinceNavigationStart()]);
 LUX.measure = _measure;
 LUX.on = (event, callback) => LUX.cmd(["on", event, callback]);
-LUX.send = () => LUX.cmd(["send"]);
+LUX.send = (force?: boolean) => LUX.cmd(["send", force]);
+LUX.snippetVersion = __SNIPPET_VERSION;
 LUX.ns = scriptStartTime;
 
 export default LUX;
@@ -77,6 +80,5 @@ function _measure(...args: Parameters<LuxGlobal["measure"]>): ReturnType<LuxGlob
 // error handler
 window.LUX_ae = []; // array of error events
 window.addEventListener("error", function (e) {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   window.LUX_ae!.push(e);
 });

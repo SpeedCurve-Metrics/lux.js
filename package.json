@@ -1,6 +1,9 @@
 {
   "name": "@speedcurve/lux",
   "version": "4.2.1",
+  "config": {
+    "snippetVersion": "2.0.0"
+  },
   "main": "dist/lux.js",
   "scripts": {
     "build": "npm run rollup",
@@ -24,6 +27,7 @@
     "@babel/preset-env": "^7.21.5",
     "@babel/preset-typescript": "^7.21.5",
     "@playwright/test": "^1.32.3",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-replace": "^6.0.2",
     "@rollup/plugin-terser": "^0.4.0",
     "@rollup/plugin-typescript": "^12.1.4",

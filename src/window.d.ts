@@ -1,7 +1,8 @@
-import { LuxGlobal } from "./global";
+import type { LuxGlobal } from "./global";
 
 declare global {
   declare const __ENABLE_POLYFILLS: boolean;
+  declare const __SNIPPET_VERSION: string;
 
   // LUX globals
   interface Window {
@@ -14,6 +15,10 @@ declare global {
   interface Window {
     attachEvent(event: string, listener: EventListener): boolean;
     detachEvent(event: string, listener: EventListener): void;
+  }
+
+  interface HTMLElement {
+    elementTiming?: string;
   }
 
   interface Document {

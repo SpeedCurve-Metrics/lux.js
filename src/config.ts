@@ -1,6 +1,11 @@
+import { LuxGlobal } from "./global";
 import { ServerTimingConfig } from "./server-timing";
 import { UrlPatternMapping } from "./url-matcher";
 
+/**
+ * ConfigObject holds the parsed and normalised lux.js configuration. It is initialised once based
+ * on the `LUX` global.
+ */
 export interface ConfigObject {
   allowEmptyPostBeacon: boolean;
   auto: boolean;
@@ -26,6 +31,8 @@ export interface ConfigObject {
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   serverTiming?: ServerTimingConfig;
+  snippetVersion?: LuxGlobal["snippetVersion"];
+  spaMode: boolean;
   trackErrors: boolean;
   trackHiddenPages: boolean;
 }
@@ -35,7 +42,8 @@ export type UserConfig = Partial<ConfigObject>;
 const luxOrigin = "https://lux.speedcurve.com";
 
 export function fromObject(obj: UserConfig): ConfigObject {
-  const autoMode = getProperty(obj, "auto", true);
+  const spaMode = getProperty(obj, "spaMode", false);
+  const autoMode = spaMode ? false : getProperty(obj, "auto", true);
 
   return {
     allowEmptyPostBeacon: getProperty(obj, "allowEmptyPostBeacon", false),
@@ -55,13 +63,14 @@ export function fromObject(obj: UserConfig): ConfigObject {
     maxBeaconUTEntries: getProperty(obj, "maxBeaconUTEntries", 20),
     maxErrors: getProperty(obj, "maxErrors", 5),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
-    measureUntil: getProperty(obj, "measureUntil", "onload"),
+    measureUntil: getProperty(obj, "measureUntil", spaMode ? "pagehidden" : "onload"),
     minMeasureTime: getProperty(obj, "minMeasureTime", 0),
     newBeaconOnPageShow: getProperty(obj, "newBeaconOnPageShow", false),
     pagegroups: getProperty(obj, "pagegroups"),
     samplerate: getProperty(obj, "samplerate", 100),
-    sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
+    sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", spaMode || autoMode),
     serverTiming: getProperty(obj, "serverTiming"),
+    spaMode,
     trackErrors: getProperty(obj, "trackErrors", true),
     trackHiddenPages: getProperty(obj, "trackHiddenPages", false),
   };

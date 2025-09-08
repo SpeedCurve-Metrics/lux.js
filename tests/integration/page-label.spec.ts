@@ -2,6 +2,14 @@ import { test, expect } from "@playwright/test";
 import Flags from "../../src/flags";
 import { hasFlag } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
+import type RequestMatcher from "../request-matcher";
+
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    config: Record<string, any>;
+  }
+}
 
 test.describe("LUX page labels in auto mode", () => {
   test("no custom label set", async ({ page }) => {
@@ -140,7 +148,7 @@ test.describe("LUX page labels in a SPA", () => {
 });
 
 test.describe("LUX JS page label", () => {
-  let luxRequests;
+  let luxRequests: RequestMatcher;
 
   test.beforeEach(async ({ page }) => {
     luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
@@ -182,7 +190,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("Another JS Label");
+    expect(luxRequests.getUrl(1)!.searchParams.get("l"))!.toEqual("Another JS Label");
   });
 
   test("the variable can be changed on the fly", async ({ page }) => {
@@ -194,7 +202,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("First JS Label");
+    expect(luxRequests.getUrl(0)!.searchParams.get("l"))!.toEqual("First JS Label");
 
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
@@ -205,7 +213,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("Different Variable Label");
+    expect(luxRequests.getUrl(1)!.searchParams.get("l"))!.toEqual("Different Variable Label");
 
     // Restore jspagelabel to previous state
     await page.evaluate(() => (LUX.jspagelabel = "window.config.page[0].name"));
@@ -220,7 +228,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("custom label");
+    expect(luxRequests.getUrl(0)!.searchParams.get("l"))!.toEqual("custom label");
 
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
@@ -231,7 +239,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("JS Label");
+    expect(luxRequests.getUrl(1)!.searchParams.get("l"))!.toEqual("JS Label");
   });
 
   test("LUX.pagegroups takes priority over JS page label", async ({ page }) => {
@@ -243,7 +251,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("Pagegroup");
+    expect(luxRequests.getUrl(0)!.searchParams.get("l"))!.toEqual("Pagegroup");
 
     await luxRequests.waitForMatchingRequest(() =>
       page.evaluate(() => {
@@ -254,7 +262,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(1).searchParams.get("l"))!.toEqual("JS Label");
+    expect(luxRequests.getUrl(1)!.searchParams.get("l"))!.toEqual("JS Label");
   });
 
   test("falls back to JS variable when pagegroup doesn't match", async ({ page }) => {
@@ -267,7 +275,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("JS Label");
+    expect(luxRequests.getUrl(0)!.searchParams.get("l"))!.toEqual("JS Label");
   });
 
   test("falls back to document title when JS variable doesn't eval", async ({ page }) => {
@@ -279,7 +287,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");
+    expect(luxRequests.getUrl(0)!.searchParams.get("l"))!.toEqual("LUX default test page");
   });
 
   test("falls back to document title when JS variable evaluates to a falsey value", async ({
@@ -293,7 +301,7 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");
+    expect(luxRequests.getUrl(0)!.searchParams.get("l"))!.toEqual("LUX default test page");
   });
 
   test("internal LUX variables can't be accessed", async ({ page }) => {
@@ -305,6 +313,6 @@ test.describe("LUX JS page label", () => {
       }),
     );
 
-    expect(luxRequests.getUrl(0).searchParams.get("l"))!.toEqual("LUX default test page");
+    expect(luxRequests.getUrl(0)!.searchParams.get("l"))!.toEqual("LUX default test page");
   });
 });

@@ -34,7 +34,9 @@ function renderOutput(output: Element) {
     output.appendChild(li(`Could not parse input: ${err}`, "red"));
   }
 
-  eventCounter.innerText = `(${inputEvents.length} events)`;
+  const sentBeacons = inputEvents.filter((event) => event[1] === LogEvent.MainBeaconSent);
+
+  eventCounter.innerText = `(${inputEvents.length} events; ${sentBeacons.length} page views)`;
 
   let navigationStart = Number(new Date(inputEvents[0][0]));
 
@@ -183,7 +185,7 @@ function renderOutput(output: Element) {
 
   output.prepend(
     li(
-      `0 ms: Navigation started at ${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString()}`,
+      `0 ms: 🟢 Navigation started at ${startTime.toLocaleDateString()} ${startTime.toLocaleTimeString()}`,
     ),
   );
 }

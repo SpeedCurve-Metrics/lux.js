@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as Config from "../../src/config";
 import * as INP from "../../src/metric/INP";
 import "../../src/window.d.ts";
+import { Writable } from "../helpers/types";
 
 const config = Config.fromObject({});
 
@@ -137,7 +138,7 @@ describe("INP", () => {
   });
 });
 
-function makeEntry(props: Partial<PerformanceEventTiming>): PerformanceEventTiming {
+function makeEntry(props: Partial<PerformanceEventTiming>): Writable<PerformanceEventTiming> {
   return {
     interactionId: 0,
     duration: 0,

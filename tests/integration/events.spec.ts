@@ -1,6 +1,15 @@
 import { test, expect } from "@playwright/test";
+import { BeaconPayload } from "../../src/beacon";
 import { getSearchParam } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
+
+declare global {
+  interface Window {
+    page_id: string;
+    beacon_url: string;
+    payload: BeaconPayload;
+  }
+}
 
 test.describe("LUX events", () => {
   test("new_page_id", async ({ page }) => {
@@ -28,14 +37,24 @@ test.describe("LUX events", () => {
   });
 
   test("beacon", async ({ page }) => {
+    const onBeacon = `
+      (beacon) => {
+        if (typeof beacon === "string") {
+          window.beacon_url = beacon;
+        } else {
+          window.payload = beacon;
+        }
+      }
+    `;
+
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
-    await page.goto(
-      "/default.html?injectScript=LUX.auto=false;LUX.on('beacon', (url) => window.beacon_url = url);",
-      { waitUntil: "networkidle" },
-    );
+    await page.goto(`/default.html?injectScript=LUX.auto=false;LUX.on('beacon', ${onBeacon});`, {
+      waitUntil: "networkidle",
+    });
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     const beacon = luxRequests.getUrl(0)!;
+    const payload = await page.evaluate(() => window.payload);
     let beaconUrl = await page.evaluate(() => window.beacon_url);
 
     // We don't encode the Delivery Type parameter before sending the beacon, but Chromium seems to
@@ -44,5 +63,6 @@ test.describe("LUX events", () => {
     beaconUrl = beaconUrl.replace("dt(empty string)_", "dt(empty%20string)_");
 
     expect(beaconUrl).toEqual(beacon.href);
+    expect(payload.customerId).toEqual("10001");
   });
 });

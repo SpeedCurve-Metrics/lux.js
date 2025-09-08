@@ -14,7 +14,23 @@ export function isBeaconEvent(event: LogEvent) {
   ].includes(event);
 }
 
+function isVerboseEvent(event: LogEvent) {
+  return [
+    LogEvent.DataCollectionStart,
+    LogEvent.PostBeaconCancelled,
+    LogEvent.PostBeaconCSPViolation,
+    LogEvent.PostBeaconInitialised,
+    LogEvent.PostBeaconSendCalled,
+    LogEvent.PostBeaconStopRecording,
+    LogEvent.PostBeaconTimeoutReached,
+  ].includes(event);
+}
+
 export function getMessageForEvent(event: LogEventRecord, filters: string[]): string {
+  if (isVerboseEvent(event[1]) && !filters.includes("verbose")) {
+    return "";
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const args = event[2] as any[];
 
@@ -26,20 +42,23 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
   }
 
   switch (event[1]) {
-    case 0:
+    case 0 as LogEvent:
       return "The lux.js script was not loaded on this page.";
 
     case LogEvent.EvaluationStart:
-      return `lux.js v${args[0]} is initialising.`;
+      return `lux.js v${args[0]} init begin.`;
 
     case LogEvent.EvaluationEnd:
-      return "lux.js has finished initialising.";
+      return "lux.js init complete.";
 
     case LogEvent.InitCalled:
-      return "LUX.init()";
+      return "🟢 LUX.init() - new page view started";
+
+    case LogEvent.StartSoftNavigationCalled:
+      return "🟢 LUX.startSoftNavigation() - new page view started";
 
     case LogEvent.MarkLoadTimeCalled:
-      return `LUX.markLoadTime(${argsAsString(args)})`;
+      return `🎯 LUX.markLoadTime(${argsAsString(args)})`;
 
     case LogEvent.MarkCalled:
       if (filters.includes("userTiming")) {
@@ -71,6 +90,9 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
     case LogEvent.SendCancelledPageHidden:
       return "This beacon was not sent because the page visibility was hidden.";
 
+    case LogEvent.SendCancelledSpaMode:
+      return "ℹ️ LUX.send() was ignored because SPA Mode is enabled.";
+
     case LogEvent.ForceSampleCalled:
       return "LUX.forceSample()";
 
@@ -78,7 +100,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return "Preparing to send main beacon. Metrics received after this point may be ignored.";
 
     case LogEvent.UnloadHandlerTriggered:
-      return "Unload handler was triggered.";
+      return "⤴️ Unload handler was triggered.";
 
     case LogEvent.OnloadHandlerTriggered:
       message = `Onload handler was triggered after ${args[0]} ms.`;
@@ -96,7 +118,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return `Sample rate is ${args[0]}%. This session is not being sampled.`;
 
     case LogEvent.MainBeaconSent:
-      message = "Main beacon sent";
+      message = "📫 Main beacon sent";
 
       if (filters.includes("beaconUrl")) {
         message += `: ${args[0]}`;
@@ -105,7 +127,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return message;
 
     case LogEvent.UserTimingBeaconSent:
-      message = "Supplementary user timing beacon sent";
+      message = "📧 Supplementary user timing beacon sent";
 
       if (filters.includes("beaconUrl")) {
         message += `: ${args[0]}`;
@@ -114,7 +136,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return message;
 
     case LogEvent.InteractionBeaconSent:
-      message = "Supplementary user interaction beacon sent";
+      message = "📧 Supplementary user interaction beacon sent";
 
       if (filters.includes("beaconUrl")) {
         message += `: ${args[0]}`;
@@ -123,7 +145,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return message;
 
     case LogEvent.CustomDataBeaconSent:
-      message = "Supplementary custom data beacon sent";
+      message = "📧 Supplementary custom data beacon sent";
 
       if (filters.includes("beaconUrl")) {
         message += `: ${args[0]}`;
@@ -142,20 +164,17 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
 
     case LogEvent.PostBeaconSent:
       if (filters.includes("beaconUrl")) {
-        return `POST beacon sent: ${args[0]}`;
+        return `📫 POST beacon sent: ${args[0]}`;
       }
 
-      return "POST beacon sent.";
+      return "📫 POST beacon sent.";
 
     case LogEvent.PostBeaconSendFailed:
       if (filters.includes("beaconUrl")) {
-        return `POST beacon send failed: ${args[0]}`;
+        return `⚠️ POST beacon send failed: ${args[0]}`;
       }
 
-      return "POST beacon send failed.";
-
-    case LogEvent.PostBeaconAlreadySent:
-      return "POST beacon cancelled (already sent).";
+      return "⚠️ POST beacon send failed.";
 
     case LogEvent.PostBeaconCancelled:
       return "POST beacon cancelled.";
@@ -170,12 +189,20 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return "POST beacon cancelled due to CSP violation.";
 
     case LogEvent.PostBeaconCollector:
-      return `POST beacon metric collector: ${args[0]} (has data: ${args[1]})`;
+      if (filters.includes("metrics")) {
+        return `POST beacon metric collector: ${args[0]} (has data: ${args[1]})`;
+      }
+
+      return "";
 
     case LogEvent.NavigationStart:
       return "";
 
     case LogEvent.PerformanceEntryReceived:
+      if (!filters.includes("metrics")) {
+        return "";
+      }
+
       if (args[0].entryType === "layout-shift") {
         return `Received layout shift at ${args[0].startTime.toFixed()} ms with value of ${args[0].value.toFixed(
           3,
@@ -207,7 +234,7 @@ export function getMessageForEvent(event: LogEventRecord, filters: string[]): st
       return message;
 
     case LogEvent.PerformanceEntryProcessed:
-      if (args[0].entryType === "largest-contentful-paint") {
+      if (filters.includes("metrics") && args[0].entryType === "largest-contentful-paint") {
         return `Picked LCP from entry at ${args[0].startTime.toFixed()} ms`;
       }
 
@@ -272,6 +299,12 @@ function getEventName(event: LogEvent) {
       return "MarkLoadTimeCalled";
     case LogEvent.SendCancelledPageHidden:
       return "SendCancelledPageHidden";
+    case LogEvent.StartSoftNavigationCalled:
+      return "StartSoftNavigationCalled";
+    case LogEvent.SendCancelledSpaMode:
+      return "SendCancelledSpaMode";
+    case LogEvent.BfCacheRestore:
+      return "BfCacheRestore";
     case LogEvent.SessionIsSampled:
       return "SessionIsSampled";
     case LogEvent.SessionIsNotSampled:
@@ -318,8 +351,6 @@ function getEventName(event: LogEvent) {
       return "PostBeaconTimeoutReached";
     case LogEvent.PostBeaconSent:
       return "PostBeaconSent";
-    case LogEvent.PostBeaconAlreadySent:
-      return "PostBeaconAlreadySent";
     case LogEvent.PostBeaconCancelled:
       return "PostBeaconCancelled";
     case LogEvent.PostBeaconStopRecording:
@@ -333,4 +364,6 @@ function getEventName(event: LogEvent) {
     case LogEvent.PostBeaconCollector:
       return "PostBeaconCollector";
   }
+
+  return "Unknown Event";
 }
