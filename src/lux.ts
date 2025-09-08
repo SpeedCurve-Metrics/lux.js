@@ -2080,7 +2080,7 @@ LUX = (function () {
   };
 
   globalLux.startSoftNavigation = (time?: number): void => {
-    logger.logEvent(LogEvent.TriggerSoftNavigationCalled);
+    logger.logEvent(LogEvent.StartSoftNavigationCalled);
     beacon.send();
     _sendLux();
     _init(time);

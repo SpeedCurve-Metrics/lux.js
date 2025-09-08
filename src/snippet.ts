@@ -1,4 +1,5 @@
 import type { Command, LuxGlobal } from "./global";
+import { LogEvent } from "./logger";
 import { performance } from "./performance";
 import scriptStartTime from "./start-marker";
 import { msSinceNavigationStart } from "./timing";
@@ -15,7 +16,7 @@ LUX = window.LUX || ({} as LuxGlobal);
 LUX.ac = [];
 LUX.addData = (name, value) => LUX.cmd(["addData", name, value]);
 LUX.cmd = (cmd: Command) => LUX.ac!.push(cmd);
-LUX.getDebug = () => [[scriptStartTime, 0, []]];
+LUX.getDebug = () => [[scriptStartTime, 0 as LogEvent, []]];
 LUX.init = (time?: number) => LUX.cmd(["init", time || msSinceNavigationStart()]);
 LUX.mark = _mark;
 LUX.markLoadTime = () => LUX.cmd(["markLoadTime", msSinceNavigationStart()]);

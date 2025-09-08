@@ -15,8 +15,7 @@ export const enum LogEvent {
   OnloadHandlerTriggered = 11,
   MarkLoadTimeCalled = 12,
   SendCancelledPageHidden = 13,
-  TriggerSoftNavigationCalled = 14,
-  SendTriggeredBySoftNavigation = 15,
+  StartSoftNavigationCalled = 14,
   SendCancelledSpaMode = 16,
   BfCacheRestore = 17,
   InitCallIgnored = 18,
@@ -62,12 +61,12 @@ export const enum LogEvent {
   PostBeaconCollector = 91,
 }
 
-export type LogEventRecord = [number, number, ...unknown[]];
+export type LogEventRecord = [number, LogEvent, ...unknown[]];
 
 export default class Logger {
   events: LogEventRecord[] = [];
 
-  logEvent(event: number, args: unknown[] = []) {
+  logEvent(event: LogEvent, args: unknown[] = []) {
     this.events.push([now(), event, args]);
   }
 
