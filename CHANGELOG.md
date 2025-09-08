@@ -1,5 +1,16 @@
 # lux.js changelog
 
+## 2025-09-09: v4.3.0
+
+### New features
+
+- Add `LUX.on()` which can be used to subscribe to internal events. Current events are `beacon` and `new_page_id`.
+- Add `LUX.spaMode` which greatly simplifies implementing lux.js in a Single Page Application (SPA). Read [the documentation](https://support.speedcurve.com/docs/single-page-applications) for more information.
+
+### Improvements
+
+- Add ES2015 and ES2020 builds which slightly reduce output size. Read [the documentation](https://support.speedcurve.com/docs/which-rum-snippet-variant-is-right-for-me) for more information.
+
 ## 2025-07-28: v4.2.1
 
 ### Bug fixes
