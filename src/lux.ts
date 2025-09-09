@@ -752,7 +752,7 @@ LUX = (function () {
   // Track how long it took lux.js to load via Resource Timing.
   function selfLoading(): string {
     let sLuxjs = "";
-    if (gbFirstPV && performance.getEntriesByName) {
+    if (gbFirstPV && performance.getEntriesByName && thisScript.src) {
       // Get the lux script URL (including querystring params).
       const aResources = performance.getEntriesByName(thisScript.src);
       if (aResources && aResources.length) {
@@ -1205,8 +1205,13 @@ LUX = (function () {
   }
 
   function getCustomerId() {
-    if (!_thisCustomerId) {
-      _thisCustomerId = thisScript.src.match(/id=(\d+)/)!.pop();
+    if (thisScript.src) {
+      const idFromScript = thisScript.src.match(/id=(\d+)/)!.pop();
+
+      if (idFromScript && _thisCustomerId !== idFromScript) {
+        // If the customer IDs are different, prefer the ID specified in the script
+        _thisCustomerId = idFromScript;
+      }
     }
 
     if (!_thisCustomerId) {
