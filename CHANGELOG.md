@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2025-09-10: v4.3.2
+
+### Bug fixes
+
+- Prevent error being thrown when accessing `snippetVersion` during early unload beacons.
+
 ## 2025-09-10: v4.3.1
 
 ### Bug fixes
