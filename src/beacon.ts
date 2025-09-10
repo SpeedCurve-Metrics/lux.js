@@ -204,7 +204,7 @@ export class Beacon {
         collectionDuration: now() - collectionStart,
         pageId: this.pageId,
         scriptVersion: VERSION,
-        snippetVersion: this.config.snippetVersion,
+        snippetVersion: LUX.snippetVersion,
         sessionId: this.sessionId,
         startTime: this.startTime,
       },

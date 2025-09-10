@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2025-09-10: v4.3.1
+
+### Bug fixes
+
+- Prefer to extract the RUM ID from the lux.js script URL i.e. `/js/lux.js?id=RUM_ID`.
+
 ## 2025-09-09: v4.3.0
 
 ### New features
