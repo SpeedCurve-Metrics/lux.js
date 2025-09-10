@@ -1427,8 +1427,8 @@ LUX = (function () {
       queryParams.push("fl=" + gFlags);
     }
 
-    if (globalLux.snippetVersion) {
-      queryParams.push("sv=" + globalLux.snippetVersion);
+    if (LUX.snippetVersion) {
+      queryParams.push("sv=" + LUX.snippetVersion);
     }
 
     const customDataValues = CustomData.valuesToString(customData);
