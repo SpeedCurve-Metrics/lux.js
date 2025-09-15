@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2025-09-17: v4.3.3
+
+### Bug fixes
+
+- Prevent error being thrown for self-hosted lux.js scripts.
+
 ## 2025-09-10: v4.3.2
 
 ### Bug fixes
