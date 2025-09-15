@@ -1206,7 +1206,7 @@ LUX = (function () {
 
   function getCustomerId() {
     if (thisScript.src) {
-      const idFromScript = thisScript.src.match(/id=(\d+)/)!.pop();
+      const idFromScript = thisScript.src.match(/id=(\d+)/)?.pop();
 
       if (idFromScript && _thisCustomerId !== idFromScript) {
         // If the customer IDs are different, prefer the ID specified in the script
