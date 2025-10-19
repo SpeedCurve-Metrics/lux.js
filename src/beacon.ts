@@ -312,7 +312,7 @@ type MetricWithValue = {
   value: number;
 };
 
-type MetricAttribution = {
+export type MetricAttribution = {
   elementSelector: string | null;
   elementType: string | null;
 };
