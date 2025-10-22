@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>SpeedCurve RUM Rage Click Tester</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        text-align: center;
+      }
+
+      p,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      table {
+        border-collapse: collapse;
+        margin: 12px auto;
+      }
+
+      th,
+      td {
+        border: 1px solid black;
+        padding: 6px 12px;
+      }
+
+      .rage, .rage * {
+        background-color: hsl(0, 100%, 90%);
+      }
+
+      #radius {
+        border: 2px solid hsl(0, 100%, 50%);
+        border-radius: 50%;
+        width: 100px;
+        height: 100px;
+        position: absolute;
+        top: -1000px;
+        left: -1000px;
+      }
+
+      .app {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        border: 1px solid hsl(205, 100%, 20%);
+        background: hsl(205, 100%, 80%);
+
+        .cart {
+          float: right;
+        }
+
+        .items {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 12px;
+          margin-top: 12px;
+        }
+
+        .item {
+          background: hsl(205, 95%, 95%);
+          border: 1px solid hsl(205, 100%, 40%);
+          padding: 12px;
+          margin-bottom: 12px;
+
+          button {
+            margin-top: 12px;
+          }
+        }
+      }
+
+      .w-full {
+        width: 100%;
+      }
+
+      .loading {
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="radius"></div>
+    <h1>SpeedCurve RUM Rage Click Tester</h1>
+
+    <div id="app" class="app">
+      <p class="cart">Your cart is empty.</p>
+      <p>Welcome to...</p>
+      <h2>Joseph's Fine Wares</h2>
+
+      <div class="items">
+        <div class="item">
+          <h3>Item 1</h3>
+          <p>This is a fine item.</p>
+          <button type="button" class="add-to-cart">Add to Cart</button>
+        </div>
+
+        <div class="item">
+          <h3>Item 2</h3>
+          <p>This item is not very fine.</p>
+          <button type="button" class="add-to-cart">Add to Cart</button>
+        </div>
+
+        <div class="item">
+          <h3>Item 3</h3>
+          <p>Do you like items? This is the third one.</p>
+          <button type="button" class="add-to-cart">Add to Cart</button>
+        </div>
+      </div>
+
+      <button class="w-full">This is a big button</button>
+    </div>
+
+    <h3>
+      Rage Click Data
+      <button type="button" id="reset-rage-data">Reset</button>
+    </h3>
+
+    <table id="rage-click-data">
+      <thead>
+        <tr>
+          <th>Clicks</th>
+          <th>Rage</th>
+          <th>Canceled Reason</th>
+          <th>Rage Target</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <script src="rage-click-tester.js"></script>
+  </body>
+</html>

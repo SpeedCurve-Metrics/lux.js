@@ -1,7 +1,7 @@
 type Callback = (data?: EventData) => void;
 type EventData = unknown;
 
-export type Event = "beacon" | "new_page_id";
+export type Event = "beacon" | "new_page_id" | "rage_click";
 
 const subscribers: Partial<Record<Event, Callback[]>> = {};
 const eventData: Partial<Record<Event, EventData>> = {};

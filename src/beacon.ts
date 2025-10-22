@@ -256,6 +256,7 @@ export enum BeaconMetricKey {
   INP = "inp",
   LCP = "lcp",
   LoAF = "loaf",
+  RageClick = "rage",
   NavigationTiming = "navigationTiming",
 }
 
@@ -295,6 +296,11 @@ export type BeaconMetricData = {
       startTime: number;
     } | null;
     sources: CLSAttribution[] | null;
+  };
+
+  [BeaconMetricKey.RageClick]: MetricWithValue & {
+    startTime: number;
+    attribution: MetricAttribution;
   };
 };
 

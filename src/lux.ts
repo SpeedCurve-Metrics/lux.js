@@ -24,6 +24,7 @@ import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import * as LCP from "./metric/LCP";
 import * as LoAF from "./metric/LoAF";
+import * as RageClick from "./metric/rage-click";
 import now from "./now";
 import {
   performance,
@@ -128,7 +129,9 @@ LUX = (function () {
   // on the same page.
   let _thisCustomerId = LUX.customerid;
 
-  const beaconCollectors: [BeaconMetricKey, CollectorFunction][] = [];
+  const beaconCollectors: [BeaconMetricKey, CollectorFunction][] = [
+    [BeaconMetricKey.RageClick, RageClick.getData],
+  ];
 
   const logEntry = <T extends PerformanceEntry>(entry: T) => {
     logger.logEvent(LogEvent.PerformanceEntryReceived, [entry]);
@@ -876,6 +879,7 @@ LUX = (function () {
     CLS.reset();
     INP.reset();
     LoAF.reset();
+    RageClick.reset();
     nErrors = 0;
     gFirstInputDelay = undefined;
 

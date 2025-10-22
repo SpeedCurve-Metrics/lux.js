@@ -7,6 +7,7 @@ import pkg from "./package.json" with { type: "json" };
 const commonPlugins = (target = "es5") => [
   json(),
   replace({
+    __DEBUG: JSON.stringify(false),
     __ENABLE_POLYFILLS: JSON.stringify(target === "es5"),
   }),
   typescript({
@@ -119,6 +120,26 @@ export default [
     },
     plugins: [
       json(),
+      typescript({
+        include: ["docs/**", "src/**", "tests/helpers/lux.ts"],
+        declaration: false,
+      }),
+    ],
+  },
+
+  // Rage click tester
+  {
+    input: "docs/rage-click-tester/index.ts",
+    output: {
+      file: "docs/rage-click-tester.js",
+      format: "iife",
+      plugins: [terser()],
+    },
+    plugins: [
+      json(),
+      replace({
+        __DEBUG: JSON.stringify(true),
+      }),
       typescript({
         include: ["docs/**", "src/**", "tests/helpers/lux.ts"],
         declaration: false,
