@@ -1,5 +1,6 @@
 import { START_MARK } from "./constants";
 import { clamp, floor, max } from "./math";
+import * as PROPS from "./minification";
 import now from "./now";
 import { getEntriesByName, getNavigationEntry, performance, timing } from "./performance";
 
@@ -57,7 +58,7 @@ export function msSincePageInit(): number {
   const startMark = getEntriesByName(START_MARK).pop();
 
   if (startMark) {
-    return floor(sinceNavigationStart - startMark.startTime);
+    return floor(sinceNavigationStart - startMark[PROPS._startTime]);
   }
 
   return sinceNavigationStart;

@@ -1,4 +1,5 @@
 import { floor } from "./math";
+import * as PROPS from "./minification";
 import scriptStartTime from "./start-marker";
 
 // If the various performance APIs aren't available, we export an empty object to
@@ -52,7 +53,7 @@ type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> &
 export function getNavigationEntry(): PartialPerformanceNavigationTiming {
   const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
 
-  if (navEntries.length) {
+  if (navEntries[PROPS._length]) {
     const nativeEntry = navEntries.pop()!.toJSON();
     const entry = {
       navigationStart: 0,
@@ -94,7 +95,7 @@ export function getEntriesByType(type: string): PerformanceEntryList {
   if (typeof performance.getEntriesByType === "function") {
     const entries = performance.getEntriesByType(type);
 
-    if (entries && entries.length) {
+    if (entries && entries[PROPS._length]) {
       return entries;
     }
   }
@@ -111,7 +112,7 @@ export function getEntriesByName(type: string): PerformanceEntryList {
   if (typeof performance.getEntriesByName === "function") {
     const entries = performance.getEntriesByName(type);
 
-    if (entries && entries.length) {
+    if (entries && entries[PROPS._length]) {
       return entries;
     }
   }

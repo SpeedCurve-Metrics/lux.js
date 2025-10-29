@@ -1,3 +1,5 @@
+import * as PROPS from "./minification";
+
 type PerformanceEntryMap = {
   longtask: PerformanceLongTaskTiming;
   element: PerformanceElementTiming;
@@ -36,7 +38,9 @@ export function observe<K extends keyof PerformanceEntryMap>(
 export function getEntries<K extends keyof PerformanceEntryMap>(
   type: K,
 ): Array<PerformanceEntryMap[K]> {
-  return ALL_ENTRIES.filter((entry) => entry.entryType === type) as Array<PerformanceEntryMap[K]>;
+  return ALL_ENTRIES.filter((entry) => entry[PROPS._entryType] === type) as Array<
+    PerformanceEntryMap[K]
+  >;
 }
 
 export function addEntry(entry: PerformanceEntry) {

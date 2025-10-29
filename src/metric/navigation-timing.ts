@@ -7,55 +7,56 @@ export type NavigationTimingData = {
   activationStart: number;
   connectEnd: number;
   connectStart: number;
-  decodedBodySize?: number;
+  decodedBodySize: number;
   domainLookupEnd: number;
   domainLookupStart: number;
-  domComplete?: number;
-  domContentLoadedEventEnd?: number;
-  domContentLoadedEventStart?: number;
-  domInteractive?: number;
-  encodedBodySize?: number;
+  domComplete: number;
+  domContentLoadedEventEnd: number;
+  domContentLoadedEventStart: number;
+  domInteractive: number;
+  encodedBodySize: number;
   fetchStart: number;
-  loadEventEnd?: number;
-  loadEventStart?: number;
+  loadEventEnd: number;
+  loadEventStart: number;
   redirectCount: number;
-  redirectEnd?: number;
-  redirectStart?: number;
-  requestStart?: number;
-  responseEnd?: number;
-  responseStart?: number;
-  secureConnectionStart?: number;
-  transferSize?: number;
+  redirectEnd: number;
+  redirectStart: number;
+  requestStart: number;
+  responseEnd: number;
+  responseStart: number;
+  secureConnectionStart: number;
+  transferSize: number;
 };
 
-export const KEYS: Record<keyof NavigationTimingData, string> = {
-  activationStart: "activationStart",
-  connectEnd: "connectEnd",
-  connectStart: "connectStart",
-  decodedBodySize: "decodedBodySize",
-  domainLookupEnd: "domainLookupEnd",
-  domainLookupStart: "domainLookupStart",
-  domComplete: "domComplete",
-  domContentLoadedEventEnd: "domContentLoadedEventEnd",
-  domContentLoadedEventStart: "domContentLoadedEventStart",
-  domInteractive: "domInteractive",
-  encodedBodySize: "encodedBodySize",
-  fetchStart: "fetchStart",
-  loadEventEnd: "loadEventEnd",
-  loadEventStart: "loadEventStart",
-  redirectCount: "redirectCount",
-  redirectEnd: "redirectEnd",
-  redirectStart: "redirectStart",
-  requestStart: "requestStart",
-  responseEnd: "responseEnd",
-  responseStart: "responseStart",
-  secureConnectionStart: "secureConnectionStart",
-  transferSize: "transferSize",
+type NavigationTimingRef = `_${keyof NavigationTimingData}`;
+
+export const KEYS: Record<NavigationTimingRef, keyof NavigationTimingData> = {
+  _activationStart: "activationStart",
+  _connectEnd: "connectEnd",
+  _connectStart: "connectStart",
+  _decodedBodySize: "decodedBodySize",
+  _domainLookupEnd: "domainLookupEnd",
+  _domainLookupStart: "domainLookupStart",
+  _domComplete: "domComplete",
+  _domContentLoadedEventEnd: "domContentLoadedEventEnd",
+  _domContentLoadedEventStart: "domContentLoadedEventStart",
+  _domInteractive: "domInteractive",
+  _encodedBodySize: "encodedBodySize",
+  _fetchStart: "fetchStart",
+  _loadEventEnd: "loadEventEnd",
+  _loadEventStart: "loadEventStart",
+  _redirectCount: "redirectCount",
+  _redirectEnd: "redirectEnd",
+  _redirectStart: "redirectStart",
+  _requestStart: "requestStart",
+  _responseEnd: "responseEnd",
+  _responseStart: "responseStart",
+  _secureConnectionStart: "secureConnectionStart",
+  _transferSize: "transferSize",
 };
 
 export function processEntry(entry: PerformanceNavigationTiming): void {
   currentNavigation = entry;
-  console.log({ currentNavigation });
 }
 
 export function getData(): NavigationTimingData | undefined {
@@ -69,7 +70,9 @@ export function getData(): NavigationTimingData | undefined {
   const fallback = getNavigationEntry();
   const entry: Partial<NavigationTimingData> = {};
 
-  for (const key in KEYS) {
+  for (const k in KEYS) {
+    const key = KEYS[k as NavigationTimingRef];
+
     entry[key as keyof NavigationTimingData] = currentNavigation
       ? currentNavigation[key as keyof NavigationTimingData]
       : fallback[key as keyof NavigationTimingData];

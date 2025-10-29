@@ -1,5 +1,6 @@
 import { UserConfig } from "../config";
 import { clamp, floor, max } from "../math";
+import * as PROPS from "../minification";
 import { INPPhase } from "./INP";
 
 export type LoAFSummary = {
@@ -76,7 +77,7 @@ export function getData(config: UserConfig): LoAFSummary {
   return {
     totalBlockingDuration: floor(totalBlockingDuration),
     totalDuration: floor(totalDuration),
-    totalEntries: entries.length,
+    totalEntries: entries[PROPS._length],
     totalStyleAndLayoutDuration: floor(totalStyleAndLayoutDuration),
     totalWorkDuration: floor(totalWorkDuration),
 
@@ -87,9 +88,9 @@ export function getData(config: UserConfig): LoAFSummary {
 
     // Only keep the slowest LoAF entries
     entries: summarizedEntries
-      .sort((a, b) => b.duration - a.duration)
+      .sort((a, b) => b[PROPS._duration] - a[PROPS._duration])
       .slice(0, config.maxAttributionEntries)
-      .sort((a, b) => a.startTime - b.startTime),
+      .sort((a, b) => a[PROPS._startTime] - b[PROPS._startTime]),
   };
 }
 
@@ -119,20 +120,20 @@ export function summarizeLoAFScripts(
     }
 
     summary[key].totalEntries++;
-    summary[key].totalDuration += script.duration;
-    summary[key].totalBlockingDuration += max(0, script.duration - 50);
+    summary[key][PROPS._totalDuration] += script[PROPS._duration];
+    summary[key].totalBlockingDuration += max(0, script[PROPS._duration] - 50);
     summary[key].totalPauseDuration += script.pauseDuration;
     summary[key].totalForcedStyleAndLayoutDuration += script.forcedStyleAndLayoutDuration;
-    summary[key].timings.push([floor(script.startTime), floor(script.duration)]);
+    summary[key].timings.push([floor(script[PROPS._startTime]), floor(script[PROPS._duration])]);
   });
 
   return Object.values(summary)
     .map((script) => ({
       ...script,
-      totalDuration: floor(script.totalDuration),
+      totalDuration: floor(script[PROPS._totalDuration]),
       totalPauseDuration: floor(script.totalPauseDuration),
       totalForcedStyleAndLayoutDuration: floor(script.totalForcedStyleAndLayoutDuration),
     }))
-    .sort((a, b) => b.totalDuration - a.totalDuration)
+    .sort((a, b) => b[PROPS._totalDuration] - a[PROPS._totalDuration])
     .slice(0, config.maxAttributionEntries);
 }
