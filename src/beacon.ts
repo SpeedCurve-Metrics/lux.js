@@ -273,7 +273,7 @@ export type BeaconMetricData = {
     } | null;
   };
 
-  [BeaconMetricKey.LoAF]: LoAFSummary | undefined;
+  [BeaconMetricKey.LoAF]: LoAFSummary;
 
   [BeaconMetricKey.INP]: MetricWithValue & {
     startTime: number;

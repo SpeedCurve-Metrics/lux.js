@@ -1,5 +1,5 @@
+import { START_MARK } from "../constants";
 import { getNavigationEntry } from "../performance";
-import { processTimeMetric } from "../timing";
 
 let currentNavigation: PerformanceNavigationTiming;
 
@@ -28,53 +28,52 @@ export type NavigationTimingData = {
   transferSize?: number;
 };
 
+export const KEYS: Record<keyof NavigationTimingData, string> = {
+  activationStart: "activationStart",
+  connectEnd: "connectEnd",
+  connectStart: "connectStart",
+  decodedBodySize: "decodedBodySize",
+  domainLookupEnd: "domainLookupEnd",
+  domainLookupStart: "domainLookupStart",
+  domComplete: "domComplete",
+  domContentLoadedEventEnd: "domContentLoadedEventEnd",
+  domContentLoadedEventStart: "domContentLoadedEventStart",
+  domInteractive: "domInteractive",
+  encodedBodySize: "encodedBodySize",
+  fetchStart: "fetchStart",
+  loadEventEnd: "loadEventEnd",
+  loadEventStart: "loadEventStart",
+  redirectCount: "redirectCount",
+  redirectEnd: "redirectEnd",
+  redirectStart: "redirectStart",
+  requestStart: "requestStart",
+  responseEnd: "responseEnd",
+  responseStart: "responseStart",
+  secureConnectionStart: "secureConnectionStart",
+  transferSize: "transferSize",
+};
+
 export function processEntry(entry: PerformanceNavigationTiming): void {
   currentNavigation = entry;
+  console.log({ currentNavigation });
 }
 
-export function getData(): NavigationTimingData {
-  const fallbackNavEntry = getNavigationEntry();
+export function getData(): NavigationTimingData | undefined {
+  const startMark = performance.getEntriesByName(START_MARK).pop();
 
-  function processNavTimingValue(key: string, allowZero?: false): number | undefined;
-  function processNavTimingValue(key: string, allowZero: true): number;
-  function processNavTimingValue(key: string, allowZero?: boolean): number | undefined {
-    let value = 0;
-
-    if (currentNavigation && key in currentNavigation) {
-      value = currentNavigation[key as keyof NavigationTimingData] as number;
-    } else if (key in fallbackNavEntry) {
-      value = fallbackNavEntry[key] as number;
-    }
-
-    if (value === 0 && !allowZero) {
-      return undefined;
-    }
-
-    return processTimeMetric(value);
+  if (startMark) {
+    // Don't report navigation timing in SPA beacons
+    return undefined;
   }
 
-  return {
-    activationStart: processNavTimingValue("activationStart", true),
-    connectEnd: processNavTimingValue("connectEnd", true),
-    connectStart: processNavTimingValue("connectStart", true),
-    decodedBodySize: processNavTimingValue("decodedBodySize"),
-    domainLookupEnd: processNavTimingValue("domainLookupEnd", true),
-    domainLookupStart: processNavTimingValue("domainLookupStart", true),
-    domComplete: processNavTimingValue("domComplete"),
-    domContentLoadedEventEnd: processNavTimingValue("domContentLoadedEventEnd"),
-    domContentLoadedEventStart: processNavTimingValue("domContentLoadedEventStart"),
-    domInteractive: processNavTimingValue("domInteractive"),
-    encodedBodySize: processNavTimingValue("encodedBodySize"),
-    fetchStart: processNavTimingValue("fetchStart", true),
-    loadEventEnd: processNavTimingValue("loadEventEnd"),
-    loadEventStart: processNavTimingValue("loadEventStart"),
-    redirectCount: processNavTimingValue("redirectCount", true),
-    redirectEnd: processNavTimingValue("redirectEnd"),
-    redirectStart: processNavTimingValue("redirectStart"),
-    requestStart: processNavTimingValue("requestStart"),
-    responseEnd: processNavTimingValue("responseEnd"),
-    responseStart: processNavTimingValue("responseStart"),
-    secureConnectionStart: processNavTimingValue("secureConnectionStart"),
-    transferSize: processNavTimingValue("transferSize"),
-  };
+  const fallback = getNavigationEntry();
+  const entry: Partial<NavigationTimingData> = {};
+
+  for (const key in KEYS) {
+    entry[key as keyof NavigationTimingData] = currentNavigation
+      ? currentNavigation[key as keyof NavigationTimingData]
+      : fallback[key as keyof NavigationTimingData];
+  }
+
+  return entry as NavigationTimingData;
 }

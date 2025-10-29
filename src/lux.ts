@@ -24,6 +24,7 @@ import * as CLS from "./metric/CLS";
 import * as INP from "./metric/INP";
 import * as LCP from "./metric/LCP";
 import * as LoAF from "./metric/LoAF";
+import * as NavigationTiming from "./metric/navigation-timing";
 import * as RageClick from "./metric/rage-click";
 import now from "./now";
 import {
@@ -158,6 +159,14 @@ LUX = (function () {
       })
     ) {
       beaconCollectors.push([BeaconMetricKey.LCP, LCP.getData]);
+    }
+
+    if (
+      PO.observe("navigation", (entry) => {
+        NavigationTiming.processEntry(entry);
+      })
+    ) {
+      beaconCollectors.push([BeaconMetricKey.NavigationTiming, NavigationTiming.getData]);
     }
 
     if (
@@ -1012,7 +1021,9 @@ LUX = (function () {
     let ns = timing.navigationStart;
     const startMark = _getMark(START_MARK);
     const endMark = _getMark(END_MARK);
-    if (startMark && endMark && !getPageRestoreTime()) {
+    const pageRestoreTime = getPageRestoreTime();
+
+    if (startMark && endMark && !pageRestoreTime) {
       // This is a SPA page view, so send the SPA marks & measures instead of Nav Timing.
       // Note: getPageRestoreTime() indicates this was a bfcache restore, which we don't want to treat as a SPA.
       const start = floor(startMark.startTime); // the start mark is "zero"
