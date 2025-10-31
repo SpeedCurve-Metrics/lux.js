@@ -35,7 +35,8 @@ export interface LuxGlobal extends UserConfig {
   mark: (...args: Parameters<PerfMarkFn>) => ReturnType<PerfMarkFn> | void;
   markLoadTime: (time?: number) => void;
   measure: (...args: Parameters<PerfMeasureFn>) => ReturnType<PerfMeasureFn> | void;
-  on: (event: Event, callback: (data?: unknown) => void) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  on: (event: Event, callback: (data?: any) => void) => void;
   /** Timestamp representing when the LUX snippet was evaluated */
   ns?: number;
   send: (force?: boolean) => void;

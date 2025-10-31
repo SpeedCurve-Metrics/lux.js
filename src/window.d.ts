@@ -1,6 +1,7 @@
 import type { LuxGlobal } from "./global";
 
 declare global {
+  declare const __DEBUG: boolean;
   declare const __ENABLE_POLYFILLS: boolean;
   declare const __SNIPPET_VERSION: string;
 

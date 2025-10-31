@@ -1,19 +1,27 @@
-import { BeaconMetricData, BeaconMetricKey, shouldReportValue } from "../beacon";
+import { BeaconMetricData, BeaconMetricKey, MetricAttribution, shouldReportValue } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
 import { getEntriesByType, getNavigationEntry, timing } from "../performance";
 import { processTimeMetric } from "../timing";
 
 let lcpEntry: LargestContentfulPaint | undefined;
+let lcpAttribution: MetricAttribution | null = null;
 
 export function processEntry(entry: LargestContentfulPaint) {
   if (!lcpEntry || entry.startTime > lcpEntry.startTime) {
     lcpEntry = entry;
+    lcpAttribution = entry.element
+      ? {
+          elementSelector: getNodeSelector(entry.element),
+          elementType: entry.element.nodeName,
+        }
+      : null;
   }
 }
 
 export function reset(): void {
   lcpEntry = undefined;
+  lcpAttribution = null;
 }
 
 export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
@@ -58,11 +66,6 @@ export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
   return {
     value: processTimeMetric(value),
     subParts,
-    attribution: lcpEntry.element
-      ? {
-          elementSelector: getNodeSelector(lcpEntry.element),
-          elementType: lcpEntry.element.nodeName,
-        }
-      : null,
+    attribution: lcpAttribution,
   };
 }
