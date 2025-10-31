@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as Config from "../../src/config";
 import * as INP from "../../src/metric/INP";
 import "../../src/window.d.ts";
-import { Writable } from "../helpers/types";
+import { Writable } from "../../src/types";
 
 const config = Config.fromObject({});
 

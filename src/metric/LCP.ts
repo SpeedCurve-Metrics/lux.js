@@ -1,6 +1,7 @@
 import { BeaconMetricData, BeaconMetricKey, MetricAttribution, shouldReportValue } from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
+import * as PROPS from "../minification";
 import { getEntriesByType, getNavigationEntry, timing } from "../performance";
 import { processTimeMetric } from "../timing";
 
@@ -8,7 +9,7 @@ let lcpEntry: LargestContentfulPaint | undefined;
 let lcpAttribution: MetricAttribution | null = null;
 
 export function processEntry(entry: LargestContentfulPaint) {
-  if (!lcpEntry || entry.startTime > lcpEntry.startTime) {
+  if (!lcpEntry || entry[PROPS._startTime] > lcpEntry[PROPS._startTime]) {
     lcpEntry = entry;
     lcpAttribution = entry.element
       ? {
@@ -33,7 +34,7 @@ export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
 
   if (lcpEntry.url) {
     const lcpResource = getEntriesByType("resource").find(
-      (resource) => resource.name === lcpEntry!.url,
+      (resource) => resource[PROPS._name] === lcpEntry!.url,
     ) as PerformanceResourceTiming;
 
     if (lcpResource) {
@@ -42,7 +43,7 @@ export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
       const activationStart = navEntry.activationStart;
       const ttfb = max(0, responseStart - activationStart);
 
-      const lcpStartTime = lcpResource.startTime;
+      const lcpStartTime = lcpResource[PROPS._startTime];
       const lcpRequestStart = (lcpResource.requestStart || lcpStartTime) - activationStart;
       const lcpResponseEnd = max(lcpRequestStart, lcpResource.responseEnd - activationStart);
       const lcpRenderTime = max(lcpResponseEnd, lcpStartTime - activationStart);
@@ -55,7 +56,7 @@ export function getData(): BeaconMetricData[BeaconMetricKey.LCP] | undefined {
     }
   }
 
-  const value = lcpEntry.startTime;
+  const value = lcpEntry[PROPS._startTime];
 
   if (!shouldReportValue(value)) {
     // It's possible the LCP entry we have occurred before the current page was initialised. In

@@ -34,3 +34,4 @@ See [the SPA documentation](https://support.speedcurve.com/docs/single-page-appl
 - Compile the lux.js script with `npm run build` or `npm run watch`
 - Run the tests with `npm run test`
 - Check for linting errors with `npm run lint` and automatically fix them (where possible) with `npm run lint-fix`
+- Note: object properties beginning with an underscore (`_`) will be mangled
