@@ -37,7 +37,7 @@ export type LoAFScriptSummary = {
 let entries: PerformanceLongAnimationFrameTiming[] = [];
 
 export function processEntry(entry: PerformanceLongAnimationFrameTiming): void {
-  entries.push(entry);
+  entries[PROPS._push](entry);
 }
 
 export function reset(): void {
@@ -65,7 +65,7 @@ export function getData(config: UserConfig): LoAFSummary {
       : 0;
     totalWorkDuration += renderStart ? renderStart - startTime : duration;
 
-    summarizedEntries.push({
+    summarizedEntries[PROPS._push]({
       startTime: floor(startTime),
       duration: floor(duration),
       renderStart: floor(renderStart),
@@ -124,7 +124,10 @@ export function summarizeLoAFScripts(
     summary[key].totalBlockingDuration += max(0, script[PROPS._duration] - 50);
     summary[key].totalPauseDuration += script.pauseDuration;
     summary[key].totalForcedStyleAndLayoutDuration += script.forcedStyleAndLayoutDuration;
-    summary[key].timings.push([floor(script[PROPS._startTime]), floor(script[PROPS._duration])]);
+    summary[key].timings[PROPS._push]([
+      floor(script[PROPS._startTime]),
+      floor(script[PROPS._duration]),
+    ]);
   });
 
   return Object.values(summary)

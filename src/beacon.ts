@@ -158,7 +158,7 @@ export class Beacon {
   }
 
   onBeforeSend(cb: () => void) {
-    this.onBeforeSendCbs.push(cb);
+    this.onBeforeSendCbs[PROPS._push](cb);
   }
 
   send() {

@@ -160,7 +160,7 @@ LUX = (function () {
         LCP.processEntry(entry);
       })
     ) {
-      beaconCollectors.push([BeaconMetricKey.LCP, LCP.getData]);
+      beaconCollectors[PROPS._push]([BeaconMetricKey.LCP, LCP.getData]);
     }
 
     if (
@@ -169,7 +169,7 @@ LUX = (function () {
         logEntry(entry);
       })
     ) {
-      beaconCollectors.push([BeaconMetricKey.CLS, CLS.getData]);
+      beaconCollectors[PROPS._push]([BeaconMetricKey.CLS, CLS.getData]);
     }
 
     if (
@@ -178,7 +178,7 @@ LUX = (function () {
         logEntry(entry);
       })
     ) {
-      beaconCollectors.push([BeaconMetricKey.LoAF, LoAF.getData]);
+      beaconCollectors[PROPS._push]([BeaconMetricKey.LoAF, LoAF.getData]);
     }
 
     const handleINPEntry = (entry: PerformanceEventTiming) => {
@@ -224,7 +224,7 @@ LUX = (function () {
         { durationThreshold: 0 },
       )
     ) {
-      beaconCollectors.push([BeaconMetricKey.INP, INP.getData]);
+      beaconCollectors[PROPS._push]([BeaconMetricKey.INP, INP.getData]);
     }
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
@@ -377,7 +377,7 @@ LUX = (function () {
         startTime,
       } as PerformanceMark;
 
-      gaMarks.push(entry);
+      gaMarks[PROPS._push](entry);
       gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
       beacon.addFlag(Flags.UserTimingNotSupported);
 
@@ -487,7 +487,7 @@ LUX = (function () {
         duration,
       } as PerformanceMeasure;
 
-      gaMeasures.push(entry);
+      gaMeasures[PROPS._push](entry);
       gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
       beacon.addFlag(Flags.UserTimingNotSupported);
 
@@ -600,10 +600,10 @@ LUX = (function () {
       const utParts = [utName, startTime];
 
       if (typeof duration !== "undefined") {
-        utParts.push(duration);
+        utParts[PROPS._push](duration);
       }
 
-      aUT.push(utParts.join("|"));
+      aUT[PROPS._push](utParts.join("|"));
     }
 
     return aUT;
@@ -619,7 +619,7 @@ LUX = (function () {
 
         if (shouldReportValue(value)) {
           logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
-          aET.push(entry.identifier + "|" + value);
+          aET[PROPS._push](entry.identifier + "|" + value);
         }
       }
     });
@@ -670,7 +670,7 @@ LUX = (function () {
     }
 
     // TODO - Add more types if/when they become available.
-    const jsType = typeof hCPU["script"] !== "undefined" ? "script" : "unknown"; // spec changed from "script" to "unknown" Nov 2018
+    const jsType = typeof hCPU[PROPS._script] !== "undefined" ? PROPS._script : "unknown"; // spec changed from "script" to "unknown" Nov 2018
     if (typeof hCPU[jsType] === "undefined") {
       // Initialize default values for pages that have *no Long Tasks*.
       hCPU[jsType] = 0;
@@ -702,7 +702,7 @@ LUX = (function () {
 
     // If FCP is not supported, we can't calculate a valid FCI.
     let bFoundFci = typeof fcp === "undefined";
-    const aValues = [];
+    const aValues: number[] = [];
     const aTuples = sDetails.split(",");
 
     for (let i = 0; i < aTuples[PROPS._length]; i++) {
@@ -710,7 +710,7 @@ LUX = (function () {
       if (aTuple[PROPS._length] === 2) {
         const start = parseInt(aTuple[0]);
         const dur = parseInt(aTuple[1]);
-        aValues.push(dur);
+        aValues[PROPS._push](dur);
         max = dur > max ? dur : max;
 
         // FCI
@@ -810,9 +810,9 @@ LUX = (function () {
 
   // Return a string of Interaction Metrics formatted for beacon querystring.
   function ixValues(): string {
-    const aIx = [];
+    const aIx: string[] = [];
     for (const key in ghIx) {
-      aIx.push(key + "|" + encodeURIComponent(ghIx[key as keyof InteractionInfo]!));
+      aIx[PROPS._push](key + "|" + encodeURIComponent(ghIx[key as keyof InteractionInfo]!));
     }
 
     return aIx.join(",");
@@ -911,7 +911,7 @@ LUX = (function () {
 
     // Find all the synchronous scripts that are ABOVE the last DOM element in the
     // viewport. (If they are BELOW then they do not block rendering of initial viewport.)
-    const aElems = document.getElementsByTagName("script");
+    const aElems = document.getElementsByTagName(PROPS._script);
     let num = 0;
     for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
       const e = aElems[i];
@@ -955,7 +955,7 @@ LUX = (function () {
 
   // Return the number of synchronous external scripts in the page.
   function syncScripts() {
-    const aElems = document.getElementsByTagName("script");
+    const aElems = document.getElementsByTagName(PROPS._script);
     let num = 0;
     for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
       const e = aElems[i];
@@ -970,7 +970,7 @@ LUX = (function () {
 
   // Return the number of external scripts in the page.
   function numScripts() {
-    const aElems = document.getElementsByTagName("script");
+    const aElems = document.getElementsByTagName(PROPS._script);
     let num = 0;
     for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
       const e = aElems[i];
@@ -1311,12 +1311,12 @@ LUX = (function () {
   // Return an array of image elements that are in the top viewport.
   function imagesATF() {
     const aImages = document.getElementsByTagName("img");
-    const aImagesAtf = [];
+    const aImagesAtf: HTMLImageElement[] = [];
     if (aImages) {
       for (let i = 0, len = aImages[PROPS._length]; i < len; i++) {
         const image = aImages[i];
         if (inViewport(image)) {
-          aImagesAtf.push(image);
+          aImagesAtf[PROPS._push](image);
         }
       }
     }
@@ -1438,17 +1438,17 @@ LUX = (function () {
     ];
 
     if (gFlags) {
-      queryParams.push("fl=" + gFlags);
+      queryParams[PROPS._push]("fl=" + gFlags);
     }
 
     if (LUX.snippetVersion) {
-      queryParams.push("sv=" + LUX.snippetVersion);
+      queryParams[PROPS._push]("sv=" + LUX.snippetVersion);
     }
 
     const customDataValues = CustomData.valuesToString(customData);
 
     if (customDataValues) {
-      queryParams.push("CD=" + customDataValues);
+      queryParams[PROPS._push]("CD=" + customDataValues);
       CustomData.clearUpdateCustomData();
     }
 
@@ -1556,7 +1556,7 @@ LUX = (function () {
     // So we create a base URL that has all the necessary information:
     const baseUrl = _getBeaconUrl(CustomData.getAllCustomData());
 
-    const is = inlineTagSize("script");
+    const is = inlineTagSize(PROPS._script);
     const ic = inlineTagSize("style");
     const ds = docSize();
     const ct = connectionType();

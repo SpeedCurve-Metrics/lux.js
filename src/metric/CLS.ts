@@ -37,7 +37,7 @@ export function processEntry(entry: LayoutShift): void {
       largestEntry = entry;
     } else {
       sessionValue += entry.value;
-      sessionEntries.push(entry);
+      sessionEntries[PROPS._push](entry);
       sessionAttributions = sessionAttributions.concat(sources);
 
       if (!largestEntry || entry.value > largestEntry.value) {

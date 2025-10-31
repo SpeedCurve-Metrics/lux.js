@@ -93,7 +93,7 @@ export function processEntry(entry: PerformanceEventTiming): void {
         startTime,
         target,
       };
-      slowestEntries.push(slowestEntriesMap[interactionId!]);
+      slowestEntries[PROPS._push](slowestEntriesMap[interactionId!]);
     }
 
     // Only store the longest <MAX_INTERACTIONS> interactions

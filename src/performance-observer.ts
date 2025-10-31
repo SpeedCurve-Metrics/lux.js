@@ -44,7 +44,7 @@ export function getEntries<K extends keyof PerformanceEntryMap>(
 }
 
 export function addEntry(entry: PerformanceEntry) {
-  ALL_ENTRIES.push(entry);
+  ALL_ENTRIES[PROPS._push](entry);
 }
 
 export function clearEntries() {

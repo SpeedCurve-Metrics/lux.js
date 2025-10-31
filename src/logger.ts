@@ -1,3 +1,4 @@
+import * as PROPS from "./minification";
 import now from "./now";
 
 export const enum LogEvent {
@@ -67,7 +68,7 @@ export default class Logger {
   events: LogEventRecord[] = [];
 
   logEvent(event: LogEvent, args: unknown[] = []) {
-    this.events.push([now(), event, args]);
+    this.events[PROPS._push]([now(), event, args]);
   }
 
   getEvents() {
