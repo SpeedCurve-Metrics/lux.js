@@ -133,6 +133,7 @@ LUX = (function () {
 
   const beaconCollectors: [BeaconMetricKey, CollectorFunction][] = [
     [BeaconMetricKey.RageClick, RageClick.getData],
+    [BeaconMetricKey.NavigationTiming, NavigationTiming.getData],
   ];
 
   const logEntry = <T extends PerformanceEntry>(entry: T) => {
@@ -160,14 +161,6 @@ LUX = (function () {
       })
     ) {
       beaconCollectors.push([BeaconMetricKey.LCP, LCP.getData]);
-    }
-
-    if (
-      PO.observe("navigation", (entry) => {
-        NavigationTiming.processEntry(entry);
-      })
-    ) {
-      beaconCollectors.push([BeaconMetricKey.NavigationTiming, NavigationTiming.getData]);
     }
 
     if (
@@ -1065,16 +1058,14 @@ LUX = (function () {
         return "";
       };
 
-      const NT_KEYS = NavigationTiming.KEYS;
-
       // loadEventStart always comes from navigation timing
-      let loadEventStartStr = prefixNTValue(NT_KEYS._loadEventStart, "ls", true);
+      let loadEventStartStr = prefixNTValue("loadEventStart", "ls", true);
 
       // If LUX.markLoadTime() was called in SPA Mode, we allow the custom mark to override loadEventEnd
       let loadEventEndStr =
         globalConfig.spaMode && endMark
           ? "le" + processTimeMetric(endMark[PROPS._startTime])
-          : prefixNTValue(NT_KEYS._loadEventEnd, "le", true);
+          : prefixNTValue("loadEventEnd", "le", true);
 
       if (pageRestoreTime && startMark && endMark) {
         // For bfcache restores, we set the load time to the time it took for the page to be restored.
@@ -1088,21 +1079,21 @@ LUX = (function () {
       s = [
         ns,
         "as" + clamp(navEntry.activationStart),
-        redirect && !pageRestoreTime ? prefixNTValue(NT_KEYS._redirectStart, "rs") : "",
-        redirect && !pageRestoreTime ? prefixNTValue(NT_KEYS._redirectEnd, "re") : "",
-        prefixNTValue(NT_KEYS._fetchStart, "fs"),
-        prefixNTValue(NT_KEYS._domainLookupStart, "ds"),
-        prefixNTValue(NT_KEYS._domainLookupEnd, "de"),
-        prefixNTValue(NT_KEYS._connectStart, "cs"),
-        isSecure ? prefixNTValue(NT_KEYS._secureConnectionStart, "sc") : "",
-        prefixNTValue(NT_KEYS._connectEnd, "ce"),
-        prefixNTValue(NT_KEYS._requestStart, "qs"),
-        prefixNTValue(NT_KEYS._responseStart, "bs"),
-        prefixNTValue(NT_KEYS._responseEnd, "be"),
-        prefixNTValue(NT_KEYS._domInteractive, "oi", true),
-        prefixNTValue(NT_KEYS._domContentLoadedEventStart, "os", true),
-        prefixNTValue(NT_KEYS._domContentLoadedEventEnd, "oe", true),
-        prefixNTValue(NT_KEYS._domComplete, "oc", true),
+        redirect && !getPageRestoreTime() ? prefixNTValue("redirectStart", "rs") : "",
+        redirect && !getPageRestoreTime() ? prefixNTValue("redirectEnd", "re") : "",
+        prefixNTValue("fetchStart", "fs"),
+        prefixNTValue("domainLookupStart", "ds"),
+        prefixNTValue("domainLookupEnd", "de"),
+        prefixNTValue("connectStart", "cs"),
+        isSecure ? prefixNTValue("secureConnectionStart", "sc") : "",
+        prefixNTValue("connectEnd", "ce"),
+        prefixNTValue("requestStart", "qs"),
+        prefixNTValue("responseStart", "bs"),
+        prefixNTValue("responseEnd", "be"),
+        prefixNTValue("domInteractive", "oi", true),
+        prefixNTValue("domContentLoadedEventStart", "os", true),
+        prefixNTValue("domContentLoadedEventEnd", "oe", true),
+        prefixNTValue("domComplete", "oc", true),
         loadEventStartStr,
         loadEventEndStr,
         typeof startRender !== "undefined" ? "sr" + startRender : "",

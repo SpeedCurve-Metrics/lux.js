@@ -42,7 +42,7 @@ export function deliveryType(): string | undefined {
   return undefined;
 }
 
-type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> & {
+export type PolyfilledNavigationTiming = Partial<PerformanceNavigationTiming> & {
   [key: string]: number | string;
   navigationStart: number;
   activationStart: number;
@@ -50,7 +50,7 @@ type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> &
   type: PerformanceNavigationTiming["type"];
 };
 
-export function getNavigationEntry(): PartialPerformanceNavigationTiming {
+export function getNavigationEntry(): PolyfilledNavigationTiming {
   const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
 
   if (navEntries[PROPS._length]) {
@@ -58,7 +58,7 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
     const entry = {
       navigationStart: 0,
       activationStart: 0,
-    } as PartialPerformanceNavigationTiming;
+    } as PolyfilledNavigationTiming;
 
     for (const key in nativeEntry) {
       entry[key] = nativeEntry[key];
@@ -68,7 +68,7 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
   }
 
   const navType = navigationType();
-  const entry: PartialPerformanceNavigationTiming = {
+  const entry: PolyfilledNavigationTiming = {
     navigationStart: 0,
     activationStart: 0,
     startTime: 0,
