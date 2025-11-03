@@ -134,6 +134,18 @@ LUX = (function () {
   const beaconCollectors: [BeaconMetricKey, CollectorFunction][] = [
     [BeaconMetricKey.RageClick, RageClick.getData],
     [BeaconMetricKey.NavigationTiming, NavigationTiming.getData],
+    [
+      BeaconMetricKey.FCP,
+      () => {
+        const fcp = getFcp();
+
+        if (fcp) {
+          return { value: fcp };
+        }
+
+        return null;
+      },
+    ],
   ];
 
   const logEntry = <T extends PerformanceEntry>(entry: T) => {

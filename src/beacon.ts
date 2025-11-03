@@ -255,14 +255,16 @@ export type BeaconMetaData = {
 export enum BeaconMetricKey {
   CLS = "cls",
   INP = "inp",
+  FCP = "fcp",
   LCP = "lcp",
   LoAF = "loaf",
   RageClick = "rage",
-  NavigationTiming = "navigationTiming",
+  NavigationTiming = "nt",
 }
 
 export type BeaconMetricData = {
   [BeaconMetricKey.NavigationTiming]: NavigationTimingData;
+  [BeaconMetricKey.FCP]: MetricWithValue;
   [BeaconMetricKey.LCP]: MetricWithValue & {
     attribution: MetricAttribution | null;
 
