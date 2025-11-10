@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2025-11-11: v4.4.2
+
+### Bug fixes
+
+- Further mitigations for "performance.getEntriesByName is not a function" errors in some browsers
+
 ## 2025-11-11: v4.4.1
 
 ### Bug fixes
