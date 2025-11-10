@@ -14,6 +14,7 @@
 ### Bug fixes
 
 - LCP element attribution is stored as the event is received, to prevent missing attribution on discarded elements
+- Prevent errors when reading `document.documentElement.clientHeight`
 
 ## 2025-09-17: v4.3.3
 

@@ -62,7 +62,7 @@ LUX = (function () {
 
   // Variable aliases that allow the minifier to reduce file size.
   const document = window.document;
-  const documentElelement = document.documentElement;
+  const documentElement = document.documentElement || {};
   const addEventListener = window.addEventListener;
   const removeEventListener = window.removeEventListener;
   const setTimeout = window.setTimeout;
@@ -1268,27 +1268,25 @@ LUX = (function () {
   }
 
   function docHeight(doc: Document) {
-    const body = doc.body,
-      docelem = doc.documentElement;
+    const body = doc.body;
     const height = max(
       body ? body.scrollHeight : 0,
       body ? body.offsetHeight : 0,
-      docelem ? docelem.clientHeight : 0,
-      docelem ? docelem.scrollHeight : 0,
-      docelem ? docelem.offsetHeight : 0,
+      documentElement ? documentElement.clientHeight : 0,
+      documentElement ? documentElement.scrollHeight : 0,
+      documentElement ? documentElement.offsetHeight : 0,
     );
     return height;
   }
 
   function docWidth(doc: Document) {
-    const body = doc.body,
-      docelem = doc.documentElement;
+    const body = doc.body;
     const width = max(
       body ? body.scrollWidth : 0,
       body ? body.offsetWidth : 0,
-      docelem ? docelem.clientWidth : 0,
-      docelem ? docelem.scrollWidth : 0,
-      docelem ? docelem.offsetWidth : 0,
+      documentElement ? documentElement.clientWidth : 0,
+      documentElement ? documentElement.scrollWidth : 0,
+      documentElement ? documentElement.offsetWidth : 0,
     );
     return width;
   }
@@ -1373,8 +1371,8 @@ LUX = (function () {
 
   // Return true if the element is in the viewport.
   function inViewport(e: HTMLElement) {
-    const vh = documentElelement.clientHeight;
-    const vw = documentElelement.clientWidth;
+    const vh = documentElement.clientHeight;
+    const vw = documentElement.clientWidth;
 
     // Return true if the top-left corner is in the viewport and it has width & height.
     const lt = findPos(e);
@@ -1602,9 +1600,9 @@ LUX = (function () {
       "nd" +
       document.getElementsByTagName("*")[PROPS.length] + // numdomelements
       "vh" +
-      documentElelement.clientHeight + // see http://www.quirksmode.org/mobile/viewports.html
+      documentElement.clientHeight + // see http://www.quirksmode.org/mobile/viewports.html
       "vw" +
-      documentElelement.clientWidth +
+      documentElement.clientWidth +
       "dh" +
       docHeight(document) +
       "dw" +
