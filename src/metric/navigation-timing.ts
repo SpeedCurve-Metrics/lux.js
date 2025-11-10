@@ -1,5 +1,5 @@
 import { START_MARK } from "../constants";
-import { getNavigationEntry } from "../performance";
+import { getNavigationEntry, performance } from "../performance";
 import { processTimeMetric } from "../timing";
 import { KeysByType, Writable } from "../types";
 
