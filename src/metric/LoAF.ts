@@ -1,5 +1,6 @@
 import { UserConfig } from "../config";
 import { clamp, floor, max } from "../math";
+import * as PROPS from "../minification";
 import { INPPhase } from "./INP";
 
 export type LoAFSummary = {
@@ -36,7 +37,7 @@ export type LoAFScriptSummary = {
 let entries: PerformanceLongAnimationFrameTiming[] = [];
 
 export function processEntry(entry: PerformanceLongAnimationFrameTiming): void {
-  entries.push(entry);
+  entries[PROPS.push](entry);
 }
 
 export function reset(): void {
@@ -64,7 +65,7 @@ export function getData(config: UserConfig): LoAFSummary {
       : 0;
     totalWorkDuration += renderStart ? renderStart - startTime : duration;
 
-    summarizedEntries.push({
+    summarizedEntries[PROPS.push]({
       startTime: floor(startTime),
       duration: floor(duration),
       renderStart: floor(renderStart),
@@ -76,7 +77,7 @@ export function getData(config: UserConfig): LoAFSummary {
   return {
     totalBlockingDuration: floor(totalBlockingDuration),
     totalDuration: floor(totalDuration),
-    totalEntries: entries.length,
+    totalEntries: entries[PROPS.length],
     totalStyleAndLayoutDuration: floor(totalStyleAndLayoutDuration),
     totalWorkDuration: floor(totalWorkDuration),
 
@@ -87,9 +88,9 @@ export function getData(config: UserConfig): LoAFSummary {
 
     // Only keep the slowest LoAF entries
     entries: summarizedEntries
-      .sort((a, b) => b.duration - a.duration)
+      .sort((a, b) => b[PROPS.duration] - a[PROPS.duration])
       .slice(0, config.maxAttributionEntries)
-      .sort((a, b) => a.startTime - b.startTime),
+      .sort((a, b) => a[PROPS.startTime] - b[PROPS.startTime]),
   };
 }
 
@@ -119,20 +120,23 @@ export function summarizeLoAFScripts(
     }
 
     summary[key].totalEntries++;
-    summary[key].totalDuration += script.duration;
-    summary[key].totalBlockingDuration += max(0, script.duration - 50);
+    summary[key][PROPS.totalDuration] += script[PROPS.duration];
+    summary[key].totalBlockingDuration += max(0, script[PROPS.duration] - 50);
     summary[key].totalPauseDuration += script.pauseDuration;
     summary[key].totalForcedStyleAndLayoutDuration += script.forcedStyleAndLayoutDuration;
-    summary[key].timings.push([floor(script.startTime), floor(script.duration)]);
+    summary[key].timings[PROPS.push]([
+      floor(script[PROPS.startTime]),
+      floor(script[PROPS.duration]),
+    ]);
   });
 
   return Object.values(summary)
     .map((script) => ({
       ...script,
-      totalDuration: floor(script.totalDuration),
+      totalDuration: floor(script[PROPS.totalDuration]),
       totalPauseDuration: floor(script.totalPauseDuration),
       totalForcedStyleAndLayoutDuration: floor(script.totalForcedStyleAndLayoutDuration),
     }))
-    .sort((a, b) => b.totalDuration - a.totalDuration)
+    .sort((a, b) => b[PROPS.totalDuration] - a[PROPS.totalDuration])
     .slice(0, config.maxAttributionEntries);
 }

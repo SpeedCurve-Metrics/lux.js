@@ -1,3 +1,5 @@
+import * as PROPS from "./minification";
+
 type Callback = (data?: EventData) => void;
 type EventData = unknown;
 
@@ -11,7 +13,7 @@ export function subscribe(event: Event, callback: Callback): void {
     subscribers[event] = [];
   }
 
-  subscribers[event].push(callback);
+  subscribers[event][PROPS.push](callback);
 
   // Ensure previous event data is available to new subscribers
   if (eventData[event] !== undefined) {

@@ -1,4 +1,5 @@
 import { getClosestScTrackAttribute } from "./interaction";
+import * as PROPS from "./minification";
 
 type ElementWithParentNode = Element & {
   parentNode: Element;
@@ -22,7 +23,7 @@ function _getNodeSelector(node: Node, selector = ""): string {
   try {
     if (
       selector &&
-      (node.nodeType === 9 || selector.length > MAX_SELECTOR_LENGTH || !node.parentNode)
+      (node.nodeType === 9 || selector[PROPS.length] > MAX_SELECTOR_LENGTH || !node.parentNode)
     ) {
       // Final selector.
       return selector;
@@ -46,7 +47,7 @@ function _getNodeSelector(node: Node, selector = ""): string {
       let classes = el.className ? "." + el.className.replace(/\s+/g, ".") : "";
 
       // Remove classes until the selector is short enough
-      while ((name + classes).length > MAX_SELECTOR_LENGTH) {
+      while ((name + classes)[PROPS.length] > MAX_SELECTOR_LENGTH) {
         classes = classes.split(".").slice(0, -1).join(".");
       }
 
@@ -55,7 +56,7 @@ function _getNodeSelector(node: Node, selector = ""): string {
       if (el.parentNode) {
         const selectorWithParent = getNodeSelector(el.parentNode, currentSelector);
 
-        if (selectorWithParent.length < MAX_SELECTOR_LENGTH) {
+        if (selectorWithParent[PROPS.length] < MAX_SELECTOR_LENGTH) {
           return selectorWithParent;
         }
       }

@@ -6,6 +6,7 @@ import { addListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
 import { LoAFScriptSummary, LoAFSummary } from "./metric/LoAF";
 import { NavigationTimingData } from "./metric/navigation-timing";
+import * as PROPS from "./minification";
 import now from "./now";
 import { getPageRestoreTime, getZeroTime, msSincePageInit } from "./timing";
 import { VERSION } from "./version";
@@ -58,8 +59,8 @@ export function fitUserTimingEntries(utValues: string[], config: ConfigObject, u
   // Trim UT entries until they fit within the maximum URL length, ensuring at least one UT entry
   // is included.
   while (
-    (url + "&UT=" + beaconUtValues.join(",")).length > config.maxBeaconUrlLength &&
-    beaconUtValues.length > 1
+    (url + "&UT=" + beaconUtValues.join(","))[PROPS.length] > config.maxBeaconUrlLength &&
+    beaconUtValues[PROPS.length] > 1
   ) {
     remainingUtValues.unshift(beaconUtValues.pop()!);
   }
@@ -157,7 +158,7 @@ export class Beacon {
   }
 
   onBeforeSend(cb: () => void) {
-    this.onBeforeSendCbs.push(cb);
+    this.onBeforeSendCbs[PROPS.push](cb);
   }
 
   send() {
@@ -185,7 +186,7 @@ export class Beacon {
       }
     }
 
-    if (!Object.keys(metricData).length && !this.config.allowEmptyPostBeacon) {
+    if (!Object.keys(metricData)[PROPS.length] && !this.config.allowEmptyPostBeacon) {
       // TODO: This is only required while the new beacon is supplementary. Once it's the primary
       // beacon, we should send it regardless of how much metric data it has.
       this.logger.logEvent(LogEvent.PostBeaconCancelled);
@@ -254,14 +255,16 @@ export type BeaconMetaData = {
 export enum BeaconMetricKey {
   CLS = "cls",
   INP = "inp",
+  FCP = "fcp",
   LCP = "lcp",
   LoAF = "loaf",
   RageClick = "rage",
-  NavigationTiming = "navigationTiming",
+  NavigationTiming = "nt",
 }
 
 export type BeaconMetricData = {
   [BeaconMetricKey.NavigationTiming]: NavigationTimingData;
+  [BeaconMetricKey.FCP]: MetricWithValue;
   [BeaconMetricKey.LCP]: MetricWithValue & {
     attribution: MetricAttribution | null;
 
@@ -273,7 +276,7 @@ export type BeaconMetricData = {
     } | null;
   };
 
-  [BeaconMetricKey.LoAF]: LoAFSummary | undefined;
+  [BeaconMetricKey.LoAF]: LoAFSummary;
 
   [BeaconMetricKey.INP]: MetricWithValue & {
     startTime: number;

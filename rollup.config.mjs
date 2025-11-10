@@ -21,7 +21,17 @@ const commonPlugins = (target = "es5") => [
 const scriptOutput = (file, minified) => ({
   file,
   format: "iife",
-  plugins: [minified ? terser() : undefined],
+  plugins: [
+    minified
+      ? terser({
+          mangle: {
+            properties: {
+              regex: /^_.+/,
+            },
+          },
+        })
+      : undefined,
+  ],
   sourcemap: true,
 });
 

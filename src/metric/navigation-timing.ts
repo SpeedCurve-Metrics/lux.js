@@ -1,80 +1,39 @@
+import { START_MARK } from "../constants";
 import { getNavigationEntry } from "../performance";
 import { processTimeMetric } from "../timing";
+import { KeysByType, Writable } from "../types";
 
-let currentNavigation: PerformanceNavigationTiming;
-
-export type NavigationTimingData = {
+type NavTimingEntry = Writable<PerformanceNavigationTiming> & {
   activationStart: number;
-  connectEnd: number;
-  connectStart: number;
-  decodedBodySize?: number;
-  domainLookupEnd: number;
-  domainLookupStart: number;
-  domComplete?: number;
-  domContentLoadedEventEnd?: number;
-  domContentLoadedEventStart?: number;
-  domInteractive?: number;
-  encodedBodySize?: number;
-  fetchStart: number;
-  loadEventEnd?: number;
-  loadEventStart?: number;
-  redirectCount: number;
-  redirectEnd?: number;
-  redirectStart?: number;
-  requestStart?: number;
-  responseEnd?: number;
-  responseStart?: number;
-  secureConnectionStart?: number;
-  transferSize?: number;
+  navigationStart: number;
 };
 
-export function processEntry(entry: PerformanceNavigationTiming): void {
-  currentNavigation = entry;
-}
+type NavTimingKey =
+  | keyof KeysByType<NavTimingEntry, number>
+  | keyof KeysByType<NavTimingEntry, string>;
 
-export function getData(): NavigationTimingData {
-  const fallbackNavEntry = getNavigationEntry();
+export type NavigationTimingData = Pick<NavTimingEntry, NavTimingKey>;
 
-  function processNavTimingValue(key: string, allowZero?: false): number | undefined;
-  function processNavTimingValue(key: string, allowZero: true): number;
-  function processNavTimingValue(key: string, allowZero?: boolean): number | undefined {
-    let value = 0;
+export function getData(): NavigationTimingData | undefined {
+  const startMark = performance.getEntriesByName(START_MARK).pop();
 
-    if (currentNavigation && key in currentNavigation) {
-      value = currentNavigation[key as keyof NavigationTimingData] as number;
-    } else if (key in fallbackNavEntry) {
-      value = fallbackNavEntry[key] as number;
-    }
-
-    if (value === 0 && !allowZero) {
-      return undefined;
-    }
-
-    return processTimeMetric(value);
+  if (startMark) {
+    // Don't report navigation timing in SPA beacons
+    return undefined;
   }
 
-  return {
-    activationStart: processNavTimingValue("activationStart", true),
-    connectEnd: processNavTimingValue("connectEnd", true),
-    connectStart: processNavTimingValue("connectStart", true),
-    decodedBodySize: processNavTimingValue("decodedBodySize"),
-    domainLookupEnd: processNavTimingValue("domainLookupEnd", true),
-    domainLookupStart: processNavTimingValue("domainLookupStart", true),
-    domComplete: processNavTimingValue("domComplete"),
-    domContentLoadedEventEnd: processNavTimingValue("domContentLoadedEventEnd"),
-    domContentLoadedEventStart: processNavTimingValue("domContentLoadedEventStart"),
-    domInteractive: processNavTimingValue("domInteractive"),
-    encodedBodySize: processNavTimingValue("encodedBodySize"),
-    fetchStart: processNavTimingValue("fetchStart", true),
-    loadEventEnd: processNavTimingValue("loadEventEnd"),
-    loadEventStart: processNavTimingValue("loadEventStart"),
-    redirectCount: processNavTimingValue("redirectCount", true),
-    redirectEnd: processNavTimingValue("redirectEnd"),
-    redirectStart: processNavTimingValue("redirectStart"),
-    requestStart: processNavTimingValue("requestStart"),
-    responseEnd: processNavTimingValue("responseEnd"),
-    responseStart: processNavTimingValue("responseStart"),
-    secureConnectionStart: processNavTimingValue("secureConnectionStart"),
-    transferSize: processNavTimingValue("transferSize"),
-  };
+  const navEntry = getNavigationEntry();
+  const entry: Record<string, string | number> = {};
+
+  for (const k in navEntry) {
+    const value = navEntry[k];
+
+    if (typeof value === "number") {
+      entry[k as keyof NavTimingEntry] = processTimeMetric(value);
+    } else if (typeof value === "string") {
+      entry[k as keyof NavTimingEntry] = value;
+    }
+  }
+
+  return entry as NavigationTimingData;
 }

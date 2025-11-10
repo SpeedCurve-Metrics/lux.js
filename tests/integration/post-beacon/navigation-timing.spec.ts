@@ -2,8 +2,7 @@ import { test, expect } from "@playwright/test";
 import { BeaconPayload } from "../../../src/beacon";
 import RequestInterceptor from "../../request-interceptor";
 
-// Skipped while navigation timing is not sent in the POST beacon
-test.skip("POST beacon navigation timing", () => {
+test.describe("POST beacon navigation timing", () => {
   test("Navigation timing is measured", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
@@ -26,12 +25,12 @@ test.skip("POST beacon navigation timing", () => {
     expect(nt.loadEventEnd).toBeGreaterThan(0);
     expect(nt.loadEventStart).toBeGreaterThan(0);
     expect(nt.redirectCount).toEqual(0);
-    expect(nt.redirectEnd).toBeUndefined();
-    expect(nt.redirectStart).toBeUndefined();
+    expect(nt.redirectEnd).toEqual(0);
+    expect(nt.redirectStart).toEqual(0);
     expect(nt.requestStart).toBeGreaterThan(0);
     expect(nt.responseEnd).toBeGreaterThan(0);
     expect(nt.responseStart).toBeGreaterThan(0);
-    expect(nt.secureConnectionStart).toBeUndefined();
+    expect(nt.secureConnectionStart).toEqual(0);
     expect(nt.transferSize).toBeGreaterThan(0);
   });
 

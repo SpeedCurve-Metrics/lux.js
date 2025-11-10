@@ -1,4 +1,5 @@
 import { floor } from "./math";
+import * as PROPS from "./minification";
 import scriptStartTime from "./start-marker";
 
 // If the various performance APIs aren't available, we export an empty object to
@@ -41,7 +42,7 @@ export function deliveryType(): string | undefined {
   return undefined;
 }
 
-type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> & {
+export type PolyfilledNavigationTiming = Partial<PerformanceNavigationTiming> & {
   [key: string]: number | string;
   navigationStart: number;
   activationStart: number;
@@ -49,15 +50,15 @@ type PartialPerformanceNavigationTiming = Partial<PerformanceNavigationTiming> &
   type: PerformanceNavigationTiming["type"];
 };
 
-export function getNavigationEntry(): PartialPerformanceNavigationTiming {
+export function getNavigationEntry(): PolyfilledNavigationTiming {
   const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
 
-  if (navEntries.length) {
-    const nativeEntry = navEntries[0] as PartialPerformanceNavigationTiming;
+  if (navEntries[PROPS.length]) {
+    const nativeEntry = navEntries.pop()!.toJSON();
     const entry = {
       navigationStart: 0,
       activationStart: 0,
-    } as PartialPerformanceNavigationTiming;
+    } as PolyfilledNavigationTiming;
 
     for (const key in nativeEntry) {
       entry[key] = nativeEntry[key];
@@ -67,7 +68,7 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
   }
 
   const navType = navigationType();
-  const entry: PartialPerformanceNavigationTiming = {
+  const entry: PolyfilledNavigationTiming = {
     navigationStart: 0,
     activationStart: 0,
     startTime: 0,
@@ -76,8 +77,8 @@ export function getNavigationEntry(): PartialPerformanceNavigationTiming {
 
   if (__ENABLE_POLYFILLS) {
     for (const key in timing) {
-      if (typeof timing[key as PerfTimingKey] === "number" && key !== "navigationStart") {
-        entry[key] = floor(timing[key as PerfTimingKey] - timing.navigationStart);
+      if (typeof timing[key as PerfTimingKey] === "number" && key !== PROPS.navigationStart) {
+        entry[key] = floor(timing[key as PerfTimingKey] - timing[PROPS.navigationStart]);
       }
     }
   }
@@ -94,7 +95,7 @@ export function getEntriesByType(type: string): PerformanceEntryList {
   if (typeof performance.getEntriesByType === "function") {
     const entries = performance.getEntriesByType(type);
 
-    if (entries && entries.length) {
+    if (entries && entries[PROPS.length]) {
       return entries;
     }
   }
@@ -111,7 +112,7 @@ export function getEntriesByName(type: string): PerformanceEntryList {
   if (typeof performance.getEntriesByName === "function") {
     const entries = performance.getEntriesByName(type);
 
-    if (entries && entries.length) {
+    if (entries && entries[PROPS.length]) {
       return entries;
     }
   }
