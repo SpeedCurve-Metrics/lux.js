@@ -2,7 +2,7 @@
 
 ## 2025-10-10: v4.4.0
 
-### New fatures
+### New features
 
 - Rage click detection
 - Extra context in the POST beacon allows calculation of user happiness for each beacon
