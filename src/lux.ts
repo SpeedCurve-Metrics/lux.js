@@ -51,7 +51,8 @@ import {
 import { getMatchesFromPatternMap } from "./url-matcher";
 import { VERSION, versionAsFloat } from "./version";
 
-let LUX = (window.LUX as LuxGlobal) || {};
+const global = window;
+let LUX = (global.LUX as LuxGlobal) || {};
 let scriptEndTime = scriptStartTime;
 
 LUX = (function () {
@@ -61,13 +62,13 @@ LUX = (function () {
   logger.logEvent(LogEvent.EvaluationStart, [VERSION, JSON.stringify(globalConfig)]);
 
   // Variable aliases that allow the minifier to reduce file size.
-  const document = window.document;
+  const document = global.document;
   const documentElement = document.documentElement || {};
-  const addEventListener = window.addEventListener;
-  const removeEventListener = window.removeEventListener;
-  const setTimeout = window.setTimeout;
-  const clearTimeout = window.clearTimeout;
-  const encodeURIComponent = window.encodeURIComponent;
+  const addEventListener = global.addEventListener;
+  const removeEventListener = global.removeEventListener;
+  const setTimeout = global.setTimeout;
+  const clearTimeout = global.clearTimeout;
+  const encodeURIComponent = global.encodeURIComponent;
   const thisScript = (document.currentScript as HTMLScriptElement) || {};
 
   // Log JS errors.
@@ -2168,8 +2169,8 @@ LUX = (function () {
   }
 
   // process the error events that happened before lux.js got loaded
-  if (typeof window.LUX_ae !== "undefined") {
-    window.LUX_ae.forEach(errorHandler);
+  if (typeof global.LUX_ae !== "undefined") {
+    global.LUX_ae.forEach(errorHandler);
   }
 
   logger.logEvent(LogEvent.EvaluationEnd);
@@ -2177,6 +2178,6 @@ LUX = (function () {
   return globalLux;
 })();
 
-window.LUX = LUX;
+global.LUX = LUX;
 
 scriptEndTime = now();
