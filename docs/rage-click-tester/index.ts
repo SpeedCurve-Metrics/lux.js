@@ -2,6 +2,11 @@ import { getNodeSelector } from "../../src/dom";
 import "../../src/lux";
 import { RageClickEvent, reset } from "../../src/metric/rage-click";
 
+/**
+ * IMPORTANT: If you update the rage click tester, please rebuild it by TEMPORARILY uncommenting
+ * its section in rollup.config.js.
+ */
+
 const events: RageClickEvent[] = [];
 const dataTable = document.getElementById("rage-click-data") as HTMLTableElement;
 const radiusEl = document.getElementById("radius") as HTMLDivElement;

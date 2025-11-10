@@ -138,22 +138,23 @@ export default [
   },
 
   // Rage click tester
-  {
-    input: "docs/rage-click-tester/index.ts",
-    output: {
-      file: "docs/rage-click-tester.js",
-      format: "iife",
-      plugins: [terser()],
-    },
-    plugins: [
-      json(),
-      replace({
-        __DEBUG: JSON.stringify(true),
-      }),
-      typescript({
-        include: ["docs/**", "src/**", "tests/helpers/lux.ts"],
-        declaration: false,
-      }),
-    ],
-  },
+  // Only rebuild when rage click tester files change
+  // {
+  //   input: "docs/rage-click-tester/index.ts",
+  //   output: {
+  //     file: "docs/rage-click-tester.js",
+  //     format: "iife",
+  //     plugins: [terser()],
+  //   },
+  //   plugins: [
+  //     json(),
+  //     replace({
+  //       __DEBUG: JSON.stringify(true),
+  //     }),
+  //     typescript({
+  //       include: ["docs/**", "src/**", "tests/helpers/lux.ts"],
+  //       declaration: false,
+  //     }),
+  //   ],
+  // },
 ];
