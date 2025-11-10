@@ -1,5 +1,5 @@
 import { START_MARK } from "../constants";
-import { getNavigationEntry, performance } from "../performance";
+import { getEntriesByName, getNavigationEntry } from "../performance";
 import { processTimeMetric } from "../timing";
 import { KeysByType, Writable } from "../types";
 
@@ -15,7 +15,7 @@ type NavTimingKey =
 export type NavigationTimingData = Pick<NavTimingEntry, NavTimingKey>;
 
 export function getData(): NavigationTimingData | undefined {
-  const startMark = performance.getEntriesByName(START_MARK).pop();
+  const startMark = getEntriesByName(START_MARK).pop();
 
   if (startMark) {
     // Don't report navigation timing in SPA beacons
