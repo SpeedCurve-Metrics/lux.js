@@ -1,5 +1,20 @@
 # lux.js changelog
 
+## 2025-10-10: v4.4.0
+
+### New fatures
+
+- Rage click detection
+- Extra context in the POST beacon allows calculation of user happiness for each beacon
+
+### Improvements
+
+- Minification optimisations to reduce bundle size
+
+### Bug fixes
+
+- LCP element attribution is stored as the event is received, to prevent missing attribution on discarded elements
+
 ## 2025-09-17: v4.3.3
 
 ### Bug fixes
