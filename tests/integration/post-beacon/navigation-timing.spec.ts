@@ -8,7 +8,7 @@ test.describe("POST beacon navigation timing", () => {
     await page.goto("/images.html", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
-    const nt = b.navigationTiming!;
+    const nt = b.nt!;
 
     expect(nt.activationStart).toEqual(0);
     expect(nt.connectEnd).toBeGreaterThan(0);
@@ -40,13 +40,13 @@ test.describe("POST beacon navigation timing", () => {
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
-    expect(b.navigationTiming).toBeDefined();
+    expect(b.nt).toBeDefined();
 
     await page.evaluate(() => LUX.init());
     await page.waitForTimeout(200);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
-    expect(b.navigationTiming).toBeUndefined();
+    expect(b.nt).toBeUndefined();
   });
 });
