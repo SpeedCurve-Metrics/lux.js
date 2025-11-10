@@ -1,4 +1,4 @@
-import { hasParentNode } from "./dom";
+import { getClosestScTrackAttribute, hasParentNode } from "./dom";
 
 export interface InteractionInfo {
   /** Click time */
@@ -54,20 +54,4 @@ export function interactionAttributionForElement(el: Element): string {
 
   // No suitable attribute was found
   return "";
-}
-
-export function getClosestScTrackAttribute(el: Element): string | null {
-  if (el.hasAttribute("data-sctrack")) {
-    const trackId = el.getAttribute("data-sctrack")?.trim();
-
-    if (trackId) {
-      return trackId;
-    }
-  }
-
-  if (hasParentNode(el)) {
-    return getClosestScTrackAttribute(el.parentNode);
-  }
-
-  return null;
 }

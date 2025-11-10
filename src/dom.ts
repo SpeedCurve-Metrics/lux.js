@@ -1,5 +1,20 @@
-import { getClosestScTrackAttribute } from "./interaction";
 import * as PROPS from "./minification";
+
+export function getClosestScTrackAttribute(el: Element): string | null {
+  if (el.hasAttribute("data-sctrack")) {
+    const trackId = el.getAttribute("data-sctrack")?.trim();
+
+    if (trackId) {
+      return trackId;
+    }
+  }
+
+  if (hasParentNode(el)) {
+    return getClosestScTrackAttribute(el.parentNode);
+  }
+
+  return null;
+}
 
 type ElementWithParentNode = Element & {
   parentNode: Element;
