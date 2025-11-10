@@ -38,13 +38,13 @@ export function observe<K extends keyof PerformanceEntryMap>(
 export function getEntries<K extends keyof PerformanceEntryMap>(
   type: K,
 ): Array<PerformanceEntryMap[K]> {
-  return ALL_ENTRIES.filter((entry) => entry[PROPS._entryType] === type) as Array<
+  return ALL_ENTRIES.filter((entry) => entry[PROPS.entryType] === type) as Array<
     PerformanceEntryMap[K]
   >;
 }
 
 export function addEntry(entry: PerformanceEntry) {
-  ALL_ENTRIES[PROPS._push](entry);
+  ALL_ENTRIES[PROPS.push](entry);
 }
 
 export function clearEntries() {

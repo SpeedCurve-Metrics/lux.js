@@ -62,6 +62,7 @@ LUX = (function () {
 
   // Variable aliases that allow the minifier to reduce file size.
   const document = window.document;
+  const documentElelement = document.documentElement;
   const addEventListener = window.addEventListener;
   const removeEventListener = window.removeEventListener;
   const setTimeout = window.setTimeout;
@@ -172,7 +173,7 @@ LUX = (function () {
         LCP.processEntry(entry);
       })
     ) {
-      beaconCollectors[PROPS._push]([BeaconMetricKey.LCP, LCP.getData]);
+      beaconCollectors[PROPS.push]([BeaconMetricKey.LCP, LCP.getData]);
     }
 
     if (
@@ -181,7 +182,7 @@ LUX = (function () {
         logEntry(entry);
       })
     ) {
-      beaconCollectors[PROPS._push]([BeaconMetricKey.CLS, CLS.getData]);
+      beaconCollectors[PROPS.push]([BeaconMetricKey.CLS, CLS.getData]);
     }
 
     if (
@@ -190,7 +191,7 @@ LUX = (function () {
         logEntry(entry);
       })
     ) {
-      beaconCollectors[PROPS._push]([BeaconMetricKey.LoAF, LoAF.getData]);
+      beaconCollectors[PROPS.push]([BeaconMetricKey.LoAF, LoAF.getData]);
     }
 
     const handleINPEntry = (entry: PerformanceEventTiming) => {
@@ -202,7 +203,7 @@ LUX = (function () {
       logEntry(entry);
 
       const entryTime =
-        (entry as PerformanceEventTiming)[PROPS._processingStart] - entry[PROPS._startTime];
+        (entry as PerformanceEventTiming)[PROPS.processingStart] - entry[PROPS.startTime];
 
       if (!gFirstInputDelay || gFirstInputDelay < entryTime) {
         gFirstInputDelay = floor(entryTime);
@@ -225,18 +226,18 @@ LUX = (function () {
           // need to manually serialize our own object with the keys we want.
           logEntry({
             interactionId: entry.interactionId,
-            name: entry[PROPS._name],
-            entryType: entry[PROPS._entryType],
-            startTime: entry[PROPS._startTime],
-            duration: entry[PROPS._duration],
-            processingStart: entry[PROPS._processingStart],
-            processingEnd: entry[PROPS._processingEnd],
+            name: entry[PROPS.name],
+            entryType: entry[PROPS.entryType],
+            startTime: entry[PROPS.startTime],
+            duration: entry[PROPS.duration],
+            processingStart: entry[PROPS.processingStart],
+            processingEnd: entry[PROPS.processingEnd],
           } as PerformanceEventTiming);
         },
         { durationThreshold: 0 },
       )
     ) {
-      beaconCollectors[PROPS._push]([BeaconMetricKey.INP, INP.getData]);
+      beaconCollectors[PROPS.push]([BeaconMetricKey.INP, INP.getData]);
     }
   } catch (e) {
     logger.logEvent(LogEvent.PerformanceObserverError, [e]);
@@ -266,7 +267,7 @@ LUX = (function () {
     logger.logEvent(LogEvent.SessionIsNotSampled, [globalConfig.samplerate]);
   }
 
-  const gLuxSnippetStart = LUX.ns ? LUX.ns - timing.navigationStart : 0;
+  const gLuxSnippetStart = LUX.ns ? LUX.ns - timing[PROPS.navigationStart] : 0;
 
   if (!performance.timing) {
     logger.logEvent(LogEvent.NavTimingNotSupported);
@@ -274,7 +275,7 @@ LUX = (function () {
     beacon.addFlag(Flags.NavTimingNotSupported);
   }
 
-  logger.logEvent(LogEvent.NavigationStart, [timing.navigationStart]);
+  logger.logEvent(LogEvent.NavigationStart, [timing[PROPS.navigationStart]]);
 
   ////////////////////// FID BEGIN
   // FIRST INPUT DELAY (FID)
@@ -389,7 +390,7 @@ LUX = (function () {
         startTime,
       } as PerformanceMark;
 
-      gaMarks[PROPS._push](entry);
+      gaMarks[PROPS.push](entry);
       gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
       beacon.addFlag(Flags.UserTimingNotSupported);
 
@@ -430,7 +431,7 @@ LUX = (function () {
       if (options) {
         // If options were provided, we need to avoid specifying a start mark if an end mark and
         // duration were already specified.
-        if (!options.end || !options[PROPS._duration]) {
+        if (!options.end || !options[PROPS.duration]) {
           (args[1] as PerformanceMeasureOptions).start = startMarkName;
         }
       } else {
@@ -459,7 +460,7 @@ LUX = (function () {
       if (typeof startMarkName === "string") {
         const startMark = _getMark(startMarkName);
         if (startMark) {
-          startTime = startMark[PROPS._startTime];
+          startTime = startMark[PROPS.startTime];
         } else if (typeof navEntry[startMarkName] === "number") {
           // the mark name can also be a property from Navigation Timing
           startTime = navEntry[startMarkName] as number;
@@ -471,7 +472,7 @@ LUX = (function () {
       if (typeof endMarkName === "string") {
         const endMark = _getMark(endMarkName);
         if (endMark) {
-          endTime = endMark[PROPS._startTime];
+          endTime = endMark[PROPS.startTime];
         } else if (typeof navEntry[endMarkName] === "number") {
           // the mark name can also be a property from Navigation Timing
           endTime = navEntry[endMarkName] as number;
@@ -484,8 +485,8 @@ LUX = (function () {
       let detail = null;
 
       if (options) {
-        if (options[PROPS._duration]) {
-          duration = options[PROPS._duration];
+        if (options[PROPS.duration]) {
+          duration = options[PROPS.duration];
         }
 
         detail = options.detail;
@@ -499,7 +500,7 @@ LUX = (function () {
         duration,
       } as PerformanceMeasure;
 
-      gaMeasures[PROPS._push](entry);
+      gaMeasures[PROPS.push](entry);
       gFlags = addFlag(gFlags, Flags.UserTimingNotSupported);
       beacon.addFlag(Flags.UserTimingNotSupported);
 
@@ -514,9 +515,9 @@ LUX = (function () {
 
   function _getM<T extends { name: string }>(name: string, aItems: T[]): T | undefined {
     if (aItems) {
-      for (let i = aItems[PROPS._length] - 1; i >= 0; i--) {
+      for (let i = aItems[PROPS.length] - 1; i >= 0; i--) {
         const m = aItems[i];
-        if (name === m[PROPS._name]) {
+        if (name === m[PROPS.name]) {
           return m;
         }
       }
@@ -529,7 +530,7 @@ LUX = (function () {
   function _getMarks(): PerformanceEntryList {
     const marks = getEntriesByType("mark");
 
-    if (marks[PROPS._length]) {
+    if (marks[PROPS.length]) {
       return marks;
     }
 
@@ -540,7 +541,7 @@ LUX = (function () {
   function _getMeasures(): PerformanceEntryList {
     const measures = getEntriesByType("measure");
 
-    if (measures[PROPS._length]) {
+    if (measures[PROPS.length]) {
       return measures;
     }
 
@@ -566,14 +567,14 @@ LUX = (function () {
 
     // marks
     _getMarks().forEach((mark) => {
-      const name = mark[PROPS._name];
+      const name = mark[PROPS.name];
 
       if (name === START_MARK || name === END_MARK) {
         // Don't include the internal marks in the beacon
         return;
       }
 
-      const startTime = floor(mark[PROPS._startTime] - tZero);
+      const startTime = floor(mark[PROPS.startTime] - tZero);
 
       if (startTime < 0) {
         // Exclude marks that were taken before the current SPA page view
@@ -583,22 +584,22 @@ LUX = (function () {
       if (typeof hUT[name] === "undefined") {
         hUT[name] = { startTime };
       } else {
-        hUT[name][PROPS._startTime] = max(startTime, hUT[name][PROPS._startTime]);
+        hUT[name][PROPS.startTime] = max(startTime, hUT[name][PROPS.startTime]);
       }
     });
 
     // measures
     _getMeasures().forEach((measure) => {
-      if (startMark && measure[PROPS._startTime] < startMark[PROPS._startTime]) {
+      if (startMark && measure[PROPS.startTime] < startMark[PROPS.startTime]) {
         // Exclude measures that were taken before the current SPA page view
         return;
       }
 
-      const name = measure[PROPS._name];
-      const startTime = floor(measure[PROPS._startTime] - tZero);
-      const duration = floor(measure[PROPS._duration]);
+      const name = measure[PROPS.name];
+      const startTime = floor(measure[PROPS.startTime] - tZero);
+      const duration = floor(measure[PROPS.duration]);
 
-      if (typeof hUT[name] === "undefined" || startTime > hUT[name][PROPS._startTime]) {
+      if (typeof hUT[name] === "undefined" || startTime > hUT[name][PROPS.startTime]) {
         hUT[name] = { startTime, duration };
       }
     });
@@ -612,10 +613,10 @@ LUX = (function () {
       const utParts = [utName, startTime];
 
       if (typeof duration !== "undefined") {
-        utParts[PROPS._push](duration);
+        utParts[PROPS.push](duration);
       }
 
-      aUT[PROPS._push](utParts.join("|"));
+      aUT[PROPS.push](utParts.join("|"));
     }
 
     return aUT;
@@ -626,12 +627,12 @@ LUX = (function () {
     const aET: string[] = [];
 
     PO.getEntries("element").forEach((entry) => {
-      if (entry.identifier && entry[PROPS._startTime]) {
-        const value = processTimeMetric(entry[PROPS._startTime]);
+      if (entry.identifier && entry[PROPS.startTime]) {
+        const value = processTimeMetric(entry[PROPS.startTime]);
 
         if (shouldReportValue(value)) {
           logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
-          aET[PROPS._push](entry.identifier + "|" + value);
+          aET[PROPS.push](entry.identifier + "|" + value);
         }
       }
     });
@@ -652,22 +653,22 @@ LUX = (function () {
     const longTaskEntries = PO.getEntries("longtask");
 
     // Add up totals for each "type" of long task
-    if (longTaskEntries[PROPS._length]) {
+    if (longTaskEntries[PROPS.length]) {
       const tZero = getZeroTime();
 
       longTaskEntries.forEach((entry) => {
-        let dur = floor(entry[PROPS._duration]);
-        if (entry[PROPS._startTime] < tZero) {
+        let dur = floor(entry[PROPS.duration]);
+        if (entry[PROPS.startTime] < tZero) {
           // In a SPA it is possible that we were in the middle of a Long Task when
           // LUX.init() was called. If so, only include the duration after tZero.
-          dur -= tZero - entry[PROPS._startTime];
+          dur -= tZero - entry[PROPS.startTime];
         }
 
         // Only process entries that we calculated to have a valid duration
         if (dur > 0) {
           logger.logEvent(LogEvent.PerformanceEntryProcessed, [entry]);
 
-          const type = entry.attribution[0][PROPS._name];
+          const type = entry.attribution[0][PROPS.name];
 
           if (!hCPU[type]) {
             hCPU[type] = 0;
@@ -676,13 +677,13 @@ LUX = (function () {
 
           hCPU[type] += dur;
           // Send back the raw startTime and duration, as well as the adjusted duration.
-          hCPUDetails[type] += "," + floor(entry[PROPS._startTime]) + "|" + dur;
+          hCPUDetails[type] += "," + floor(entry[PROPS.startTime]) + "|" + dur;
         }
       });
     }
 
     // TODO - Add more types if/when they become available.
-    const jsType = typeof hCPU[PROPS._script] !== "undefined" ? PROPS._script : "unknown"; // spec changed from "script" to "unknown" Nov 2018
+    const jsType = typeof hCPU[PROPS.script] !== "undefined" ? PROPS.script : "unknown"; // spec changed from "script" to "unknown" Nov 2018
     if (typeof hCPU[jsType] === "undefined") {
       // Initialize default values for pages that have *no Long Tasks*.
       hCPU[jsType] = 0;
@@ -717,12 +718,12 @@ LUX = (function () {
     const aValues: number[] = [];
     const aTuples = sDetails.split(",");
 
-    for (let i = 0; i < aTuples[PROPS._length]; i++) {
+    for (let i = 0; i < aTuples[PROPS.length]; i++) {
       const aTuple = aTuples[i].split("|");
-      if (aTuple[PROPS._length] === 2) {
+      if (aTuple[PROPS.length] === 2) {
         const start = parseInt(aTuple[0]);
         const dur = parseInt(aTuple[1]);
-        aValues[PROPS._push](dur);
+        aValues[PROPS.push](dur);
         max = dur > max ? dur : max;
 
         // FCI
@@ -744,7 +745,7 @@ LUX = (function () {
       }
     }
 
-    const count = aValues[PROPS._length];
+    const count = aValues[PROPS.length];
     const median = arrayMedian(aValues);
 
     return { count, median, max, fci };
@@ -752,14 +753,14 @@ LUX = (function () {
 
   // Return the median value from an array of integers.
   function arrayMedian(aValues: number[]): number {
-    if (0 === aValues[PROPS._length]) {
+    if (0 === aValues[PROPS.length]) {
       return 0;
     }
 
-    const half = floor(aValues[PROPS._length] / 2);
+    const half = floor(aValues[PROPS.length] / 2);
     aValues.sort(sortNumeric);
 
-    if (aValues[PROPS._length] % 2) {
+    if (aValues[PROPS.length] % 2) {
       // Return the middle value.
       return aValues[half];
     } else {
@@ -774,7 +775,7 @@ LUX = (function () {
     if (gbFirstPV && performance.getEntriesByName && thisScript.src) {
       // Get the lux script URL (including querystring params).
       const aResources = performance.getEntriesByName(thisScript.src);
-      if (aResources && aResources[PROPS._length]) {
+      if (aResources && aResources[PROPS.length]) {
         const r = aResources[0] as PerformanceResourceTiming;
         // DO NOT USE DURATION!!!!!
         // See https://www.stevesouders.com/blog/2014/11/25/serious-confusion-with-resource-timing/
@@ -804,7 +805,7 @@ LUX = (function () {
           (typeof transferSize === "number" ? "x" + transferSize : "") +
           (typeof gLuxSnippetStart === "number" ? "l" + gLuxSnippetStart : "") +
           "s" +
-          (scriptStartTime - timing.navigationStart) + // when lux.js started getting evaluated relative to navigationStart
+          (scriptStartTime - timing[PROPS.navigationStart]) + // when lux.js started getting evaluated relative to navigationStart
           "";
       }
     }
@@ -824,7 +825,7 @@ LUX = (function () {
   function ixValues(): string {
     const aIx: string[] = [];
     for (const key in ghIx) {
-      aIx[PROPS._push](key + "|" + encodeURIComponent(ghIx[key as keyof InteractionInfo]!));
+      aIx[PROPS.push](key + "|" + encodeURIComponent(ghIx[key as keyof InteractionInfo]!));
     }
 
     return aIx.join(",");
@@ -923,9 +924,9 @@ LUX = (function () {
 
     // Find all the synchronous scripts that are ABOVE the last DOM element in the
     // viewport. (If they are BELOW then they do not block rendering of initial viewport.)
-    const aElems = document.getElementsByTagName(PROPS._script);
+    const aElems = document.getElementsByTagName(PROPS.script);
     let num = 0;
-    for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
+    for (let i = 0, len = aElems[PROPS.length]; i < len; i++) {
       const e = aElems[i];
       if (
         e.src &&
@@ -946,7 +947,7 @@ LUX = (function () {
   function blockingStylesheets() {
     let nBlocking = 0;
     const aElems = document.getElementsByTagName("link");
-    for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
+    for (let i = 0, len = aElems[PROPS.length]; i < len; i++) {
       const e = aElems[i];
       if (e.href && "stylesheet" === e.rel && 0 !== e.href.indexOf("data:")) {
         if (
@@ -967,9 +968,9 @@ LUX = (function () {
 
   // Return the number of synchronous external scripts in the page.
   function syncScripts() {
-    const aElems = document.getElementsByTagName(PROPS._script);
+    const aElems = document.getElementsByTagName(PROPS.script);
     let num = 0;
-    for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
+    for (let i = 0, len = aElems[PROPS.length]; i < len; i++) {
       const e = aElems[i];
       if (e.src && !e.async && !e.defer) {
         // If the script has a SRC and async is false, then increment the counter.
@@ -982,9 +983,9 @@ LUX = (function () {
 
   // Return the number of external scripts in the page.
   function numScripts() {
-    const aElems = document.getElementsByTagName(PROPS._script);
+    const aElems = document.getElementsByTagName(PROPS.script);
     let num = 0;
-    for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
+    for (let i = 0, len = aElems[PROPS.length]; i < len; i++) {
       const e = aElems[i];
       if (e.src) {
         num++;
@@ -997,7 +998,7 @@ LUX = (function () {
   function numStylesheets() {
     const aElems = document.getElementsByTagName("link");
     let num = 0;
-    for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
+    for (let i = 0, len = aElems[PROPS.length]; i < len; i++) {
       const e = aElems[i];
       if (e.href && "stylesheet" == e.rel) {
         num++;
@@ -1009,10 +1010,10 @@ LUX = (function () {
   function inlineTagSize(tagName: string) {
     const aElems = document.getElementsByTagName(tagName);
     let size = 0;
-    for (let i = 0, len = aElems[PROPS._length]; i < len; i++) {
+    for (let i = 0, len = aElems[PROPS.length]; i < len; i++) {
       const e = aElems[i];
       try {
-        size += e.innerHTML[PROPS._length];
+        size += e.innerHTML[PROPS.length];
       } catch (e) {
         // It seems like IE throws an error when accessing the innerHTML property
         logger.logEvent(LogEvent.InnerHtmlAccessError);
@@ -1025,7 +1026,7 @@ LUX = (function () {
 
   function getNavTiming() {
     let s = "";
-    let ns = timing.navigationStart;
+    let ns = timing[PROPS.navigationStart];
     const startMark = _getMark(START_MARK);
     const endMark = _getMark(END_MARK);
     const pageRestoreTime = getPageRestoreTime();
@@ -1033,9 +1034,9 @@ LUX = (function () {
     if (startMark && endMark && !pageRestoreTime) {
       // This is a SPA page view, so send the SPA marks & measures instead of Nav Timing.
       // Note: getPageRestoreTime() indicates this was a bfcache restore, which we don't want to treat as a SPA.
-      const start = floor(startMark[PROPS._startTime]); // the start mark is "zero"
+      const start = floor(startMark[PROPS.startTime]); // the start mark is "zero"
       ns += start; // "navigationStart" for a SPA is the real navigationStart plus the start mark
-      const end = floor(endMark[PROPS._startTime]) - start; // delta from start mark
+      const end = floor(endMark[PROPS.startTime]) - start; // delta from start mark
       s =
         ns +
         // fetchStart and activationStart are the same as navigationStart for a SPA
@@ -1076,12 +1077,12 @@ LUX = (function () {
       // If LUX.markLoadTime() was called in SPA Mode, we allow the custom mark to override loadEventEnd
       let loadEventEndStr =
         globalConfig.spaMode && endMark
-          ? "le" + processTimeMetric(endMark[PROPS._startTime])
+          ? "le" + processTimeMetric(endMark[PROPS.startTime])
           : prefixNTValue("loadEventEnd", "le", true);
 
       if (pageRestoreTime && startMark && endMark) {
         // For bfcache restores, we set the load time to the time it took for the page to be restored.
-        const loadTime = floor(endMark[PROPS._startTime] - startMark[PROPS._startTime]);
+        const loadTime = floor(endMark[PROPS.startTime] - startMark[PROPS.startTime]);
         loadEventStartStr = "ls" + loadTime;
         loadEventEndStr = "le" + loadTime;
       }
@@ -1090,7 +1091,7 @@ LUX = (function () {
       const isSecure = document.location.protocol === "https:";
       s = [
         ns,
-        "as" + clamp(navEntry.activationStart),
+        "as" + clamp(navEntry[PROPS.activationStart]),
         redirect && !getPageRestoreTime() ? prefixNTValue("redirectStart", "rs") : "",
         redirect && !getPageRestoreTime() ? prefixNTValue("redirectEnd", "re") : "",
         prefixNTValue("fetchStart", "fs"),
@@ -1114,7 +1115,7 @@ LUX = (function () {
       ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
-      const end = floor(endMark[PROPS._startTime]);
+      const end = floor(endMark[PROPS.startTime]);
       s =
         ns +
         "fs" +
@@ -1133,11 +1134,11 @@ LUX = (function () {
   function getFcp(): number | undefined {
     const paintEntries = getEntriesByType("paint");
 
-    for (let i = 0; i < paintEntries[PROPS._length]; i++) {
+    for (let i = 0; i < paintEntries[PROPS.length]; i++) {
       const entry = paintEntries[i];
 
-      if (entry[PROPS._name] === "first-contentful-paint") {
-        const value = processTimeMetric(entry[PROPS._startTime]);
+      if (entry[PROPS.name] === "first-contentful-paint") {
+        const value = processTimeMetric(entry[PROPS.startTime]);
 
         if (shouldReportValue(value)) {
           return value;
@@ -1152,9 +1153,9 @@ LUX = (function () {
   function getLcp(): number | undefined {
     const lcpEntries = PO.getEntries("largest-contentful-paint");
 
-    if (lcpEntries[PROPS._length]) {
-      const lastEntry = lcpEntries[lcpEntries[PROPS._length] - 1];
-      const value = processTimeMetric(lastEntry[PROPS._startTime]);
+    if (lcpEntries[PROPS.length]) {
+      const lastEntry = lcpEntries[lcpEntries[PROPS.length] - 1];
+      const value = processTimeMetric(lastEntry[PROPS.startTime]);
 
       if (shouldReportValue(value)) {
         logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
@@ -1172,11 +1173,11 @@ LUX = (function () {
     if ("PerformancePaintTiming" in self) {
       const paintEntries = getEntriesByType("paint");
 
-      if (paintEntries[PROPS._length]) {
-        const paintValues = paintEntries.map((entry) => entry[PROPS._startTime]).sort(sortNumeric);
+      if (paintEntries[PROPS.length]) {
+        const paintValues = paintEntries.map((entry) => entry[PROPS.startTime]).sort(sortNumeric);
 
         // Use the earliest valid paint entry as the start render time.
-        for (let i = 0; i < paintValues[PROPS._length]; i++) {
+        for (let i = 0; i < paintValues[PROPS.length]; i++) {
           const value = processTimeMetric(paintValues[i]);
 
           if (shouldReportValue(value)) {
@@ -1188,7 +1189,7 @@ LUX = (function () {
 
     if (performance.timing && timing.msFirstPaint && __ENABLE_POLYFILLS) {
       // If IE/Edge, use the prefixed `msFirstPaint` property (see http://msdn.microsoft.com/ff974719).
-      return floor(timing.msFirstPaint - timing.navigationStart);
+      return floor(timing.msFirstPaint - timing[PROPS.navigationStart]);
     }
 
     logger.logEvent(LogEvent.PaintTimingNotSupported);
@@ -1216,16 +1217,14 @@ LUX = (function () {
    */
   function getINPString(details: INP.Interaction): string {
     return [
-      "&INP=" + details[PROPS._duration],
-      details[PROPS._selector] ? "&INPs=" + encodeURIComponent(details[PROPS._selector]) : "",
-      "&INPt=" + floor(details[PROPS._startTime]),
-      "&INPi=" + clamp(floor(details[PROPS._processingStart] - details[PROPS._startTime])),
-      "&INPp=" + clamp(floor(details[PROPS._processingTime])),
+      "&INP=" + details[PROPS.duration],
+      details[PROPS.selector] ? "&INPs=" + encodeURIComponent(details[PROPS.selector]) : "",
+      "&INPt=" + floor(details[PROPS.startTime]),
+      "&INPi=" + clamp(floor(details[PROPS.processingStart] - details[PROPS.startTime])),
+      "&INPp=" + clamp(floor(details[PROPS.processingTime])),
       "&INPd=" +
         clamp(
-          floor(
-            details[PROPS._startTime] + details[PROPS._duration] - details[PROPS._processingEnd],
-          ),
+          floor(details[PROPS.startTime] + details[PROPS.duration] - details[PROPS.processingEnd]),
         ),
     ].join("");
   }
@@ -1249,12 +1248,12 @@ LUX = (function () {
 
   function avgDomDepth() {
     const aElems = document.getElementsByTagName("*");
-    let i = aElems[PROPS._length];
+    let i = aElems[PROPS.length];
     let totalParents = 0;
     while (i--) {
       totalParents += numParents(aElems[i]);
     }
-    const average = round(totalParents / aElems[PROPS._length]);
+    const average = round(totalParents / aElems[PROPS.length]);
     return average;
   }
 
@@ -1325,10 +1324,10 @@ LUX = (function () {
     const aImages = document.getElementsByTagName("img");
     const aImagesAtf: HTMLImageElement[] = [];
     if (aImages) {
-      for (let i = 0, len = aImages[PROPS._length]; i < len; i++) {
+      for (let i = 0, len = aImages[PROPS.length]; i < len; i++) {
         const image = aImages[i];
         if (inViewport(image)) {
-          aImagesAtf[PROPS._push](image);
+          aImagesAtf[PROPS.push](image);
         }
       }
     }
@@ -1351,7 +1350,7 @@ LUX = (function () {
       // Elements are listed in DOM order.
       const aChildren = parent.children;
       if (aChildren) {
-        for (let i = 0, len = aChildren[PROPS._length]; i < len; i++) {
+        for (let i = 0, len = aChildren[PROPS.length]; i < len; i++) {
           const child = aChildren[i];
           if (inViewport(child as HTMLElement)) {
             // The children are in DOM order, so we just have to
@@ -1374,8 +1373,8 @@ LUX = (function () {
 
   // Return true if the element is in the viewport.
   function inViewport(e: HTMLElement) {
-    const vh = document.documentElement.clientHeight;
-    const vw = document.documentElement.clientWidth;
+    const vh = documentElelement.clientHeight;
+    const vw = documentElelement.clientWidth;
 
     // Return true if the top-left corner is in the viewport and it has width & height.
     const lt = findPos(e);
@@ -1450,17 +1449,17 @@ LUX = (function () {
     ];
 
     if (gFlags) {
-      queryParams[PROPS._push]("fl=" + gFlags);
+      queryParams[PROPS.push]("fl=" + gFlags);
     }
 
     if (LUX.snippetVersion) {
-      queryParams[PROPS._push]("sv=" + LUX.snippetVersion);
+      queryParams[PROPS.push]("sv=" + LUX.snippetVersion);
     }
 
     const customDataValues = CustomData.valuesToString(customData);
 
     if (customDataValues) {
-      queryParams[PROPS._push]("CD=" + customDataValues);
+      queryParams[PROPS.push]("CD=" + customDataValues);
       CustomData.clearUpdateCustomData();
     }
 
@@ -1501,7 +1500,7 @@ LUX = (function () {
       // For soft navigations, only set the synthetic load time if SPA mode is not enabled, and...
       if (!globalConfig.spaMode) {
         // ...there is no existing end mark, or the end mark is from a previous SPA page.
-        if (!endMark || endMark[PROPS._startTime] < startMark[PROPS._startTime]) {
+        if (!endMark || endMark[PROPS.startTime] < startMark[PROPS.startTime]) {
           _markLoadTime();
         }
       }
@@ -1568,7 +1567,7 @@ LUX = (function () {
     // So we create a base URL that has all the necessary information:
     const baseUrl = _getBeaconUrl(CustomData.getAllCustomData());
 
-    const is = inlineTagSize(PROPS._script);
+    const is = inlineTagSize(PROPS.script);
     const ic = inlineTagSize("style");
     const ds = docSize();
     const ct = connectionType();
@@ -1595,17 +1594,17 @@ LUX = (function () {
       blockingStylesheets() +
       (ic > -1 ? "ic" + ic : "") +
       "ia" +
-      imagesATF()[PROPS._length] +
+      imagesATF()[PROPS.length] +
       "it" +
-      document.getElementsByTagName("img")[PROPS._length] + // total number of images
+      document.getElementsByTagName("img")[PROPS.length] + // total number of images
       "dd" +
       avgDomDepth() +
       "nd" +
-      document.getElementsByTagName("*")[PROPS._length] + // numdomelements
+      document.getElementsByTagName("*")[PROPS.length] + // numdomelements
       "vh" +
-      document.documentElement.clientHeight + // see http://www.quirksmode.org/mobile/viewports.html
+      documentElelement.clientHeight + // see http://www.quirksmode.org/mobile/viewports.html
       "vw" +
-      document.documentElement.clientWidth +
+      documentElelement.clientWidth +
       "dh" +
       docHeight(document) +
       "dw" +
@@ -1638,7 +1637,7 @@ LUX = (function () {
     const mainBeaconUrl =
       baseUrl +
       metricsQueryString +
-      (beaconUtValues[PROPS._length] > 0 ? "&UT=" + beaconUtValues.join(",") : "");
+      (beaconUtValues[PROPS.length] > 0 ? "&UT=" + beaconUtValues.join(",") : "");
     logger.logEvent(LogEvent.MainBeaconSent, [mainBeaconUrl]);
     _sendBeacon(mainBeaconUrl);
 
@@ -1648,7 +1647,7 @@ LUX = (function () {
     gbIxSent = sIx ? 1 : 0;
 
     // Send other beacons for JUST User Timing.
-    while (remainingUtValues[PROPS._length]) {
+    while (remainingUtValues[PROPS.length]) {
       [beaconUtValues, remainingUtValues] = fitUserTimingEntries(
         remainingUtValues,
         globalConfig,
@@ -1881,7 +1880,7 @@ LUX = (function () {
   // Refresh its expiration date and return its value.
   function refreshUniqueId(newValue: string): string {
     let uid = _getCookie(SESSION_COOKIE_NAME);
-    if (!uid || uid[PROPS._length] < 11) {
+    if (!uid || uid[PROPS.length] < 11) {
       uid = newValue;
     } else {
       // Prevent sessions lasting more than 24 hours.
@@ -1960,7 +1959,7 @@ LUX = (function () {
     try {
       // Seeing "Permission denied" errors, so do a simple try-catch.
       const aTuples = document.cookie.split(";");
-      for (let i = 0; i < aTuples[PROPS._length]; i++) {
+      for (let i = 0; i < aTuples[PROPS.length]; i++) {
         const aTuple = aTuples[i].split("=");
         if (name === aTuple[0].trim()) {
           // cookie name starts with " " if not first
@@ -2129,7 +2128,7 @@ LUX = (function () {
       const startMark = _getMark(START_MARK);
       const endMark = _getMark(END_MARK);
 
-      if (!endMark || (startMark && endMark[PROPS._startTime] < startMark[PROPS._startTime])) {
+      if (!endMark || (startMark && endMark[PROPS.startTime] < startMark[PROPS.startTime])) {
         _markLoadTime();
       }
     } else {
@@ -2166,7 +2165,7 @@ LUX = (function () {
   }
 
   // Process the command queue
-  if (LUX.ac && LUX.ac[PROPS._length]) {
+  if (LUX.ac && LUX.ac[PROPS.length]) {
     LUX.ac.forEach(_runCommand);
   }
 

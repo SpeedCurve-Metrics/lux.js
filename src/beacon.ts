@@ -59,8 +59,8 @@ export function fitUserTimingEntries(utValues: string[], config: ConfigObject, u
   // Trim UT entries until they fit within the maximum URL length, ensuring at least one UT entry
   // is included.
   while (
-    (url + "&UT=" + beaconUtValues.join(","))[PROPS._length] > config.maxBeaconUrlLength &&
-    beaconUtValues[PROPS._length] > 1
+    (url + "&UT=" + beaconUtValues.join(","))[PROPS.length] > config.maxBeaconUrlLength &&
+    beaconUtValues[PROPS.length] > 1
   ) {
     remainingUtValues.unshift(beaconUtValues.pop()!);
   }
@@ -158,7 +158,7 @@ export class Beacon {
   }
 
   onBeforeSend(cb: () => void) {
-    this.onBeforeSendCbs[PROPS._push](cb);
+    this.onBeforeSendCbs[PROPS.push](cb);
   }
 
   send() {
@@ -186,7 +186,7 @@ export class Beacon {
       }
     }
 
-    if (!Object.keys(metricData)[PROPS._length] && !this.config.allowEmptyPostBeacon) {
+    if (!Object.keys(metricData)[PROPS.length] && !this.config.allowEmptyPostBeacon) {
       // TODO: This is only required while the new beacon is supplementary. Once it's the primary
       // beacon, we should send it regardless of how much metric data it has.
       this.logger.logEvent(LogEvent.PostBeaconCancelled);

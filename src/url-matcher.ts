@@ -34,7 +34,7 @@ export function getMatchesFromPatternMap(
             return key;
           }
 
-          matches[PROPS._push](key);
+          matches[PROPS.push](key);
         }
       }
     }

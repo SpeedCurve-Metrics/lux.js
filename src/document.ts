@@ -1,3 +1,4 @@
+import * as PROPS from "./minification";
 import { getNavigationEntry, timing } from "./performance";
 
 export function isVisible(): boolean {
@@ -35,7 +36,7 @@ export function afterPrerender(cb: () => void): void {
 }
 
 export function wasPrerendered(): boolean {
-  return document.prerendering || getNavigationEntry().activationStart > 0;
+  return document.prerendering || getNavigationEntry()[PROPS.activationStart] > 0;
 }
 
 export function wasRedirected(): boolean {

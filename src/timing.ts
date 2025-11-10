@@ -25,7 +25,7 @@ export function getPageRestoreTime(): number | undefined {
 export function getZeroTime() {
   return max(
     getPageRestoreTime() || 0,
-    getNavigationEntry().activationStart,
+    getNavigationEntry()[PROPS.activationStart],
     getEntriesByName(START_MARK).pop()?.startTime || 0,
   );
 }
@@ -46,7 +46,7 @@ export function msSinceNavigationStart(): number {
     return floor(performance.now());
   }
 
-  return now() - timing.navigationStart;
+  return now() - timing[PROPS.navigationStart];
 }
 
 /**
@@ -58,7 +58,7 @@ export function msSincePageInit(): number {
   const startMark = getEntriesByName(START_MARK).pop();
 
   if (startMark) {
-    return floor(sinceNavigationStart - startMark[PROPS._startTime]);
+    return floor(sinceNavigationStart - startMark[PROPS.startTime]);
   }
 
   return sinceNavigationStart;

@@ -53,7 +53,7 @@ export type PolyfilledNavigationTiming = Partial<PerformanceNavigationTiming> & 
 export function getNavigationEntry(): PolyfilledNavigationTiming {
   const navEntries = getEntriesByType("navigation") as PerformanceNavigationTiming[];
 
-  if (navEntries[PROPS._length]) {
+  if (navEntries[PROPS.length]) {
     const nativeEntry = navEntries.pop()!.toJSON();
     const entry = {
       navigationStart: 0,
@@ -77,8 +77,8 @@ export function getNavigationEntry(): PolyfilledNavigationTiming {
 
   if (__ENABLE_POLYFILLS) {
     for (const key in timing) {
-      if (typeof timing[key as PerfTimingKey] === "number" && key !== "navigationStart") {
-        entry[key] = floor(timing[key as PerfTimingKey] - timing.navigationStart);
+      if (typeof timing[key as PerfTimingKey] === "number" && key !== PROPS.navigationStart) {
+        entry[key] = floor(timing[key as PerfTimingKey] - timing[PROPS.navigationStart]);
       }
     }
   }
@@ -95,7 +95,7 @@ export function getEntriesByType(type: string): PerformanceEntryList {
   if (typeof performance.getEntriesByType === "function") {
     const entries = performance.getEntriesByType(type);
 
-    if (entries && entries[PROPS._length]) {
+    if (entries && entries[PROPS.length]) {
       return entries;
     }
   }
@@ -112,7 +112,7 @@ export function getEntriesByName(type: string): PerformanceEntryList {
   if (typeof performance.getEntriesByName === "function") {
     const entries = performance.getEntriesByName(type);
 
-    if (entries && entries[PROPS._length]) {
+    if (entries && entries[PROPS.length]) {
       return entries;
     }
   }

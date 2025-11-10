@@ -13,7 +13,7 @@ export function subscribe(event: Event, callback: Callback): void {
     subscribers[event] = [];
   }
 
-  subscribers[event][PROPS._push](callback);
+  subscribers[event][PROPS.push](callback);
 
   // Ensure previous event data is available to new subscribers
   if (eventData[event] !== undefined) {

@@ -68,7 +68,7 @@ export default class Logger {
   events: LogEventRecord[] = [];
 
   logEvent(event: LogEvent, args: unknown[] = []) {
-    this.events[PROPS._push]([now(), event, args]);
+    this.events[PROPS.push]([now(), event, args]);
   }
 
   getEvents() {

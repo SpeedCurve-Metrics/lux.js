@@ -14,22 +14,22 @@ let maximumSessionValue = 0;
 export function processEntry(entry: LayoutShift): void {
   if (!entry.hadRecentInput) {
     const firstEntry = sessionEntries[0];
-    const latestEntry = sessionEntries[sessionEntries[PROPS._length] - 1];
+    const latestEntry = sessionEntries[sessionEntries[PROPS.length] - 1];
     const sources = entry.sources
       ? entry.sources
           .filter((source) => source.node)
           .map((source) => ({
             value: entry.value,
-            startTime: processTimeMetric(entry[PROPS._startTime]),
+            startTime: processTimeMetric(entry[PROPS.startTime]),
             elementSelector: getNodeSelector(source.node!),
             elementType: source.node!.nodeName,
           }))
       : [];
 
     if (
-      sessionEntries[PROPS._length] &&
-      (entry[PROPS._startTime] - latestEntry[PROPS._startTime] >= 1000 ||
-        entry[PROPS._startTime] - firstEntry[PROPS._startTime] >= 5000)
+      sessionEntries[PROPS.length] &&
+      (entry[PROPS.startTime] - latestEntry[PROPS.startTime] >= 1000 ||
+        entry[PROPS.startTime] - firstEntry[PROPS.startTime] >= 5000)
     ) {
       sessionValue = entry.value;
       sessionEntries = [entry];
@@ -37,7 +37,7 @@ export function processEntry(entry: LayoutShift): void {
       largestEntry = entry;
     } else {
       sessionValue += entry.value;
-      sessionEntries[PROPS._push](entry);
+      sessionEntries[PROPS.push](entry);
       sessionAttributions = sessionAttributions.concat(sources);
 
       if (!largestEntry || entry.value > largestEntry.value) {
@@ -63,14 +63,14 @@ export function getData(config: UserConfig): BeaconMetricData[BeaconMetricKey.CL
 
   return {
     value: maximumSessionValue,
-    startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0][PROPS._startTime]) : null,
+    startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0][PROPS.startTime]) : null,
     largestEntry: largestEntry
       ? {
           value: largestEntry.value,
-          startTime: processTimeMetric(largestEntry[PROPS._startTime]),
+          startTime: processTimeMetric(largestEntry[PROPS.startTime]),
         }
       : null,
-    sources: sessionAttributions[PROPS._length]
+    sources: sessionAttributions[PROPS.length]
       ? sessionAttributions.slice(0, config.maxAttributionEntries)
       : null,
   };

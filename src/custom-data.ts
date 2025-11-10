@@ -50,7 +50,7 @@ export function valuesToString(values: CustomDataDict): string {
     key = key.replace(/,/g, "").replace(/\|/g, "");
     value = value.replace(/,/g, "").replace(/\|/g, "");
 
-    strings[PROPS._push](key + "|" + value);
+    strings[PROPS.push](key + "|" + value);
   }
 
   return encodeURIComponent(strings.join(","));

@@ -49,7 +49,7 @@ export function reset(): void {
 }
 
 export function processEntry(entry: PerformanceEventTiming): void {
-  if (entry.interactionId || (entry[PROPS._entryType] === "first-input" && !entryExists(entry))) {
+  if (entry.interactionId || (entry[PROPS.entryType] === "first-input" && !entryExists(entry))) {
     const { duration, startTime, interactionId, name, processingStart, processingEnd, target } =
       entry;
 
@@ -62,22 +62,22 @@ export function processEntry(entry: PerformanceEventTiming): void {
     const selector = target ? getNodeSelector(target) : null;
 
     if (existingEntry) {
-      const longerDuration = duration > existingEntry[PROPS._duration];
+      const longerDuration = duration > existingEntry[PROPS.duration];
       const sameWithLongerProcessingTime =
-        duration === existingEntry[PROPS._duration] &&
-        processingTime > existingEntry[PROPS._processingTime];
+        duration === existingEntry[PROPS.duration] &&
+        processingTime > existingEntry[PROPS.processingTime];
 
       if (longerDuration || sameWithLongerProcessingTime) {
         // Only replace an existing interation if the duration is longer, or if the duration is the
         // same but the processing time is longer. The logic around this is that the interaction with
         // longer processing time is likely to be the event that actually had a handler.
-        existingEntry[PROPS._duration] = duration;
-        existingEntry[PROPS._name] = name;
-        existingEntry[PROPS._processingEnd] = processingEnd;
-        existingEntry[PROPS._processingStart] = processingStart;
-        existingEntry[PROPS._processingTime] = processingTime;
-        existingEntry[PROPS._selector] = selector;
-        existingEntry[PROPS._startTime] = startTime;
+        existingEntry[PROPS.duration] = duration;
+        existingEntry[PROPS.name] = name;
+        existingEntry[PROPS.processingEnd] = processingEnd;
+        existingEntry[PROPS.processingStart] = processingStart;
+        existingEntry[PROPS.processingTime] = processingTime;
+        existingEntry[PROPS.selector] = selector;
+        existingEntry[PROPS.startTime] = startTime;
         existingEntry.target = target;
       }
     } else {
@@ -93,11 +93,11 @@ export function processEntry(entry: PerformanceEventTiming): void {
         startTime,
         target,
       };
-      slowestEntries[PROPS._push](slowestEntriesMap[interactionId!]);
+      slowestEntries[PROPS.push](slowestEntriesMap[interactionId!]);
     }
 
     // Only store the longest <MAX_INTERACTIONS> interactions
-    slowestEntries.sort((a, b) => b[PROPS._duration] - a[PROPS._duration]);
+    slowestEntries.sort((a, b) => b[PROPS.duration] - a[PROPS.duration]);
     slowestEntries.splice(MAX_INTERACTIONS).forEach((entry) => {
       delete slowestEntriesMap[entry.interactionId!];
     });
@@ -107,7 +107,7 @@ export function processEntry(entry: PerformanceEventTiming): void {
 function entryExists(e1: PerformanceEntry): boolean {
   return slowestEntries.some(
     (e2) =>
-      e1[PROPS._startTime] === e2[PROPS._startTime] && e1[PROPS._duration] === e2[PROPS._duration],
+      e1[PROPS.startTime] === e2[PROPS.startTime] && e1[PROPS.duration] === e2[PROPS.duration],
   );
 }
 
@@ -116,7 +116,7 @@ function entryExists(e1: PerformanceEntry): boolean {
  * current page.
  */
 export function getHighPercentileInteraction(): Interaction | undefined {
-  const index = Math.min(slowestEntries[PROPS._length] - 1, Math.floor(getInteractionCount() / 50));
+  const index = Math.min(slowestEntries[PROPS.length] - 1, Math.floor(getInteractionCount() / 50));
 
   return slowestEntries[index];
 }
@@ -135,17 +135,15 @@ export function getData(config: UserConfig): BeaconMetricData[BeaconMetricKey.IN
     // Only include scripts that started during the interaction
     .filter(
       (script) =>
-        script[PROPS._startTime] + script[PROPS._duration] >= startTime &&
-        script[PROPS._startTime] <= startTime + duration,
+        script[PROPS.startTime] + script[PROPS.duration] >= startTime &&
+        script[PROPS.startTime] <= startTime + duration,
     )
     .map((_script) => {
       const script = JSON.parse(JSON.stringify(_script));
 
       // Clamp the script duration to the time of the interaction
-      script[PROPS._duration] =
-        script[PROPS._startTime] +
-        script[PROPS._duration] -
-        max(startTime, script[PROPS._startTime]);
+      script[PROPS.duration] =
+        script[PROPS.startTime] + script[PROPS.duration] - max(startTime, script[PROPS.startTime]);
       script.inpPhase = getINPPhase(script, interaction);
 
       return script as PerformanceScriptTiming;
@@ -154,21 +152,21 @@ export function getData(config: UserConfig): BeaconMetricData[BeaconMetricKey.IN
   const loafScripts = summarizeLoAFScripts(inpScripts, config);
 
   return {
-    value: interaction[PROPS._duration],
+    value: interaction[PROPS.duration],
     startTime: processTimeMetric(startTime),
-    duration: interaction[PROPS._duration],
+    duration: interaction[PROPS.duration],
     subParts: {
       inputDelay: clamp(floor(processingStart - startTime)),
       processingStart: processTimeMetric(processingStart),
-      processingEnd: processTimeMetric(interaction[PROPS._processingEnd]),
-      processingTime: clamp(floor(interaction[PROPS._processingTime])),
+      processingEnd: processTimeMetric(interaction[PROPS.processingEnd]),
+      processingTime: clamp(floor(interaction[PROPS.processingTime])),
       presentationDelay: clamp(
-        floor(startTime + interaction[PROPS._duration] - interaction[PROPS._processingEnd]),
+        floor(startTime + interaction[PROPS.duration] - interaction[PROPS.processingEnd]),
       ),
     },
     attribution: {
-      eventType: interaction[PROPS._name],
-      elementSelector: interaction[PROPS._selector] || null,
+      eventType: interaction[PROPS.name],
+      elementSelector: interaction[PROPS.selector] || null,
       elementType: interaction.target?.nodeName || null,
       loafScripts,
     },
@@ -179,9 +177,9 @@ export function getINPPhase(script: PerformanceScriptTiming, interaction: Intera
   const { processingStart, processingTime, startTime } = interaction;
   const inputDelay = processingStart - startTime;
 
-  if (script[PROPS._startTime] < startTime + inputDelay) {
+  if (script[PROPS.startTime] < startTime + inputDelay) {
     return INPPhase.InputDelay;
-  } else if (script[PROPS._startTime] >= startTime + inputDelay + processingTime) {
+  } else if (script[PROPS.startTime] >= startTime + inputDelay + processingTime) {
     return INPPhase.PresentationDelay;
   }
 
