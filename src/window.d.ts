@@ -1,9 +1,9 @@
 import type { LuxGlobal } from "./global";
 
 declare global {
-  declare const __DEBUG: boolean;
-  declare const __ENABLE_POLYFILLS: boolean;
-  declare const __SNIPPET_VERSION: string;
+  const __DEBUG: boolean;
+  const __ENABLE_POLYFILLS: boolean;
+  const __SNIPPET_VERSION: string;
 
   // LUX globals
   interface Window {
@@ -149,7 +149,7 @@ declare global {
     attribution: TaskAttributionTiming[];
   }
 
-  declare const PerformanceLongTaskTiming: {
+  const PerformanceLongTaskTiming: {
     prototype: PerformanceLongTaskTiming;
     new (): PerformanceLongTaskTiming;
   };
@@ -182,7 +182,7 @@ declare global {
     url: string;
   }
 
-  declare const PerformanceElementTiming: {
+  const PerformanceElementTiming: {
     prototype: PerformanceElementTiming;
     new (): PerformanceElementTiming;
   };
@@ -201,7 +201,7 @@ declare global {
     sources: LayoutShiftAttribution[];
   }
 
-  declare const LayoutShift: {
+  const LayoutShift: {
     prototype: LayoutShift;
     new (): LayoutShift;
   };
