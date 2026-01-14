@@ -2157,9 +2157,9 @@ LUX = (function () {
    * Run a command from the command queue
    */
   function _runCommand([fn, ...args]: Command) {
-    if (typeof globalLux[fn] === "function") {
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      (globalLux[fn] as Function).apply(globalLux, args);
+    const method = globalLux[fn];
+    if (typeof method === "function") {
+      (method as (...args: unknown[]) => void).apply(globalLux, args);
     }
   }
 
