@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BeaconPayload } from "../../../src/beacon";
+import type { BeaconPayload } from "../../../src/beacon";
 import RequestInterceptor from "../../request-interceptor";
 
 test.describe("POST beacon navigation timing", () => {

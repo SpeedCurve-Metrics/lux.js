@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BeaconPayload } from "../../../src/beacon";
+import type { BeaconPayload } from "../../../src/beacon";
 import { SESSION_COOKIE_NAME as uid } from "../../../src/cookie";
 import RequestInterceptor from "../../request-interceptor";
 

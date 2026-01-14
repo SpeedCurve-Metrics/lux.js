@@ -1,6 +1,6 @@
-import { LuxGlobal } from "./global";
-import { ServerTimingConfig } from "./server-timing";
-import { UrlPatternMapping } from "./url-matcher";
+import type { LuxGlobal } from "./global";
+import type { ServerTimingConfig } from "./server-timing";
+import type { UrlPatternMapping } from "./url-matcher";
 
 /**
  * ConfigObject holds the parsed and normalised lux.js configuration. It is initialised once based

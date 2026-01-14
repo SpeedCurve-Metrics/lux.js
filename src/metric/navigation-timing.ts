@@ -1,7 +1,7 @@
 import { START_MARK } from "../constants";
 import { getEntriesByName, getNavigationEntry } from "../performance";
 import { processTimeMetric } from "../timing";
-import { KeysByType, Writable } from "../types";
+import type { KeysByType, Writable } from "../types";
 
 type NavTimingEntry = Writable<PerformanceNavigationTiming> & {
   activationStart: number;

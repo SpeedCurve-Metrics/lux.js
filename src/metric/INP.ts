@@ -1,5 +1,5 @@
-import { BeaconMetricData, BeaconMetricKey } from "../beacon";
-import { UserConfig } from "../config";
+import { type BeaconMetricData, BeaconMetricKey } from "../beacon";
+import type { UserConfig } from "../config";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
 import * as PROPS from "../minification";

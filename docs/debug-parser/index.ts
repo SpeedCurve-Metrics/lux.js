@@ -1,4 +1,4 @@
-import { LogEvent, LogEventRecord } from "../../src/logger";
+import { LogEvent, type LogEventRecord } from "../../src/logger";
 import { getNavTiming } from "../../tests/helpers/lux";
 import { getMessageForEvent, isBeaconEvent } from "./events";
 import { getFilters } from "./filters";

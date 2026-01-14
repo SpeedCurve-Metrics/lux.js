@@ -1,5 +1,5 @@
-import { Page, expect } from "@playwright/test";
-import { BeaconPayload } from "../../src/beacon";
+import { type Page, expect } from "@playwright/test";
+import type { BeaconPayload } from "../../src/beacon";
 import { SNIPPET_VERSION, VERSION } from "../../src/version";
 import { getNavTiming, getPageStat, getSearchParam } from "./lux";
 

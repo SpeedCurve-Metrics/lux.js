@@ -1,5 +1,5 @@
-import { CLSAttribution, BeaconMetricData, BeaconMetricKey } from "../beacon";
-import { UserConfig } from "../config";
+import { type CLSAttribution, type BeaconMetricData, BeaconMetricKey } from "../beacon";
+import type { UserConfig } from "../config";
 import { getNodeSelector } from "../dom";
 import { max } from "../math";
 import * as PROPS from "../minification";

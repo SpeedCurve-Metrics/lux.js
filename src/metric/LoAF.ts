@@ -1,4 +1,4 @@
-import { UserConfig } from "../config";
+import type { UserConfig } from "../config";
 import { clamp, floor, max } from "../math";
 import * as PROPS from "../minification";
 import { INPPhase } from "./INP";

@@ -1,7 +1,7 @@
 import {
   Beacon,
   BeaconMetricKey,
-  CollectorFunction,
+  type CollectorFunction,
   fitUserTimingEntries,
   shouldReportValue,
 } from "./beacon";
@@ -16,7 +16,7 @@ import * as Events from "./events";
 import Flags, { addFlag } from "./flags";
 import type { Command, LuxGlobal } from "./global";
 import { getTrackingParams } from "./integrations/tracking";
-import { InteractionInfo } from "./interaction";
+import type { InteractionInfo } from "./interaction";
 import { addListener, removeListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
 import { clamp, floor, max, round, sortNumeric } from "./math";

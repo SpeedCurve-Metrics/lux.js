@@ -1,4 +1,9 @@
-import { BeaconMetricData, BeaconMetricKey, MetricAttribution, shouldReportValue } from "../beacon";
+import {
+  type BeaconMetricData,
+  BeaconMetricKey,
+  type MetricAttribution,
+  shouldReportValue,
+} from "../beacon";
 import { getNodeSelector } from "../dom";
 import { clamp, floor, max } from "../math";
 import * as PROPS from "../minification";
