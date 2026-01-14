@@ -7,8 +7,7 @@
   "main": "dist/lux.js",
   "type": "module",
   "scripts": {
-    "build": "npm run rollup",
-    "rollup": "rollup --config rollup.config.mjs",
+    "build": "rollup -c",
     "type-check": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts' 'docs/debug-parser/**/*.ts'",
     "lint:fix": "npm run lint -- --fix",
@@ -16,7 +15,7 @@
     "test:all": "jest && playwright test",
     "test:unit": "jest tests/unit/",
     "test:e2e": "playwright test tests/integration/",
-    "watch": "npm run rollup -- --watch",
+    "watch": "npm run build -- --watch",
     "prepublishOnly": "npm run build"
   },
   "files": [
