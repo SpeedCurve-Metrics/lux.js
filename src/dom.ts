@@ -78,7 +78,7 @@ function _getNodeSelector(node: Node, selector = ""): string {
 
       return currentSelector;
     }
-  } catch (error) {
+  } catch {
     // Do nothing.
   }
 

@@ -218,7 +218,7 @@ export class Beacon {
         this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
         Events.emit("beacon", payload);
       }
-    } catch (e) {
+    } catch {
       // Intentionally empty; handled below
     }
 

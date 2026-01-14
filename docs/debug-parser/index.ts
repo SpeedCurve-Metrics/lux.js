@@ -95,7 +95,7 @@ function renderOutput(output: Element) {
         let config = args[1];
         try {
           config = JSON.parse(config);
-        } catch (e) {
+        } catch {
           // Ignore
         }
 
@@ -118,7 +118,7 @@ function renderOutput(output: Element) {
         let payload = args[1];
         try {
           payload = JSON.parse(payload);
-        } catch (e) {
+        } catch {
           // Ignore
         }
 
