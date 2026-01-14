@@ -126,7 +126,7 @@ test.describe("LUX interaction", () => {
     expect(ixBeacon.searchParams.get("NT")).toBeNull();
   });
 
-  test("FID and INP are gathered for clicks", async ({ page, browserName }) => {
+  test("FID and INP are gathered for clicks", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html?blockFor=100");
 
@@ -147,31 +147,26 @@ test.describe("LUX interaction", () => {
     expect(mainBeacon.searchParams.get("INP")).toBeNull();
     expect(parseInt(getSearchParam(ixBeacon, "FID"))).toBeGreaterThanOrEqual(0);
 
-    if (browserName === "webkit") {
-      // INP not supported in webkit
-      expect(ixBeacon.searchParams.get("INP")).toBeNull();
-    } else {
-      const INP = parseInt(getSearchParam(ixBeacon, "INP"));
-      const INPTimestamp = parseInt(getSearchParam(ixBeacon, "INPt"));
+    const INP = parseInt(getSearchParam(ixBeacon, "INP"));
+    const INPTimestamp = parseInt(getSearchParam(ixBeacon, "INPt"));
 
-      expect(INP).toBeGreaterThanOrEqual(0);
-      expect(INPTimestamp).toBeGreaterThanOrEqual(timeBeforeClick);
+    expect(INP).toBeGreaterThanOrEqual(0);
+    expect(INPTimestamp).toBeGreaterThanOrEqual(timeBeforeClick);
 
-      const INPInputDelay = parseInt(getSearchParam(ixBeacon, "INPi"));
-      const INPProcessingTime = parseInt(getSearchParam(ixBeacon, "INPp"));
-      const INPPresentationDelay = parseInt(getSearchParam(ixBeacon, "INPd"));
-      const allSubParts = INPInputDelay + INPProcessingTime + INPPresentationDelay;
+    const INPInputDelay = parseInt(getSearchParam(ixBeacon, "INPi"));
+    const INPProcessingTime = parseInt(getSearchParam(ixBeacon, "INPp"));
+    const INPPresentationDelay = parseInt(getSearchParam(ixBeacon, "INPd"));
+    const allSubParts = INPInputDelay + INPProcessingTime + INPPresentationDelay;
 
-      // The subparts are floored, so they can add up to 3ms less than the INP duration
-      expect(allSubParts).toBeGreaterThanOrEqual(INP - 3);
-      expect(allSubParts).toBeLessThanOrEqual(INP);
+    // The subparts are floored, so they can add up to 3ms less than the INP duration
+    expect(allSubParts).toBeGreaterThanOrEqual(INP - 3);
+    expect(allSubParts).toBeLessThanOrEqual(INP);
 
-      const INPSelector = getSearchParam(ixBeacon, "INPs");
-      expect(INPSelector).toEqual("#button-with-js");
-    }
+    const INPSelector = getSearchParam(ixBeacon, "INPs");
+    expect(INPSelector).toEqual("#button-with-js");
   });
 
-  test("FID and INP are gathered for keypress", async ({ page, browserName }) => {
+  test("FID and INP are gathered for keypress", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html?blockFor=50", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() => page.locator("#button-with-js").press("Enter"));
@@ -182,16 +177,10 @@ test.describe("LUX interaction", () => {
     expect(mainBeacon.searchParams.get("FID")).toBeNull();
     expect(mainBeacon.searchParams.get("INP")).toBeNull();
     expect(parseInt(getSearchParam(ixBeacon, "FID"))).toBeGreaterThanOrEqual(0);
-
-    if (browserName === "webkit") {
-      // INP not supported in webkit
-      expect(ixBeacon.searchParams.get("INP")).toBeNull();
-    } else {
-      expect(parseInt(getSearchParam(ixBeacon, "INP"))).toBeGreaterThanOrEqual(0);
-    }
+    expect(parseInt(getSearchParam(ixBeacon, "INP"))).toBeGreaterThanOrEqual(0);
   });
 
-  test("gather IX metrics in a SPA", async ({ page, browserName }) => {
+  test("gather IX metrics in a SPA", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/interaction.html?blockFor=20&injectScript=LUX.auto=false;");
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
@@ -218,13 +207,7 @@ test.describe("LUX interaction", () => {
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThanOrEqual(timeAfterClick - timeBeforeInit);
     expect(parseInt(getSearchParam(secondPageBeacon, "FID"))).toBeGreaterThanOrEqual(0);
-
-    if (browserName === "webkit") {
-      // INP not supported in webkit
-      expect(secondPageBeacon.searchParams.get("INP")).toBeNull();
-    } else {
-      expect(parseInt(getSearchParam(secondPageBeacon, "INP"))).toBeGreaterThanOrEqual(0);
-    }
+    expect(parseInt(getSearchParam(secondPageBeacon, "INP"))).toBeGreaterThanOrEqual(0);
 
     // The third beacon should have no IX metrics
     expect(thirdPageBeacon.searchParams.get("FID")).toBeNull();
