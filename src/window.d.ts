@@ -154,21 +154,6 @@ declare global {
     new (): PerformanceLongTaskTiming;
   };
 
-  // Largest Contentful Paint: https://wicg.github.io/largest-contentful-paint/#sec-largest-contentful-paint-interface
-  interface LargestContentfulPaint extends PerformanceEntry {
-    renderTime: DOMHighResTimeStamp;
-    loadTime: DOMHighResTimeStamp;
-    size: number;
-    id: string;
-    url: string;
-    element?: Element;
-  }
-
-  declare const LargestContentfulPaint: {
-    prototype: LargestContentfulPaint;
-    new (): LargestContentfulPaint;
-  };
-
   // Element Timing API: https://wicg.github.io/element-timing/#sec-performance-element-timing
   interface PerformanceElementTiming extends PerformanceEntry {
     element: Element;
