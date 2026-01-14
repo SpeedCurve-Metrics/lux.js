@@ -5,6 +5,7 @@
     "snippetVersion": "2.0.0"
   },
   "main": "dist/lux.js",
+  "type": "module",
   "scripts": {
     "build": "npm run rollup",
     "rollup": "rollup --config rollup.config.mjs",
