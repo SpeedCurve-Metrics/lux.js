@@ -1,9 +1,9 @@
 import type { LuxGlobal } from "./global";
 
 declare global {
-  declare const __DEBUG: boolean;
-  declare const __ENABLE_POLYFILLS: boolean;
-  declare const __SNIPPET_VERSION: string;
+  const __DEBUG: boolean;
+  const __ENABLE_POLYFILLS: boolean;
+  const __SNIPPET_VERSION: string;
 
   // LUX globals
   interface Window {
@@ -149,24 +149,9 @@ declare global {
     attribution: TaskAttributionTiming[];
   }
 
-  declare const PerformanceLongTaskTiming: {
+  const PerformanceLongTaskTiming: {
     prototype: PerformanceLongTaskTiming;
     new (): PerformanceLongTaskTiming;
-  };
-
-  // Largest Contentful Paint: https://wicg.github.io/largest-contentful-paint/#sec-largest-contentful-paint-interface
-  interface LargestContentfulPaint extends PerformanceEntry {
-    renderTime: DOMHighResTimeStamp;
-    loadTime: DOMHighResTimeStamp;
-    size: number;
-    id: string;
-    url: string;
-    element?: Element;
-  }
-
-  declare const LargestContentfulPaint: {
-    prototype: LargestContentfulPaint;
-    new (): LargestContentfulPaint;
   };
 
   // Element Timing API: https://wicg.github.io/element-timing/#sec-performance-element-timing
@@ -182,7 +167,7 @@ declare global {
     url: string;
   }
 
-  declare const PerformanceElementTiming: {
+  const PerformanceElementTiming: {
     prototype: PerformanceElementTiming;
     new (): PerformanceElementTiming;
   };
@@ -201,7 +186,7 @@ declare global {
     sources: LayoutShiftAttribution[];
   }
 
-  declare const LayoutShift: {
+  const LayoutShift: {
     prototype: LayoutShift;
     new (): LayoutShift;
   };

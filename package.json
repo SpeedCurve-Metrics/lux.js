@@ -5,17 +5,17 @@
     "snippetVersion": "2.0.0"
   },
   "main": "dist/lux.js",
+  "type": "module",
   "scripts": {
-    "build": "npm run rollup",
-    "rollup": "rollup --config rollup.config.mjs",
+    "build": "rollup -c",
     "type-check": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts' 'docs/debug-parser/**/*.ts'",
     "lint:fix": "npm run lint -- --fix",
     "test": "npm run type-check && npm run lint && npm run test:all",
-    "test:all": "jest && playwright test",
-    "test:unit": "jest tests/unit/",
-    "test:e2e": "playwright test tests/integration/",
-    "watch": "npm run rollup -- --watch",
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "test:unit": "jest",
+    "test:e2e": "playwright test",
+    "watch": "npm run build -- --watch",
     "prepublishOnly": "npm run build"
   },
   "files": [
@@ -26,13 +26,13 @@
     "@babel/core": "^7.21.5",
     "@babel/preset-env": "^7.21.5",
     "@babel/preset-typescript": "^7.21.5",
-    "@playwright/test": "^1.32.3",
+    "@playwright/test": "1.57.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-replace": "^6.0.2",
     "@rollup/plugin-terser": "^0.4.0",
     "@rollup/plugin-typescript": "^12.1.4",
-    "@typescript-eslint/eslint-plugin": "^6.2.0",
-    "@typescript-eslint/parser": "^6.2.0",
+    "@typescript-eslint/eslint-plugin": "8.53.0",
+    "@typescript-eslint/parser": "8.53.0",
     "babel-jest": "^29.5.0",
     "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.3.0",
@@ -45,7 +45,7 @@
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.6",
     "tslib": "^2.3.1",
-    "typescript": "^5.0.4"
+    "typescript": "5.9.3"
   },
   "prettier": {
     "printWidth": 100

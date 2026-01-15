@@ -1,4 +1,4 @@
-import { LogEvent, LogEventRecord } from "../../src/logger";
+import { LogEvent, type LogEventRecord } from "../../src/logger";
 import { getNavTiming } from "../../tests/helpers/lux";
 import { getMessageForEvent, isBeaconEvent } from "./events";
 import { getFilters } from "./filters";
@@ -95,7 +95,7 @@ function renderOutput(output: Element) {
         let config = args[1];
         try {
           config = JSON.parse(config);
-        } catch (e) {
+        } catch {
           // Ignore
         }
 
@@ -118,7 +118,7 @@ function renderOutput(output: Element) {
         let payload = args[1];
         try {
           payload = JSON.parse(payload);
-        } catch (e) {
+        } catch {
           // Ignore
         }
 

@@ -1,4 +1,6 @@
-import { version as pkgVersion, config as pkgConfig } from "../package.json";
+import pkg from "../package.json" with { type: "json" };
+
+const { version: pkgVersion, config: pkgConfig } = pkg;
 import { padStart } from "./string";
 
 export const VERSION = pkgVersion;

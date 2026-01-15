@@ -1,4 +1,4 @@
-import { Request } from "@playwright/test";
+import type { Request } from "@playwright/test";
 
 export default class RequestMatcher {
   searchString: string;

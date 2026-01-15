@@ -1,11 +1,11 @@
-import { ConfigObject, UserConfig } from "./config";
+import type { ConfigObject, UserConfig } from "./config";
 import { wasPrerendered } from "./document";
 import * as Events from "./events";
 import Flags, { addFlag } from "./flags";
 import { addListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
-import { LoAFScriptSummary, LoAFSummary } from "./metric/LoAF";
-import { NavigationTimingData } from "./metric/navigation-timing";
+import type { LoAFScriptSummary, LoAFSummary } from "./metric/LoAF";
+import type { NavigationTimingData } from "./metric/navigation-timing";
 import * as PROPS from "./minification";
 import now from "./now";
 import { getPageRestoreTime, getZeroTime, msSincePageInit } from "./timing";
@@ -218,7 +218,7 @@ export class Beacon {
         this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
         Events.emit("beacon", payload);
       }
-    } catch (e) {
+    } catch {
       // Intentionally empty; handled below
     }
 

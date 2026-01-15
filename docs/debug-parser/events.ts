@@ -1,4 +1,4 @@
-import { LogEvent, LogEventRecord } from "../../src/logger";
+import { LogEvent, type LogEventRecord } from "../../src/logger";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function argsAsString(args: any[]): string {

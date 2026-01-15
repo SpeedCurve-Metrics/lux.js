@@ -1,6 +1,6 @@
 import { getNodeSelector } from "../../src/dom";
 import "../../src/lux";
-import { RageClickEvent, reset } from "../../src/metric/rage-click";
+import { type RageClickEvent, reset } from "../../src/metric/rage-click";
 
 /**
  * IMPORTANT: If you update the rage click tester, please rebuild it by TEMPORARILY uncommenting

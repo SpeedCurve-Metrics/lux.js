@@ -1,21 +1,21 @@
-const { randomUUID } = require("crypto");
-const path = require("path");
-const sqlite = require("sqlite");
-const sqlite3 = require("sqlite3");
+import { randomUUID } from "crypto";
+import path from "path";
+import { fileURLToPath } from "url";
+import { open } from "sqlite";
+import sqlite3 from "sqlite3";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TABLE_NAME = "beacons";
 
-module.exports = class BeaconStore {
+export default class BeaconStore {
   connection;
   id = "";
 
   static async open() {
-    return sqlite
-      .open({
-        filename: path.join(__dirname, "..", "..", "beacon-store.db"),
-        driver: sqlite3.Database,
-      })
-      .then((connection) => new BeaconStore(connection));
+    return open({
+      filename: path.join(__dirname, "..", "..", "beacon-store.db"),
+      driver: sqlite3.Database,
+    }).then((connection) => new BeaconStore(connection));
   }
 
   constructor(connection) {
@@ -31,7 +31,7 @@ module.exports = class BeaconStore {
       useragent,
       url,
       pagelabel,
-      pathname
+      pathname,
     );
   }
 
@@ -42,7 +42,7 @@ module.exports = class BeaconStore {
   async findAll() {
     return this.connection.all(
       `SELECT * FROM ${TABLE_NAME} WHERE prefix = ? ORDER BY timestamp`,
-      this.id
+      this.id,
     );
   }
 
@@ -50,7 +50,7 @@ module.exports = class BeaconStore {
     return this.connection.all(
       `SELECT * FROM ${TABLE_NAME} WHERE prefix = ? AND url LIKE ? ORDER BY timestamp`,
       this.id,
-      url
+      url,
     );
   }
 
@@ -58,7 +58,7 @@ module.exports = class BeaconStore {
     return this.connection.all(
       `SELECT * FROM ${TABLE_NAME} WHERE prefix = ? AND pathname LIKE ? ORDER BY timestamp`,
       this.id,
-      pathname
+      pathname,
     );
   }
 
@@ -81,4 +81,4 @@ module.exports = class BeaconStore {
       pathname TEXT
     )`);
   }
-};
+}

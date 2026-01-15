@@ -3,7 +3,7 @@ import type { LuxGlobal } from "../src/global";
 export {};
 
 declare global {
-  declare const LUX: LuxGlobal;
+  const LUX: LuxGlobal;
 
   namespace PlaywrightTest {
     interface Matchers<R> {

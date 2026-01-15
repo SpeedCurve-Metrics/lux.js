@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BeaconPayload } from "../../../src/beacon";
+import type { BeaconPayload } from "../../../src/beacon";
 import RequestInterceptor from "../../request-interceptor";
 
 test.describe("POST beacon navigation timing", () => {
@@ -11,11 +11,12 @@ test.describe("POST beacon navigation timing", () => {
     const nt = b.nt!;
 
     expect(nt.activationStart).toEqual(0);
-    expect(nt.connectEnd).toBeGreaterThan(0);
-    expect(nt.connectStart).toBeGreaterThan(0);
+    // Connection timing values can be 0 when the browser reuses an existing connection
+    expect(nt.connectEnd).toBeGreaterThanOrEqual(0);
+    expect(nt.connectStart).toBeGreaterThanOrEqual(0);
     expect(nt.decodedBodySize).toBeGreaterThan(0);
-    expect(nt.domainLookupEnd).toBeGreaterThan(0);
-    expect(nt.domainLookupStart).toBeGreaterThan(0);
+    expect(nt.domainLookupEnd).toBeGreaterThanOrEqual(0);
+    expect(nt.domainLookupStart).toBeGreaterThanOrEqual(0);
     expect(nt.domComplete).toBeGreaterThan(0);
     expect(nt.domContentLoadedEventEnd).toBeGreaterThan(0);
     expect(nt.domContentLoadedEventStart).toBeGreaterThan(0);

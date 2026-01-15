@@ -1,7 +1,7 @@
 import {
   Beacon,
   BeaconMetricKey,
-  CollectorFunction,
+  type CollectorFunction,
   fitUserTimingEntries,
   shouldReportValue,
 } from "./beacon";
@@ -16,7 +16,7 @@ import * as Events from "./events";
 import Flags, { addFlag } from "./flags";
 import type { Command, LuxGlobal } from "./global";
 import { getTrackingParams } from "./integrations/tracking";
-import { InteractionInfo } from "./interaction";
+import type { InteractionInfo } from "./interaction";
 import { addListener, removeListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
 import { clamp, floor, max, round, sortNumeric } from "./math";
@@ -327,7 +327,7 @@ LUX = (function () {
     try {
       // Seeing "Permission denied" errors, so do a simple try-catch.
       bCancelable = evt.cancelable;
-    } catch (e) {
+    } catch {
       // bail - no need to return anything
       logger.logEvent(LogEvent.InputEventPermissionError);
       return;
@@ -1015,7 +1015,7 @@ LUX = (function () {
       const e = aElems[i];
       try {
         size += e.innerHTML[PROPS.length];
-      } catch (e) {
+      } catch {
         // It seems like IE throws an error when accessing the innerHTML property
         logger.logEvent(LogEvent.InnerHtmlAccessError);
         return -1;
@@ -1398,7 +1398,7 @@ LUX = (function () {
         curleft += el.offsetLeft;
         curtop += el.offsetTop;
         el = el.offsetParent as HTMLElement | null;
-      } catch (e) {
+      } catch {
         // If we get an exception, just return the current values.
         return [curleft, curtop];
       }
@@ -1791,7 +1791,7 @@ LUX = (function () {
         if (e && e.target instanceof Element) {
           target = e.target;
         }
-      } catch (e) {
+      } catch {
         logger.logEvent(LogEvent.EventTargetAccessError);
       }
 
@@ -1965,7 +1965,7 @@ LUX = (function () {
           return unescape(aTuple[1]);
         }
       }
-    } catch (e) {
+    } catch {
       logger.logEvent(LogEvent.CookieReadError);
     }
 
@@ -1981,7 +1981,7 @@ LUX = (function () {
         (seconds ? "; max-age=" + seconds : "") +
         (globalConfig.cookieDomain ? "; domain=" + globalConfig.cookieDomain : "") +
         "; path=/; SameSite=Lax";
-    } catch (e) {
+    } catch {
       logger.logEvent(LogEvent.CookieSetError);
     }
   }
@@ -2157,9 +2157,9 @@ LUX = (function () {
    * Run a command from the command queue
    */
   function _runCommand([fn, ...args]: Command) {
-    if (typeof globalLux[fn] === "function") {
-      // eslint-disable-next-line @typescript-eslint/ban-types
-      (globalLux[fn] as Function).apply(globalLux, args);
+    const method = globalLux[fn];
+    if (typeof method === "function") {
+      (method as (...args: unknown[]) => void).apply(globalLux, args);
     }
   }
 

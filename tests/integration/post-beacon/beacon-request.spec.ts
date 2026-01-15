@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BeaconPayload } from "../../../src/beacon";
+import type { BeaconPayload } from "../../../src/beacon";
 import { getElapsedMs } from "../../helpers/lux";
 import * as Shared from "../../helpers/shared-tests";
 import RequestInterceptor from "../../request-interceptor";

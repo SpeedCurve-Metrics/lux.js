@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BeaconPayload } from "../../src/beacon";
+import type { BeaconPayload } from "../../src/beacon";
 import Flags, { hasFlag } from "../../src/flags";
 import { entryTypeSupported } from "../helpers/browsers";
 import {
