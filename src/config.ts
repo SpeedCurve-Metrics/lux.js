@@ -9,6 +9,7 @@ import type { UrlPatternMapping } from "./url-matcher";
 export interface ConfigObject {
   allowEmptyPostBeacon: boolean;
   auto: boolean;
+  errorBeaconDelay: number;
   beaconUrl: string;
   beaconUrlFallback?: string;
   beaconUrlV2: string;
@@ -48,13 +49,14 @@ export function fromObject(obj: UserConfig): ConfigObject {
   return {
     allowEmptyPostBeacon: getProperty(obj, "allowEmptyPostBeacon", false),
     auto: autoMode,
+    errorBeaconDelay: getProperty(obj, "errorBeaconDelay", 200),
     beaconUrl: getProperty(obj, "beaconUrl", luxOrigin + "/lux/"),
     beaconUrlFallback: getProperty(obj, "beaconUrlFallback"),
     beaconUrlV2: getProperty(obj, "beaconUrlV2", "https://beacon.speedcurve.com/store"),
     conversions: getProperty(obj, "conversions"),
     cookieDomain: getProperty(obj, "cookieDomain"),
     customerid: getProperty(obj, "customerid"),
-    errorBeaconUrl: getProperty(obj, "errorBeaconUrl", luxOrigin + "/error/"),
+    errorBeaconUrl: getProperty(obj, "errorBeaconUrl", "https://beacon.speedcurve.com/store/error"),
     interactionBeaconDelay: getProperty(obj, "interactionBeaconDelay", 200),
     jspagelabel: getProperty(obj, "jspagelabel"),
     label: getProperty(obj, "label"),

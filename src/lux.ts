@@ -12,6 +12,7 @@ import { SESSION_COOKIE_NAME } from "./cookie";
 import * as CustomData from "./custom-data";
 import { onVisible, isVisible, wasPrerendered, wasRedirected } from "./document";
 import { getNodeSelector } from "./dom";
+import { queueErrorBeacon } from "./error-beacon";
 import * as Events from "./events";
 import Flags, { addFlag } from "./flags";
 import type { Command, LuxGlobal } from "./global";
@@ -86,28 +87,22 @@ LUX = (function () {
 
       if (isLuxError || (nErrors <= globalConfig.maxErrors && _sample())) {
         // Sample & limit other errors.
-        // Send the error beacon.
-        new Image().src =
-          globalConfig.errorBeaconUrl +
-          "?v=" +
-          versionAsFloat() +
-          "&id=" +
-          getCustomerId() +
-          "&fn=" +
-          encodeURIComponent(e.filename) +
-          "&ln=" +
-          e.lineno +
-          "&cn=" +
-          e.colno +
-          "&msg=" +
-          encodeURIComponent(e.message) +
-          "&l=" +
-          encodeURIComponent(_getPageLabel()) +
-          (connectionType() ? "&ct=" + connectionType() : "") +
-          "&HN=" +
-          encodeURIComponent(document.location.hostname) +
-          "&PN=" +
-          encodeURIComponent(document.location.pathname);
+        queueErrorBeacon(globalConfig, e, msSincePageInit(), {
+          customerId: getCustomerId(),
+          pageId: gSyncId,
+          sessionId: gUid,
+          scriptVersion: VERSION,
+          hostname: document.location.hostname,
+          pathname: document.location.pathname,
+          pageLabel: _getPageLabel(),
+          connectionType: connectionType(),
+          deliveryType: deliveryType(),
+          navigationType: navigationType(),
+          deviceMemory:
+            typeof navigator.deviceMemory === "number" ? round(navigator.deviceMemory) : undefined,
+          flags: gFlags,
+          customData: CustomData.getAllCustomData(),
+        });
       }
     }
   }
@@ -1298,24 +1293,20 @@ LUX = (function () {
   }
 
   // Return the connection type based on Network Information API.
-  // Note this API is in flux.
-  function connectionType() {
+  function connectionType(): string | undefined {
     const c = navigator.connection;
-    let connType = "";
 
     if (c && c.effectiveType) {
-      connType = c.effectiveType;
+      const connType = c.effectiveType;
 
       if ("slow-2g" === connType) {
-        connType = "Slow 2G";
-      } else if ("2g" === connType || "3g" === connType || "4g" === connType || "5g" === connType) {
-        connType = connType.toUpperCase();
-      } else {
-        connType = connType.charAt(0).toUpperCase() + connType.slice(1);
+        return "Slow 2G";
       }
+
+      return connType.toUpperCase();
     }
 
-    return connType;
+    return undefined;
   }
 
   // Return an array of image elements that are in the top viewport.
@@ -1571,6 +1562,7 @@ LUX = (function () {
     const ds = docSize();
     const ct = connectionType();
     const dt = deliveryType();
+    const navType = navigationType();
 
     // Note some page stat values (the `PS` query string) are non-numeric. To make extracting these
     // values easier, we append an underscore "_" to the value. Values this is used for include
@@ -1614,7 +1606,7 @@ LUX = (function () {
       "er" +
       nErrors +
       "nt" +
-      navigationType() +
+      (typeof navType !== "undefined" ? navType : "") +
       (navigator.deviceMemory ? "dm" + round(navigator.deviceMemory) : "") + // device memory (GB)
       (sIx ? "&IX=" + sIx : "") +
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +

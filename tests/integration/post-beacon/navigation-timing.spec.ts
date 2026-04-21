@@ -28,7 +28,9 @@ test.describe("POST beacon navigation timing", () => {
     expect(nt.redirectCount).toEqual(0);
     expect(nt.redirectEnd).toEqual(0);
     expect(nt.redirectStart).toEqual(0);
-    expect(nt.requestStart).toBeGreaterThan(0);
+    // requestStart can floor to 0 on fast localhost connections where the
+    // sub-millisecond time between navigationStart and requestStart is rounded down
+    expect(nt.requestStart).toBeGreaterThanOrEqual(0);
     expect(nt.responseEnd).toBeGreaterThan(0);
     expect(nt.responseStart).toBeGreaterThan(0);
     expect(nt.secureConnectionStart).toEqual(0);

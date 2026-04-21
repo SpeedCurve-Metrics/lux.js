@@ -83,14 +83,14 @@ BeaconStore.open().then(async (store) => {
       sendResponse(200, headers("application/json"), contents);
     } else if (pathname === "/js/lux.js") {
       const contents = await readFile(path.join(distDir, "lux.min.js"));
-      let preamble = [
-        "LUX=window.LUX||{}",
-        "LUX.allowEmptyPostBeacon=true;",
-        `LUX.beaconUrl='http://localhost:${SERVER_PORT}/beacon/'`,
-        `LUX.beaconUrlFallback='http://localhost:${SERVER_PORT}/csp-approved/store/'`,
-        `LUX.beaconUrlV2='http://localhost:${SERVER_PORT}/v2/store/'`,
-        `LUX.errorBeaconUrl='http://localhost:${SERVER_PORT}/error/'`,
-      ].join(";");
+      let preamble = `LUX = Object.assign({
+        allowEmptyPostBeacon: true,
+        beaconUrl: 'http://localhost:${SERVER_PORT}/beacon/',
+        beaconUrlFallback: 'http://localhost:${SERVER_PORT}/csp-approved/store/',
+        beaconUrlV2: 'http://localhost:${SERVER_PORT}/v2/store/',
+        errorBeaconDelay: 1000,
+        errorBeaconUrl: 'http://localhost:${SERVER_PORT}/store/error',
+      }, window.LUX || {});`;
 
       sendResponse(200, headers(contentType), `${preamble};${contents}`);
     } else if (pathname === "/beacon/" || pathname === "/error/") {
@@ -111,6 +111,8 @@ BeaconStore.open().then(async (store) => {
 
       sendResponse(200, headers("image/webp"));
     } else if (pathname === "/v2/store/" || pathname === "/csp-approved/store/") {
+      sendResponse(204, {}, "");
+    } else if (pathname === "/store/error") {
       sendResponse(204, {}, "");
     } else if (existsSync(filePath)) {
       try {

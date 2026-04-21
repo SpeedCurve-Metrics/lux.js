@@ -142,13 +142,12 @@ test.describe("LUX inline snippet", () => {
     page,
     browserName,
   }) => {
-    const errorRequests = new RequestInterceptor(page).createRequestMatcher("/error/");
+    const errorRequests = new RequestInterceptor(page).createRequestMatcher("/store/error");
     await page.goto("/default.html?injectScript=snippet();");
     await errorRequests.waitForMatchingRequest();
 
-    expect(getSearchParam(errorRequests.getUrl(0)!, "msg")).toContain(
-      referenceErrorMessage(browserName, "snippet"),
-    );
+    const beacon = errorRequests.get(0)!.postDataJSON();
+    expect(beacon.errors[0].message).toContain(referenceErrorMessage(browserName, "snippet"));
   });
 
   test("settings that are set before the snippet are preserved", async ({ page }) => {
