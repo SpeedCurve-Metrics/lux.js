@@ -25,6 +25,9 @@ type BufferedError = {
   message: string;
 };
 
+// This is the same value as MAX_ERRORS_PER_BEACON in speedcurve-rum-beacons-edge-service
+const MAX_ERRORS_PER_BEACON = 64;
+
 let buffer: BufferedError[] = [];
 let pendingContext: ErrorBeaconContext | null = null;
 let pendingConfig: ConfigObject | null = null;
@@ -36,8 +39,12 @@ export function queueErrorBeacon(
   errorTime: number,
   context: ErrorBeaconContext,
 ): void {
-  // If the page context changed (e.g. SPA navigation), flush the current buffer first
-  if (pendingContext && pendingContext.pageId !== context.pageId) {
+  // If the page ID has changed since the last error (e.g. due to a SPA navigation), or if the
+  // buffer is full, flush the current beacon before adding the new error.
+  const pageChanged = pendingContext && pendingContext.pageId !== context.pageId;
+  const bufferFull = buffer.length >= MAX_ERRORS_PER_BEACON;
+
+  if (pageChanged || bufferFull) {
     flushErrorBeacon();
   }
 

@@ -88,4 +88,38 @@ describe("error-beacon", () => {
     });
     expect(payload.customData).toEqual({});
   });
+
+  test("buffer is flushed when it reaches the max errors per beacon", async () => {
+    const bodies: string[] = [];
+    jest.doMock("../../src/transport", () => ({
+      postJson: (_url: string, body: string) => {
+        bodies.push(body);
+        return true;
+      },
+    }));
+
+    const { queueErrorBeacon } = await import("../../src/error-beacon");
+
+    const config = makeConfig();
+    const context = fullContext();
+    const makeError = (i: number) =>
+      ({
+        filename: "a.js",
+        lineno: i,
+        colno: 1,
+        message: `boom ${i}`,
+      }) as unknown as ErrorEvent;
+
+    for (let i = 0; i < 65; i++) {
+      queueErrorBeacon(config as never, makeError(i), i, context as never);
+    }
+
+    expect(bodies).toHaveLength(1);
+    expect((JSON.parse(bodies[0]) as { errors: unknown[] }).errors).toHaveLength(64);
+
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    expect(bodies).toHaveLength(2);
+    expect((JSON.parse(bodies[1]) as { errors: unknown[] }).errors).toHaveLength(1);
+  });
 });
