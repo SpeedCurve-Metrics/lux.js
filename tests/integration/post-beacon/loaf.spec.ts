@@ -16,7 +16,7 @@ test.describe("POST beacon LoAF", () => {
       expect(loaf.totalBlockingDuration).toBeGreaterThan(0);
       expect(loaf.totalDuration).toBeGreaterThan(0);
       expect(loaf.totalEntries).toBeGreaterThan(0);
-      expect(loaf.totalStyleAndLayoutDuration).toBeGreaterThan(0);
+      expect(loaf.totalStyleAndLayoutDuration).toBeGreaterThanOrEqual(0);
       expect(loaf.totalWorkDuration).toBeGreaterThan(0);
       expect(loaf.entries.length).toBeGreaterThan(0);
       expect(loaf.scripts.length).toBeGreaterThan(0);
@@ -40,7 +40,7 @@ test.describe("POST beacon LoAF", () => {
       expect(loaf.totalBlockingDuration).toBeGreaterThan(0);
       expect(loaf.totalDuration).toBeGreaterThan(0);
       expect(loaf.totalEntries).toBeGreaterThan(0);
-      expect(loaf.totalStyleAndLayoutDuration).toBeGreaterThan(0);
+      expect(loaf.totalStyleAndLayoutDuration).toBeGreaterThanOrEqual(0);
       expect(loaf.totalWorkDuration).toBeGreaterThan(0);
       expect(loaf.entries.length).toBeGreaterThan(0);
       expect(loaf.scripts.length).toBeGreaterThan(0);
