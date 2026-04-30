@@ -6,13 +6,13 @@ describe("Config.fromObject()", () => {
     const config = Config.fromObject({});
 
     expect(config.auto).toEqual(true);
-    expect(config.errorBeaconDelay).toEqual(200);
+    expect(config.errorBeaconDelay).toEqual(2000);
     expect(config.beaconUrl).toEqual("https://lux.speedcurve.com/lux/");
     expect(config.customerid).toBeUndefined();
     expect(config.errorBeaconUrl).toEqual("https://beacon.speedcurve.com/store/error");
     expect(config.jspagelabel).toBeUndefined();
     expect(config.label).toBeUndefined();
-    expect(config.maxErrors).toEqual(5);
+    expect(config.maxErrors).toEqual(64);
     expect(config.maxMeasureTime).toEqual(60_000);
     expect(config.measureUntil).toEqual("onload");
     expect(config.minMeasureTime).toEqual(0);

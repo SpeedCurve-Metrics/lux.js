@@ -49,7 +49,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
   return {
     allowEmptyPostBeacon: getProperty(obj, "allowEmptyPostBeacon", false),
     auto: autoMode,
-    errorBeaconDelay: getProperty(obj, "errorBeaconDelay", 200),
+    errorBeaconDelay: getProperty(obj, "errorBeaconDelay", 2000),
     beaconUrl: getProperty(obj, "beaconUrl", luxOrigin + "/lux/"),
     beaconUrlFallback: getProperty(obj, "beaconUrlFallback"),
     beaconUrlV2: getProperty(obj, "beaconUrlV2", "https://beacon.speedcurve.com/store"),
@@ -63,7 +63,7 @@ export function fromObject(obj: UserConfig): ConfigObject {
     maxAttributionEntries: getProperty(obj, "maxAttributionEntries", 25),
     maxBeaconUrlLength: getProperty(obj, "maxBeaconUrlLength", 8190),
     maxBeaconUTEntries: getProperty(obj, "maxBeaconUTEntries", 20),
-    maxErrors: getProperty(obj, "maxErrors", 5),
+    maxErrors: getProperty(obj, "maxErrors", 64),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
     measureUntil: getProperty(obj, "measureUntil", spaMode ? "pagehidden" : "onload"),
     minMeasureTime: getProperty(obj, "minMeasureTime", 0),
