@@ -1,5 +1,13 @@
 # lux.js changelog
 
+## 2026-05-06: v4.5.0
+
+### Improvements
+
+- JavaScript errors are now batched together to reduce the number of HTTP requests sent by lux.js. The batched request delay can be set with `LUX.errorBeaconDelay` (default 2,000 ms).
+- JavaScript error beacons now include all dimensions, enabling better filtering and segmentation of errors in your SpeedCurve dashboards.
+- The default value of `LUX.maxErrors` (the maximum number of detailed errors to record) has been increased from 5 to 64.
+
 ## 2025-11-11: v4.4.2
 
 ### Bug fixes
