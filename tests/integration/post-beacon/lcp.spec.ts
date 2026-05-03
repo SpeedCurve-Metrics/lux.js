@@ -51,7 +51,7 @@ test.describe("POST beacon LCP", () => {
       const eve = document.createElement("img");
       eve.src = "/eve.jpg?delay=100";
       eve.className = "new-lcp-image";
-      eve.style.width = "500px";
+      eve.style.width = "600px";
       document.querySelector("p")!.prepend(eve);
     });
     await page.waitForTimeout(150);
@@ -64,6 +64,7 @@ test.describe("POST beacon LCP", () => {
     if (lcpSupported) {
       b = luxRequests.get(2)!.postDataJSON() as BeaconPayload;
       expect(b.lcp!.value).toBeBetween(insertTime, beaconTime);
+
       // WebKit sometimes reports the parent element instead of the actual img element
       const selector = b.lcp!.attribution!.elementSelector;
       if (browserName === "webkit") {

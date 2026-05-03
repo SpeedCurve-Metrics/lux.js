@@ -16,12 +16,12 @@ export const timing = performance.timing || {
 // Older PerformanceTiming implementations allow for arbitrary keys to exist on the timing object
 export type PerfTimingKey = keyof Omit<PerformanceTiming, "toJSON">;
 
-export function navigationType() {
+export function navigationType(): number | undefined {
   if (performance.navigation && typeof performance.navigation.type !== "undefined") {
     return performance.navigation.type;
   }
 
-  return "";
+  return undefined;
 }
 
 /**

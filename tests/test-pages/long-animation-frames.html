@@ -28,8 +28,10 @@
         function globalClickHandler() {
             const duration = Number(durationInput.value) || 50;
 
-            // Create one long task that is associated with the document
-            externalLongTask(duration + Math.round(Math.random() * 10));
+            // Create one long task that is associated with the document. We add some "noise" to
+            // the duration so that the JS engine doesn't optimize it away for the second task.
+            const noise = Math.ceil(Math.random() * 10);
+            externalLongTask(duration + noise);
 
             // And another that is associated with the external script
             const script = document.createElement("script");

@@ -9,6 +9,7 @@ import type { NavigationTimingData } from "./metric/navigation-timing";
 import * as PROPS from "./minification";
 import now from "./now";
 import { getPageRestoreTime, getZeroTime, msSincePageInit } from "./timing";
+import { postJson } from "./transport";
 import { VERSION } from "./version";
 
 type BeaconOptions = {
@@ -22,18 +23,6 @@ type BeaconOptions = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CollectorFunction = (config: UserConfig) => any;
-
-const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("content-type", "application/json");
-  xhr.send(String(data));
-
-  return true;
-};
-
-const sendBeacon =
-  "sendBeacon" in navigator ? navigator.sendBeacon.bind(navigator) : sendBeaconFallback;
 
 /**
  * Some values should only be reported if they are non-zero. The exception to this is when the page
@@ -213,7 +202,7 @@ export class Beacon {
     );
 
     try {
-      if (sendBeacon(beaconUrl, JSON.stringify(payload))) {
+      if (postJson(beaconUrl, JSON.stringify(payload))) {
         this.isSent = true;
         this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
         Events.emit("beacon", payload);
