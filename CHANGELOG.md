@@ -1,6 +1,6 @@
 # lux.js changelog
 
-## 2026-05-06: v4.5.0
+## 2026-05-07: v4.5.0
 
 ### Improvements
 
