@@ -134,7 +134,6 @@ test.describe("LUX interaction", () => {
     await luxRequests.waitForMatchingRequest();
 
     // Then wait for the interaction beacon after clicking
-    const timeBeforeClick = await getElapsedMs(page);
     await luxRequests.waitForMatchingRequest(
       () => page.locator("#button-with-js").click({ force: true }),
       2,
@@ -144,26 +143,11 @@ test.describe("LUX interaction", () => {
     const ixBeacon = luxRequests.getUrl(1)!;
 
     expect(mainBeacon.searchParams.get("FID")).toBeNull();
-    expect(mainBeacon.searchParams.get("INP")).toBeNull();
     expect(parseInt(getSearchParam(ixBeacon, "FID"))).toBeGreaterThanOrEqual(0);
 
-    const INP = parseInt(getSearchParam(ixBeacon, "INP"));
-    const INPTimestamp = parseInt(getSearchParam(ixBeacon, "INPt"));
-
-    expect(INP).toBeGreaterThanOrEqual(0);
-    expect(INPTimestamp).toBeGreaterThanOrEqual(timeBeforeClick);
-
-    const INPInputDelay = parseInt(getSearchParam(ixBeacon, "INPi"));
-    const INPProcessingTime = parseInt(getSearchParam(ixBeacon, "INPp"));
-    const INPPresentationDelay = parseInt(getSearchParam(ixBeacon, "INPd"));
-    const allSubParts = INPInputDelay + INPProcessingTime + INPPresentationDelay;
-
-    // The subparts are floored, so they can add up to 3ms less than the INP duration
-    expect(allSubParts).toBeGreaterThanOrEqual(INP - 3);
-    expect(allSubParts).toBeLessThanOrEqual(INP);
-
-    const INPSelector = getSearchParam(ixBeacon, "INPs");
-    expect(INPSelector).toEqual("#button-with-js");
+    // INP was removed from the GET beacon
+    expect(mainBeacon.searchParams.get("INP")).toBeNull();
+    expect(ixBeacon.searchParams.get("INP")).toBeNull();
   });
 
   test("FID and INP are gathered for keypress", async ({ page }) => {
@@ -175,9 +159,11 @@ test.describe("LUX interaction", () => {
     const ixBeacon = luxRequests.getUrl(1)!;
 
     expect(mainBeacon.searchParams.get("FID")).toBeNull();
-    expect(mainBeacon.searchParams.get("INP")).toBeNull();
     expect(parseInt(getSearchParam(ixBeacon, "FID"))).toBeGreaterThanOrEqual(0);
-    expect(parseInt(getSearchParam(ixBeacon, "INP"))).toBeGreaterThanOrEqual(0);
+
+    // INP was removed from the GET beacon
+    expect(mainBeacon.searchParams.get("INP")).toBeNull();
+    expect(ixBeacon.searchParams.get("INP")).toBeNull();
   });
 
   test("gather IX metrics in a SPA", async ({ page }) => {
@@ -207,10 +193,12 @@ test.describe("LUX interaction", () => {
     expect(parseInt(ixMetrics.c)).toBeGreaterThan(20);
     expect(parseInt(ixMetrics.c)).toBeLessThanOrEqual(timeAfterClick - timeBeforeInit);
     expect(parseInt(getSearchParam(secondPageBeacon, "FID"))).toBeGreaterThanOrEqual(0);
-    expect(parseInt(getSearchParam(secondPageBeacon, "INP"))).toBeGreaterThanOrEqual(0);
 
     // The third beacon should have no IX metrics
     expect(thirdPageBeacon.searchParams.get("FID")).toBeNull();
+
+    // INP was removed from the GET beacon
+    expect(secondPageBeacon.searchParams.get("INP")).toBeNull();
     expect(thirdPageBeacon.searchParams.get("INP")).toBeNull();
   });
 
