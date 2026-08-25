@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2026-08-26: v4.5.1
+
+### Bug fixes
+
+- Fix INP start time not being corrected for SPA page views or back-forward cache restores.
+
 ## 2026-05-07: v4.5.0
 
 ### Improvements
