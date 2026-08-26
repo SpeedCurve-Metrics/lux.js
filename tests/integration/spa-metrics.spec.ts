@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import Flags, { hasFlag } from "../../src/flags";
-import { entryTypeSupported } from "../helpers/browsers";
 import { getElapsedMs, getNavTiming, getNavigationTimingMs, getSearchParam } from "../helpers/lux";
 import * as Shared from "../helpers/shared-tests";
 import RequestInterceptor from "../request-interceptor";
@@ -70,7 +69,6 @@ test.describe("LUX SPA", () => {
     expect(NT.domComplete).toBeUndefined();
     expect(NT.startRender).toBeUndefined();
     expect(NT.firstContentfulPaint).toBeUndefined();
-    expect(NT.largestContentfulPaint).toBeUndefined();
   });
 
   test("calling LUX.init before LUX.send does not lose data", async ({ page }) => {
@@ -81,16 +79,12 @@ test.describe("LUX SPA", () => {
 
     const beacon = luxRequests.getUrl(0)!;
     const NT = getNavTiming(beacon);
-    const lcpSupported = await entryTypeSupported(page, "largest-contentful-paint");
 
     expect(NT.startRender).toBeGreaterThan(0);
     expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
-    if (lcpSupported) {
-      expect(NT.largestContentfulPaint).toBeGreaterThanOrEqual(0);
-    } else {
-      expect(NT.largestContentfulPaint).toBeUndefined();
-    }
+    // LCP is only sent in the POST beacon
+    expect(getNavTiming(beacon, "lc")).toBeNull();
   });
 
   test("load time value for the first pages is the time between navigationStart and loadEventStart", async ({

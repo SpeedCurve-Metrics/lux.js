@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import type { BeaconPayload } from "../../src/beacon";
 import Flags, { hasFlag } from "../../src/flags";
-import { entryTypeSupported } from "../helpers/browsers";
 import {
   getElapsedMs,
   getNavigationTimingMs,
@@ -103,16 +102,12 @@ test.describe("LUX SPA Mode", () => {
 
     const beacon = luxRequests.getUrl(0)!;
     const NT = getNavTiming(beacon);
-    const lcpSupported = await entryTypeSupported(page, "largest-contentful-paint");
 
     expect(NT.startRender).toBeGreaterThan(0);
     expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
-    if (lcpSupported) {
-      expect(NT.largestContentfulPaint).toBeGreaterThanOrEqual(0);
-    } else {
-      expect(NT.largestContentfulPaint).toBeUndefined();
-    }
+    // LCP is only sent in the POST beacon
+    expect(getNavTiming(beacon, "lc")).toBeNull();
   });
 
   test("legacy implementations work as expected", async ({ page }) => {

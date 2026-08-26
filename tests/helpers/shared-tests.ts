@@ -71,7 +71,7 @@ export function testPageStats({ page, browserName, beacon }: SharedTestArgs, has
   expect(getPageStat(beacon, "nt")).toEqual(0);
 }
 
-export function testNavigationTiming({ browserName, beacon }: SharedTestArgs) {
+export function testNavigationTiming({ beacon }: SharedTestArgs) {
   const NT = getNavTiming(beacon);
 
   // Secure connection time will be null because localhost is insecure
@@ -100,10 +100,8 @@ export function testNavigationTiming({ browserName, beacon }: SharedTestArgs) {
   expect(NT.startRender).toBeGreaterThan(0);
   expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
-  if (browserName === "chromium") {
-    // Only Chromium records LCP
-    expect(NT.largestContentfulPaint).toBeGreaterThan(0);
-  }
+  // LCP is only sent in the POST beacon
+  expect(getNavTiming(beacon, "lc")).toBeNull();
 }
 
 export function testPostBeacon(beacon: BeaconPayload, hasSnippet = true) {

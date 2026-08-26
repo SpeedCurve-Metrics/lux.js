@@ -99,7 +99,6 @@ test.describe("BF cache integration", () => {
     expect(bfcNT.domComplete).toEqual(0);
     expect(bfcNT.startRender).toEqual(0);
     expect(bfcNT.firstContentfulPaint).toEqual(0);
-    expect(bfcNT.largestContentfulPaint).toEqual(0);
 
     // The bfcache beacon should still have a measurable load time, which will be the time it took
     // for the page to be restored from cache.
