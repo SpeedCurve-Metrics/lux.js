@@ -1,5 +1,76 @@
 # lux.js changelog
 
+## 2026-08-26: v4.5.1
+
+### Bug fixes
+
+- Fix INP start time not being corrected for SPA page views or back-forward cache restores.
+
+## 2026-05-07: v4.5.0
+
+### Improvements
+
+- JavaScript errors are now batched together to reduce the number of HTTP requests sent by lux.js. The batched request delay can be set with `LUX.errorBeaconDelay` (default 2,000 ms).
+- JavaScript error beacons now include all dimensions, enabling better filtering and segmentation of errors in your SpeedCurve dashboards.
+- The default value of `LUX.maxErrors` (the maximum number of detailed errors to record) has been increased from 5 to 64.
+
+## 2025-11-11: v4.4.2
+
+### Bug fixes
+
+- Further mitigations for "performance.getEntriesByName is not a function" errors in some browsers
+
+## 2025-11-11: v4.4.1
+
+### Bug fixes
+
+- Add mitigations for "performance.getEntriesByName is not a function" errors in some browsers
+
+## 2025-11-10: v4.4.0
+
+### New features
+
+- Rage click detection
+- Extra context in the POST beacon allows calculation of user happiness for each beacon
+
+### Improvements
+
+- Minification optimisations to reduce bundle size
+
+### Bug fixes
+
+- LCP element attribution is stored as the event is received, to prevent missing attribution on discarded elements
+- Prevent errors when reading `document.documentElement.clientHeight`
+
+## 2025-09-17: v4.3.3
+
+### Bug fixes
+
+- Prevent error being thrown for self-hosted lux.js scripts.
+
+## 2025-09-10: v4.3.2
+
+### Bug fixes
+
+- Prevent error being thrown when accessing `snippetVersion` during early unload beacons.
+
+## 2025-09-10: v4.3.1
+
+### Bug fixes
+
+- Prefer to extract the RUM ID from the lux.js script URL i.e. `/js/lux.js?id=RUM_ID`.
+
+## 2025-09-09: v4.3.0
+
+### New features
+
+- Add `LUX.on()` which can be used to subscribe to internal events. Current events are `beacon` and `new_page_id`.
+- Add `LUX.spaMode` which greatly simplifies implementing lux.js in a Single Page Application (SPA). Read [the documentation](https://support.speedcurve.com/docs/single-page-applications) for more information.
+
+### Improvements
+
+- Add ES2015 and ES2020 builds which slightly reduce output size. Read [the documentation](https://support.speedcurve.com/docs/which-rum-snippet-variant-is-right-for-me) for more information.
+
 ## 2025-07-28: v4.2.1
 
 ### Bug fixes

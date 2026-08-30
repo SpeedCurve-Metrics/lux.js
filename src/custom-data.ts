@@ -1,3 +1,5 @@
+import * as PROPS from "./minification";
+
 export type CustomDataDict = Record<string, unknown>;
 
 const customDataValues: CustomDataDict = {};
@@ -38,7 +40,7 @@ export function clearUpdateCustomData(): void {
  * Convert a set of custom data values to the string format expected by the backend.
  */
 export function valuesToString(values: CustomDataDict): string {
-  const strings = [];
+  const strings: string[] = [];
 
   for (let key in values) {
     // Convert all values to strings
@@ -48,7 +50,7 @@ export function valuesToString(values: CustomDataDict): string {
     key = key.replace(/,/g, "").replace(/\|/g, "");
     value = value.replace(/,/g, "").replace(/\|/g, "");
 
-    strings.push(key + "|" + value);
+    strings[PROPS.push](key + "|" + value);
   }
 
   return encodeURIComponent(strings.join(","));

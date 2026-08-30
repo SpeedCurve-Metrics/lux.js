@@ -1,12 +1,15 @@
-import { ConfigObject, UserConfig } from "./config";
+import type { ConfigObject, UserConfig } from "./config";
 import { wasPrerendered } from "./document";
+import * as Events from "./events";
 import Flags, { addFlag } from "./flags";
 import { addListener } from "./listeners";
 import Logger, { LogEvent } from "./logger";
-import { LoAFScriptSummary, LoAFSummary } from "./metric/LoAF";
-import { NavigationTimingData } from "./metric/navigation-timing";
+import type { LoAFScriptSummary, LoAFSummary } from "./metric/LoAF";
+import type { NavigationTimingData } from "./metric/navigation-timing";
+import * as PROPS from "./minification";
 import now from "./now";
 import { getPageRestoreTime, getZeroTime, msSincePageInit } from "./timing";
+import { postJson } from "./transport";
 import { VERSION } from "./version";
 
 type BeaconOptions = {
@@ -20,18 +23,6 @@ type BeaconOptions = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CollectorFunction = (config: UserConfig) => any;
-
-const sendBeaconFallback = (url: string | URL, data?: BodyInit | null) => {
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", url, true);
-  xhr.setRequestHeader("content-type", "application/json");
-  xhr.send(String(data));
-
-  return true;
-};
-
-const sendBeacon =
-  "sendBeacon" in navigator ? navigator.sendBeacon.bind(navigator) : sendBeaconFallback;
 
 /**
  * Some values should only be reported if they are non-zero. The exception to this is when the page
@@ -57,8 +48,8 @@ export function fitUserTimingEntries(utValues: string[], config: ConfigObject, u
   // Trim UT entries until they fit within the maximum URL length, ensuring at least one UT entry
   // is included.
   while (
-    (url + "&UT=" + beaconUtValues.join(",")).length > config.maxBeaconUrlLength &&
-    beaconUtValues.length > 1
+    (url + "&UT=" + beaconUtValues.join(","))[PROPS.length] > config.maxBeaconUrlLength &&
+    beaconUtValues[PROPS.length] > 1
   ) {
     remainingUtValues.unshift(beaconUtValues.pop()!);
   }
@@ -159,10 +150,14 @@ export class Beacon {
   }
 
   onBeforeSend(cb: () => void) {
-    this.#onBeforeSendCbs.push(cb);
+    this.#onBeforeSendCbs[PROPS.push](cb);
   }
 
   send() {
+    if (this.isSent) {
+      return;
+    }
+
     this.#logger.logEvent(LogEvent.PostBeaconSendCalled);
 
     for (const cb of this.#onBeforeSendCbs) {
@@ -183,15 +178,10 @@ export class Beacon {
       }
     }
 
-    if (!Object.keys(metricData).length && !this.#config.allowEmptyPostBeacon) {
+    if (!Object.keys(metricData)[PROPS.length] && !this.#config.allowEmptyPostBeacon) {
       // TODO: This is only required while the new beacon is supplementary. Once it's the primary
       // beacon, we should send it regardless of how much metric data it has.
       this.#logger.logEvent(LogEvent.PostBeaconCancelled);
-      return;
-    }
-
-    if (this.isSent) {
-      this.#logger.logEvent(LogEvent.PostBeaconAlreadySent);
       return;
     }
 
@@ -207,6 +197,7 @@ export class Beacon {
         collectionDuration: now() - collectionStart,
         pageId: this.#pageId,
         scriptVersion: VERSION,
+        snippetVersion: this.#config.snippetVersion,
         sessionId: this.#sessionId,
         startTime: this.#startTime,
       },
@@ -214,11 +205,12 @@ export class Beacon {
     );
 
     try {
-      if (sendBeacon(beaconUrl, JSON.stringify(payload))) {
+      if (postJson(beaconUrl, JSON.stringify(payload))) {
         this.isSent = true;
         this.#logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
+        Events.emit("beacon", payload);
       }
-    } catch (e) {
+    } catch {
       // Intentionally empty; handled below
     }
 
@@ -242,6 +234,9 @@ export type BeaconMetaData = {
   /** The lux.js version that sent the beacon */
   scriptVersion: string;
 
+  /** The lux.js snippet version that sent the beacon */
+  snippetVersion?: string;
+
   /** How long in milliseconds did this beacon capture page data for */
   measureDuration: number;
 
@@ -252,13 +247,16 @@ export type BeaconMetaData = {
 export enum BeaconMetricKey {
   CLS = "cls",
   INP = "inp",
+  FCP = "fcp",
   LCP = "lcp",
   LoAF = "loaf",
-  NavigationTiming = "navigationTiming",
+  RageClick = "rage",
+  NavigationTiming = "nt",
 }
 
 export type BeaconMetricData = {
   [BeaconMetricKey.NavigationTiming]: NavigationTimingData;
+  [BeaconMetricKey.FCP]: MetricWithValue;
   [BeaconMetricKey.LCP]: MetricWithValue & {
     attribution: MetricAttribution | null;
 
@@ -270,7 +268,7 @@ export type BeaconMetricData = {
     } | null;
   };
 
-  [BeaconMetricKey.LoAF]: LoAFSummary | undefined;
+  [BeaconMetricKey.LoAF]: LoAFSummary;
 
   [BeaconMetricKey.INP]: MetricWithValue & {
     startTime: number;
@@ -294,6 +292,11 @@ export type BeaconMetricData = {
     } | null;
     sources: CLSAttribution[] | null;
   };
+
+  [BeaconMetricKey.RageClick]: MetricWithValue & {
+    startTime: number;
+    attribution: MetricAttribution;
+  };
 };
 
 export type CLSAttribution = MetricAttribution & {
@@ -310,7 +313,7 @@ type MetricWithValue = {
   value: number;
 };
 
-type MetricAttribution = {
+export type MetricAttribution = {
   elementSelector: string | null;
   elementType: string | null;
 };

@@ -2,6 +2,12 @@ import { describe, expect, test } from "@jest/globals";
 import * as Config from "../../src/config";
 import * as CLS from "../../src/metric/CLS";
 
+declare global {
+  interface Window {
+    LayoutShift: () => void;
+  }
+}
+
 const config = Config.fromObject({});
 
 // Mock LayoutShift support so the CLS.getData() returns a value.

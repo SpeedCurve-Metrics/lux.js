@@ -1,9 +1,15 @@
-import { ServerTimingConfig } from "./server-timing";
-import { UrlPatternMapping } from "./url-matcher";
+import type { LuxGlobal } from "./global";
+import type { ServerTimingConfig } from "./server-timing";
+import type { UrlPatternMapping } from "./url-matcher";
 
+/**
+ * ConfigObject holds the parsed and normalised lux.js configuration. It is initialised once based
+ * on the `LUX` global.
+ */
 export interface ConfigObject {
   allowEmptyPostBeacon: boolean;
   auto: boolean;
+  errorBeaconDelay: number;
   beaconUrl: string;
   beaconUrlFallback?: string;
   beaconUrlV2: string;
@@ -26,6 +32,8 @@ export interface ConfigObject {
   samplerate: number;
   sendBeaconOnPageHidden: boolean;
   serverTiming?: ServerTimingConfig;
+  snippetVersion?: LuxGlobal["snippetVersion"];
+  spaMode: boolean;
   trackErrors: boolean;
   trackHiddenPages: boolean;
 }
@@ -35,33 +43,36 @@ export type UserConfig = Partial<ConfigObject>;
 const luxOrigin = "https://lux.speedcurve.com";
 
 export function fromObject(obj: UserConfig): ConfigObject {
-  const autoMode = getProperty(obj, "auto", true);
+  const spaMode = getProperty(obj, "spaMode", false);
+  const autoMode = spaMode ? false : getProperty(obj, "auto", true);
 
   return {
     allowEmptyPostBeacon: getProperty(obj, "allowEmptyPostBeacon", false),
     auto: autoMode,
+    errorBeaconDelay: getProperty(obj, "errorBeaconDelay", 2000),
     beaconUrl: getProperty(obj, "beaconUrl", luxOrigin + "/lux/"),
     beaconUrlFallback: getProperty(obj, "beaconUrlFallback"),
     beaconUrlV2: getProperty(obj, "beaconUrlV2", "https://beacon.speedcurve.com/store"),
     conversions: getProperty(obj, "conversions"),
     cookieDomain: getProperty(obj, "cookieDomain"),
     customerid: getProperty(obj, "customerid"),
-    errorBeaconUrl: getProperty(obj, "errorBeaconUrl", luxOrigin + "/error/"),
+    errorBeaconUrl: getProperty(obj, "errorBeaconUrl", "https://beacon.speedcurve.com/store/error"),
     interactionBeaconDelay: getProperty(obj, "interactionBeaconDelay", 200),
     jspagelabel: getProperty(obj, "jspagelabel"),
     label: getProperty(obj, "label"),
     maxAttributionEntries: getProperty(obj, "maxAttributionEntries", 25),
     maxBeaconUrlLength: getProperty(obj, "maxBeaconUrlLength", 8190),
     maxBeaconUTEntries: getProperty(obj, "maxBeaconUTEntries", 20),
-    maxErrors: getProperty(obj, "maxErrors", 5),
+    maxErrors: getProperty(obj, "maxErrors", 64),
     maxMeasureTime: getProperty(obj, "maxMeasureTime", 60_000),
-    measureUntil: getProperty(obj, "measureUntil", "onload"),
+    measureUntil: getProperty(obj, "measureUntil", spaMode ? "pagehidden" : "onload"),
     minMeasureTime: getProperty(obj, "minMeasureTime", 0),
     newBeaconOnPageShow: getProperty(obj, "newBeaconOnPageShow", false),
     pagegroups: getProperty(obj, "pagegroups"),
     samplerate: getProperty(obj, "samplerate", 100),
-    sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", autoMode),
+    sendBeaconOnPageHidden: getProperty(obj, "sendBeaconOnPageHidden", spaMode || autoMode),
     serverTiming: getProperty(obj, "serverTiming"),
+    spaMode,
     trackErrors: getProperty(obj, "trackErrors", true),
     trackHiddenPages: getProperty(obj, "trackHiddenPages", false),
   };

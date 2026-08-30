@@ -1,3 +1,5 @@
+import * as PROPS from "./minification";
+
 export interface UrlPatternMapping {
   [key: string]: string[];
 }
@@ -19,7 +21,7 @@ export function getMatchesFromPatternMap(
   pathname: string,
   firstOnly?: boolean,
 ): string[] | (string | undefined) {
-  const matches = [];
+  const matches: string[] = [];
 
   for (const key in patternMap) {
     const patterns = patternMap[key];
@@ -32,7 +34,7 @@ export function getMatchesFromPatternMap(
             return key;
           }
 
-          matches.push(key);
+          matches[PROPS.push](key);
         }
       }
     }

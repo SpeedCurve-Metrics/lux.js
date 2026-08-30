@@ -1,4 +1,4 @@
-import { Request } from "@playwright/test";
+import type { Request } from "@playwright/test";
 
 export default class RequestMatcher {
   searchString: string;
@@ -35,7 +35,9 @@ export default class RequestMatcher {
     requestCount?: number,
   ): Promise<void>;
   async waitForMatchingRequest(requestCount?: number): Promise<void>;
-  async waitForMatchingRequest(...args): Promise<void> {
+  async waitForMatchingRequest(
+    ...args: [(() => Promise<unknown>) | number | undefined, number?]
+  ): Promise<void> {
     let afterCb: (() => Promise<unknown>) | undefined;
     let requestCount: number | undefined;
 

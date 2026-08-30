@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 import Flags from "../../src/flags";
+import { setPageHidden } from "../helpers/browsers";
 import { hasFlag } from "../helpers/lux";
 import RequestInterceptor from "../request-interceptor";
-import { setPageHidden } from "../helpers/browsers";
 
 test.describe("LUX unload behaviour", () => {
   test("not automatically sending a beacon when the user navigates away from a page with LUX.auto = false", async ({

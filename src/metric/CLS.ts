@@ -1,8 +1,8 @@
-import { CLSAttribution, BeaconMetricData, BeaconMetricKey } from "../beacon";
-import { UserConfig } from "../config";
-import * as Const from "../constants";
+import { type CLSAttribution, type BeaconMetricData, BeaconMetricKey } from "../beacon";
+import type { UserConfig } from "../config";
 import { getNodeSelector } from "../dom";
 import { max } from "../math";
+import * as PROPS from "../minification";
 import { processTimeMetric } from "../timing";
 
 let sessionValue = 0;
@@ -14,33 +14,33 @@ let maximumSessionValue = 0;
 export function processEntry(entry: LayoutShift): void {
   if (!entry.hadRecentInput) {
     const firstEntry = sessionEntries[0];
-    const latestEntry = sessionEntries[sessionEntries.length - 1];
+    const latestEntry = sessionEntries[sessionEntries[PROPS.length] - 1];
     const sources = entry.sources
       ? entry.sources
           .filter((source) => source.node)
           .map((source) => ({
-            value: entry[Const.value],
-            startTime: processTimeMetric(entry[Const.startTime]),
+            value: entry.value,
+            startTime: processTimeMetric(entry[PROPS.startTime]),
             elementSelector: getNodeSelector(source.node!),
             elementType: source.node!.nodeName,
           }))
       : [];
 
     if (
-      sessionEntries.length &&
-      (entry[Const.startTime] - latestEntry[Const.startTime] >= 1000 ||
-        entry[Const.startTime] - firstEntry[Const.startTime] >= 5000)
+      sessionEntries[PROPS.length] &&
+      (entry[PROPS.startTime] - latestEntry[PROPS.startTime] >= 1000 ||
+        entry[PROPS.startTime] - firstEntry[PROPS.startTime] >= 5000)
     ) {
-      sessionValue = entry[Const.value];
+      sessionValue = entry.value;
       sessionEntries = [entry];
       sessionAttributions = sources;
       largestEntry = entry;
     } else {
-      sessionValue += entry[Const.value];
-      sessionEntries.push(entry);
+      sessionValue += entry.value;
+      sessionEntries[PROPS.push](entry);
       sessionAttributions = sessionAttributions.concat(sources);
 
-      if (!largestEntry || entry[Const.value] > largestEntry[Const.value]) {
+      if (!largestEntry || entry.value > largestEntry.value) {
         largestEntry = entry;
       }
     }
@@ -63,14 +63,14 @@ export function getData(config: UserConfig): BeaconMetricData[BeaconMetricKey.CL
 
   return {
     value: maximumSessionValue,
-    startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0][Const.startTime]) : null,
+    startTime: sessionEntries[0] ? processTimeMetric(sessionEntries[0][PROPS.startTime]) : null,
     largestEntry: largestEntry
       ? {
-          value: largestEntry[Const.value],
-          startTime: processTimeMetric(largestEntry[Const.startTime]),
+          value: largestEntry.value,
+          startTime: processTimeMetric(largestEntry[PROPS.startTime]),
         }
       : null,
-    sources: sessionAttributions.length
+    sources: sessionAttributions[PROPS.length]
       ? sessionAttributions.slice(0, config.maxAttributionEntries)
       : null,
   };

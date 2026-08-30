@@ -19,6 +19,7 @@
             for (let i = 0; i < count; i++) {
                 setTimeout(() => {
                     const el = document.createElement("img");
+                    el.className = `image-${i}`;
                     el.src = `eve.jpg?delay=${i * 10}&ts=${performance.now()}`;
                     el.width = i * 30;
 

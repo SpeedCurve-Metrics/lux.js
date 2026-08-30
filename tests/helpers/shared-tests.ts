@@ -1,4 +1,6 @@
-import { Page, expect } from "@playwright/test";
+import { type Page, expect } from "@playwright/test";
+import type { BeaconPayload } from "../../src/beacon";
+import { SNIPPET_VERSION, VERSION } from "../../src/version";
 import { getNavTiming, getPageStat, getSearchParam } from "./lux";
 
 type SharedTestArgs = {
@@ -69,7 +71,7 @@ export function testPageStats({ page, browserName, beacon }: SharedTestArgs, has
   expect(getPageStat(beacon, "nt")).toEqual(0);
 }
 
-export function testNavigationTiming({ browserName, beacon }: SharedTestArgs) {
+export function testNavigationTiming({ beacon }: SharedTestArgs) {
   const NT = getNavTiming(beacon);
 
   // Secure connection time will be null because localhost is insecure
@@ -98,8 +100,22 @@ export function testNavigationTiming({ browserName, beacon }: SharedTestArgs) {
   expect(NT.startRender).toBeGreaterThan(0);
   expect(NT.firstContentfulPaint).toBeGreaterThan(0);
 
-  if (browserName === "chromium") {
-    // Only Chromium records LCP
-    expect(NT.largestContentfulPaint).toBeGreaterThan(0);
+  // LCP is only sent in the POST beacon
+  expect(getNavTiming(beacon, "lc")).toBeNull();
+}
+
+export function testPostBeacon(beacon: BeaconPayload, hasSnippet = true) {
+  expect(beacon.customerId).toEqual("10001");
+  expect(beacon.flags).toBeGreaterThan(0);
+  expect(beacon.pageId).toBeTruthy();
+  expect(beacon.sessionId).toBeTruthy();
+  expect(beacon.measureDuration).toBeGreaterThan(0);
+  expect(beacon.scriptVersion).toEqual(VERSION);
+
+  if (hasSnippet) {
+    // The es2020 variant is set in tests/server.mjs
+    expect(beacon.snippetVersion).toEqual(`${SNIPPET_VERSION}-es2020`);
+  } else {
+    expect(beacon.snippetVersion).toBeUndefined();
   }
 }

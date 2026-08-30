@@ -102,9 +102,11 @@
         <h2>Parsed debug output <span id="event-counter"></span></h2>
 
         <div class="event-filters">
-            <label><input type="checkbox" checked class="event-filter" data-event="addData"> LUX.addData()</label>
-            <label><input type="checkbox" checked class="event-filter" data-event="userTiming"> LUX.mark/measure()</label>
-            <label><input type="checkbox" class="event-filter" data-event="beaconUrl"> Show beacon URL</label>
+            <label><input type="checkbox" checked class="event-filter" data-event="metrics"> Metrics Events</label>
+            <label><input type="checkbox" checked class="event-filter" data-event="addData"> <code>LUX.addData()</code></label>
+            <label><input type="checkbox" checked class="event-filter" data-event="userTiming"> <code>LUX.mark/measure()</code></label>
+            <label><input type="checkbox" class="event-filter" data-event="verbose"> Show Verbose Events</label>
+            <label><input type="checkbox" class="event-filter" data-event="beaconUrl"> Show Beacon URL</label>
         </div>
 
         <ul class="mt-1" id="output"></ul>

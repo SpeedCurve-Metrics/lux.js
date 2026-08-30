@@ -1,4 +1,4 @@
-import { test, expect, chromium, Browser } from "@playwright/test";
+import { test, expect, chromium, type Browser } from "@playwright/test";
 import Flags from "../../src/flags";
 import BeaconStore from "../helpers/beacon-store";
 import {
@@ -99,7 +99,6 @@ test.describe("BF cache integration", () => {
     expect(bfcNT.domComplete).toEqual(0);
     expect(bfcNT.startRender).toEqual(0);
     expect(bfcNT.firstContentfulPaint).toEqual(0);
-    expect(bfcNT.largestContentfulPaint).toEqual(0);
 
     // The bfcache beacon should still have a measurable load time, which will be the time it took
     // for the page to be restored from cache.
@@ -110,7 +109,7 @@ test.describe("BF cache integration", () => {
     const firstET = parseUserTiming(getSearchParam(firstBeacon, "ET"));
     const bfcET = parseUserTiming(getSearchParam(bfcBeacon, "ET"));
 
-    expect(firstET["eve-image"].startTime).toBeGreaterThanOrEqual(getNavTiming(firstBeacon, "le")!);
+    expect(firstET["eve-image"].startTime).toBeGreaterThanOrEqual(getNavTiming(firstBeacon, "ls")!);
     expect(firstET["eve-image-delayed"]).toBeUndefined();
 
     expect(bfcET["eve-image"].startTime).toEqual(0);

@@ -1,3 +1,4 @@
+import * as PROPS from "./minification";
 import now from "./now";
 
 export const enum LogEvent {
@@ -15,6 +16,10 @@ export const enum LogEvent {
   OnloadHandlerTriggered = 11,
   MarkLoadTimeCalled = 12,
   SendCancelledPageHidden = 13,
+  StartSoftNavigationCalled = 14,
+  SendCancelledSpaMode = 16,
+  BfCacheRestore = 17,
+  InitCallIgnored = 18,
 
   // Data collection events
   SessionIsSampled = 21,
@@ -48,7 +53,6 @@ export const enum LogEvent {
   PostBeaconSendCalled = 81,
   PostBeaconTimeoutReached = 82,
   PostBeaconSent = 83,
-  PostBeaconAlreadySent = 84,
   PostBeaconCancelled = 85,
   PostBeaconStopRecording = 86,
   PostBeaconMetricRejected = 87,
@@ -58,13 +62,13 @@ export const enum LogEvent {
   PostBeaconCollector = 91,
 }
 
-export type LogEventRecord = [number, number, ...unknown[]];
+export type LogEventRecord = [number, LogEvent, ...unknown[]];
 
 export default class Logger {
   events: LogEventRecord[] = [];
 
-  logEvent(event: number, args: unknown[] = []) {
-    this.events.push([now(), event, args]);
+  logEvent(event: LogEvent, args: unknown[] = []) {
+    this.events[PROPS.push]([now(), event, args]);
   }
 
   getEvents() {

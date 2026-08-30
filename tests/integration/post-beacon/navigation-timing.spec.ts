@@ -1,22 +1,22 @@
 import { test, expect } from "@playwright/test";
-import { BeaconPayload } from "../../../src/beacon";
+import type { BeaconPayload } from "../../../src/beacon";
 import RequestInterceptor from "../../request-interceptor";
 
-// Skipped while navigation timing is not sent in the POST beacon
-test.skip("POST beacon navigation timing", () => {
+test.describe("POST beacon navigation timing", () => {
   test("Navigation timing is measured", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
     await page.goto("/images.html", { waitUntil: "networkidle" });
     await luxRequests.waitForMatchingRequest(() => page.goto("/"));
     const b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
-    const nt = b.navigationTiming!;
+    const nt = b.nt!;
 
     expect(nt.activationStart).toEqual(0);
-    expect(nt.connectEnd).toBeGreaterThan(0);
-    expect(nt.connectStart).toBeGreaterThan(0);
+    // Connection timing values can be 0 when the browser reuses an existing connection
+    expect(nt.connectEnd).toBeGreaterThanOrEqual(0);
+    expect(nt.connectStart).toBeGreaterThanOrEqual(0);
     expect(nt.decodedBodySize).toBeGreaterThan(0);
-    expect(nt.domainLookupEnd).toBeGreaterThan(0);
-    expect(nt.domainLookupStart).toBeGreaterThan(0);
+    expect(nt.domainLookupEnd).toBeGreaterThanOrEqual(0);
+    expect(nt.domainLookupStart).toBeGreaterThanOrEqual(0);
     expect(nt.domComplete).toBeGreaterThan(0);
     expect(nt.domContentLoadedEventEnd).toBeGreaterThan(0);
     expect(nt.domContentLoadedEventStart).toBeGreaterThan(0);
@@ -26,12 +26,14 @@ test.skip("POST beacon navigation timing", () => {
     expect(nt.loadEventEnd).toBeGreaterThan(0);
     expect(nt.loadEventStart).toBeGreaterThan(0);
     expect(nt.redirectCount).toEqual(0);
-    expect(nt.redirectEnd).toBeUndefined();
-    expect(nt.redirectStart).toBeUndefined();
-    expect(nt.requestStart).toBeGreaterThan(0);
+    expect(nt.redirectEnd).toEqual(0);
+    expect(nt.redirectStart).toEqual(0);
+    // requestStart can floor to 0 on fast localhost connections where the
+    // sub-millisecond time between navigationStart and requestStart is rounded down
+    expect(nt.requestStart).toBeGreaterThanOrEqual(0);
     expect(nt.responseEnd).toBeGreaterThan(0);
     expect(nt.responseStart).toBeGreaterThan(0);
-    expect(nt.secureConnectionStart).toBeUndefined();
+    expect(nt.secureConnectionStart).toEqual(0);
     expect(nt.transferSize).toBeGreaterThan(0);
   });
 
@@ -41,13 +43,13 @@ test.skip("POST beacon navigation timing", () => {
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
-    expect(b.navigationTiming).toBeDefined();
+    expect(b.nt).toBeDefined();
 
     await page.evaluate(() => LUX.init());
     await page.waitForTimeout(200);
     await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
 
     b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
-    expect(b.navigationTiming).toBeUndefined();
+    expect(b.nt).toBeUndefined();
   });
 });

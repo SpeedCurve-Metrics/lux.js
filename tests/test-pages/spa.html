@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LUX SPA test page</title>
+    <script>/*INJECT_SCRIPT*/</script>
+    <script>
+        LUX.spaMode = true;
+        LUX.label = "SPA";
+        LUX.maxMeasureTime = 10_000;
+    </script>
+    <script src="/js/lux.js?id=10001" crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>LUX SPA test page</h1>
+
+    <div id="app"></div>
+
+    <script src="external-long-task.js"></script>
+    <script type="module">
+        const initLogs = [[performance.now(), "bootstrap start"]];
+        const pages = ["Eve", "Charlie", "Boring"];
+        import { Component, html, render, useEffect, useState } from "./preact.js";
+
+        class App extends Component {
+            constructor() {
+                super();
+
+                this.state = {
+                    page: "Boring",
+                    size: 200,
+                    logs: initLogs,
+                };
+
+                addEventListener("visibilitychange", () => {
+                    this.log(`visibilitychange ${document.visibilityState}`);
+                });
+
+                LUX.on("beacon", (beacon) => {
+                    if (typeof beacon === "string") {
+                        this.log("GET beacon sent");
+                    } else {
+                        this.log("POST beacon sent");
+
+                        if (beacon.lcp) {
+                            this.log(`LCP (${beacon.lcp.attribution.elementSelector})`, beacon.startTime + beacon.lcp.value);
+                        }
+
+                        if (beacon.inp) {
+                            this.log(`INP (${beacon.inp.value}ms)`, beacon.startTime + beacon.inp.startTime);
+                        }
+
+                        if (beacon.cls?.value) {
+                            this.log(`CLS (${beacon.cls.value})`, beacon.startTime + beacon.cls.startTime);
+                        }
+
+                        if (beacon.loaf?.totalDuration) {
+                            this.log(`LoAF (${beacon.loaf.totalDuration}ms)`);
+                        }
+                    }
+                });
+
+                for (const prop in LUX) {
+                    if (typeof LUX[prop] === "function") {
+                        const original = LUX[prop];
+
+                        LUX[prop] = (...args) => {
+                            this.log(`LUX.${prop}()`);
+                            original.apply(LUX, args);
+                        }
+                    }
+                }
+
+                this.log("bootstrap end");
+            }
+
+            setPage(page) {
+                this.log(`setPage ${page}`);
+                LUX.startSoftNavigation();
+                this.setState({ page });
+            }
+
+            setImageSize(size) {
+                this.setState({ size });
+            }
+
+            log(log, time = performance.now()) {
+                this.setState((prevState) => ({
+                    logs: [...prevState.logs, [time, log]]
+                }));
+            }
+
+            render () {
+                const { page, size, logs } = this.state;
+
+                return html`
+                    <${Navigation} pages=${pages} page=${page} setPage=${this.setPage.bind(this)} />
+
+                    <div style="padding-bottom: 12px;">
+                        <button type="button" onclick=${() => this.setImageSize(size - 20)}> - </button>
+                        Image Size
+                        <button type="button" onclick=${() => this.setImageSize(size + 20)}> + </button>
+                    </div>
+
+                    <div style="padding-bottom: 12px;">
+                        <button type="button" onclick=${() => externalLongTask(1000 * Math.random())}>Run Long Task</button>
+                    </div>
+
+                    <${Content} page=${page} size=${size} cache=${logs.length} />
+
+                    <${Logs} logs=${logs} />
+                `;
+            }
+        }
+
+        function Navigation({ pages, page, setPage }) {
+            return html`
+                <h3>Navigation</h3>
+                <nav>
+                    <ul style="list-style: none; padding: 0; display: grid; gap: 6px;">
+                        ${pages.map((p) => html`
+                            <li>
+                                <button type="button" onclick=${() => setPage(p)}>
+                                    ${p}${p === page ? " <-- you are here" : ""}
+                                </button>
+                            </li>
+                        `)}
+                    </ul>
+                </nav>
+            `;
+        }
+
+        function Content({ page, size, cache }) {
+            if (["Eve", "Charlie"].includes(page)) {
+                return html`
+                    <div id="content">
+                        <img src="/${page.toLowerCase()}.jpg?delay=200&t=${cache}" class="${page.toLowerCase()}" alt="${page}" width="${size}" />
+                    </div>
+                `;
+            }
+
+            return html`
+                <div id="content">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </div>
+            `;
+        }
+
+        const fmt = new Intl.NumberFormat();
+        function Logs({ logs }) {
+            return html`
+                <h3>Logs</h3>
+                <pre id="logs" style="background: #eee; padding: 1rem 1.2rem;">
+                    ${logs.sort(([a], [b]) => a - b).map(([time, msg]) => `${fmt.format(time)}ms: ${msg}`).join("\n")}
+                </pre>
+            `;
+        }
+
+        render(html`<${App} />`, document.getElementById('app'));
+    </script>
+</body>
+</html>
