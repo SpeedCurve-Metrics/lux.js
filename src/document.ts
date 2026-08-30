@@ -1,3 +1,4 @@
+import { addListener, removeListener } from "./listeners";
 import * as PROPS from "./minification";
 import { getNavigationEntry, timing } from "./performance";
 
@@ -18,11 +19,11 @@ export function onVisible(cb: () => void): void {
       const onVisibleCallback = () => {
         if (isVisible()) {
           cb();
-          removeEventListener("visibilitychange", onVisibleCallback);
+          removeListener("visibilitychange", onVisibleCallback);
         }
       };
 
-      addEventListener("visibilitychange", onVisibleCallback, true);
+      addListener("visibilitychange", onVisibleCallback, true);
     }
   });
 }

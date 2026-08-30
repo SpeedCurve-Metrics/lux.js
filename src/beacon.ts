@@ -58,53 +58,57 @@ export function fitUserTimingEntries(utValues: string[], config: ConfigObject, u
 }
 
 export class Beacon {
-  config: ConfigObject;
-  logger: Logger;
-  isRecording = true;
-  isSent = false;
-  sendRetries = 0;
-  maxMeasureTimeout = 0;
+  public isSent = false;
 
-  customerId: string;
-  pageId: string;
-  sessionId: string;
-  flags = 0;
+  private _config: ConfigObject;
+  private _logger: Logger;
+  private _sendRetries = 0;
+  private _maxMeasureTimeout = 0;
 
-  startTime: number;
-  metricCollectors: { [k in BeaconMetricKey]?: CollectorFunction } = {};
+  private _customerId: string;
+  private _pageId: string;
+  private _sessionId: string;
+  private _flags = 0;
 
-  onBeforeSendCbs: Array<() => void> = [];
+  private _startTime: number;
+  private _metricCollectors: { [k in BeaconMetricKey]?: CollectorFunction } = {};
+
+  private _onBeforeSendCbs: Array<() => void> = [];
 
   constructor(opts: BeaconOptions) {
-    this.startTime = opts.startTime || getZeroTime();
-    this.config = opts.config;
-    this.logger = opts.logger;
-    this.customerId = opts.customerId;
-    this.sessionId = opts.sessionId;
-    this.pageId = opts.pageId;
+    this._startTime = opts.startTime || getZeroTime();
+    this._config = opts.config;
+    this._logger = opts.logger;
+    this._customerId = opts.customerId;
+    this._sessionId = opts.sessionId;
+    this._pageId = opts.pageId;
 
-    this.maxMeasureTimeout = window.setTimeout(() => {
-      this.logger.logEvent(LogEvent.PostBeaconTimeoutReached);
-      this.stopRecording();
+    this._maxMeasureTimeout = window.setTimeout(() => {
+      this._logger.logEvent(LogEvent.PostBeaconTimeoutReached);
+      this._stopRecording();
       this.send();
-    }, this.config.maxMeasureTime - msSincePageInit());
+    }, this._config.maxMeasureTime - msSincePageInit());
 
     addListener("securitypolicyviolation", (e: SecurityPolicyViolationEvent) => {
-      if (e.disposition !== "report" && e.blockedURI === this.config.beaconUrlV2 && "URL" in self) {
+      if (
+        e.disposition !== "report" &&
+        e.blockedURI === this._config.beaconUrlV2 &&
+        "URL" in self
+      ) {
         // Some websites might have CSP rules that allow the GET beacon, but not the POST beacon.
         // We can detect this here and attempt to send the beacon to a fallback endpoint.
         //
         // If the fallback endpoint has not been provided in the config, we will fall back to using
         // the POST beacon pathname on the GET beacon origin.
-        if (!this.config.beaconUrlFallback) {
-          const getOrigin = new URL(this.config.beaconUrl).origin;
-          const postPathname = new URL(this.config.beaconUrlV2).pathname;
-          this.config.beaconUrlFallback = getOrigin + postPathname;
+        if (!this._config.beaconUrlFallback) {
+          const getOrigin = new URL(this._config.beaconUrl).origin;
+          const postPathname = new URL(this._config.beaconUrlV2).pathname;
+          this._config.beaconUrlFallback = getOrigin + postPathname;
         }
 
         // Update the V2 beacon URL
-        this.config.beaconUrlV2 = this.config.beaconUrlFallback!;
-        this.logger.logEvent(LogEvent.PostBeaconCSPViolation, [this.config.beaconUrlV2]);
+        this._config.beaconUrlV2 = this._config.beaconUrlFallback!;
+        this._logger.logEvent(LogEvent.PostBeaconCSPViolation, [this._config.beaconUrlV2]);
         this.addFlag(Flags.BeaconBlockedByCsp);
 
         // Not all browsers return false if sendBeacon fails. In this case, `this.isSent` will be
@@ -113,41 +117,40 @@ export class Beacon {
         this.isSent = false;
 
         // Try to send the beacon again
-        if (this.sendRetries < 1) {
-          this.sendRetries++;
+        if (this._sendRetries < 1) {
+          this._sendRetries++;
           this.send();
         }
       }
     });
 
-    this.logger.logEvent(LogEvent.PostBeaconInitialised);
+    this._logger.logEvent(LogEvent.PostBeaconInitialised);
   }
 
-  isBeingSampled() {
-    const bucket = parseInt(String(this.sessionId).slice(-2));
+  private _isBeingSampled() {
+    const bucket = parseInt(String(this._sessionId).slice(-2));
 
-    return bucket < this.config.samplerate;
+    return bucket < this._config.samplerate;
   }
 
-  stopRecording() {
-    this.isRecording = false;
-    this.logger.logEvent(LogEvent.PostBeaconStopRecording);
+  private _stopRecording() {
+    this._logger.logEvent(LogEvent.PostBeaconStopRecording);
   }
 
   addCollector<K extends BeaconMetricKey>(metric: K, collector: CollectorFunction) {
-    this.metricCollectors[metric] = collector;
+    this._metricCollectors[metric] = collector;
   }
 
   addFlag(flag: number) {
-    this.flags = addFlag(this.flags, flag);
+    this._flags = addFlag(this._flags, flag);
   }
 
-  beaconUrl() {
-    return this.config.beaconUrlV2;
+  private _beaconUrl() {
+    return this._config.beaconUrlV2;
   }
 
   onBeforeSend(cb: () => void) {
-    this.onBeforeSendCbs[PROPS.push](cb);
+    this._onBeforeSendCbs[PROPS.push](cb);
   }
 
   send() {
@@ -155,48 +158,48 @@ export class Beacon {
       return;
     }
 
-    this.logger.logEvent(LogEvent.PostBeaconSendCalled);
+    this._logger.logEvent(LogEvent.PostBeaconSendCalled);
 
-    for (const cb of this.onBeforeSendCbs) {
+    for (const cb of this._onBeforeSendCbs) {
       cb();
     }
 
-    if (!this.isBeingSampled()) {
+    if (!this._isBeingSampled()) {
       return;
     }
 
     const collectionStart = now();
     const metricData: Partial<BeaconMetricData> = {};
-    for (const metric in this.metricCollectors) {
-      const data = this.metricCollectors[metric as BeaconMetricKey]!(this.config);
-      this.logger.logEvent(LogEvent.PostBeaconCollector, [metric, !!data]);
+    for (const metric in this._metricCollectors) {
+      const data = this._metricCollectors[metric as BeaconMetricKey]!(this._config);
+      this._logger.logEvent(LogEvent.PostBeaconCollector, [metric, !!data]);
       if (data) {
         metricData[metric as BeaconMetricKey] = data;
       }
     }
 
-    if (!Object.keys(metricData)[PROPS.length] && !this.config.allowEmptyPostBeacon) {
+    if (!Object.keys(metricData)[PROPS.length] && !this._config.allowEmptyPostBeacon) {
       // TODO: This is only required while the new beacon is supplementary. Once it's the primary
       // beacon, we should send it regardless of how much metric data it has.
-      this.logger.logEvent(LogEvent.PostBeaconCancelled);
+      this._logger.logEvent(LogEvent.PostBeaconCancelled);
       return;
     }
 
     // Only clear the max measure timeout if there's data to send.
-    clearTimeout(this.maxMeasureTimeout);
+    clearTimeout(this._maxMeasureTimeout);
 
-    const beaconUrl = this.beaconUrl();
+    const beaconUrl = this._beaconUrl();
     const payload: BeaconPayload = Object.assign(
       {
-        customerId: this.customerId,
-        flags: this.flags,
+        customerId: this._customerId,
+        flags: this._flags,
         measureDuration: msSincePageInit(),
         collectionDuration: now() - collectionStart,
-        pageId: this.pageId,
+        pageId: this._pageId,
         scriptVersion: VERSION,
-        snippetVersion: this.config.snippetVersion,
-        sessionId: this.sessionId,
-        startTime: this.startTime,
+        snippetVersion: this._config.snippetVersion,
+        sessionId: this._sessionId,
+        startTime: this._startTime,
       },
       metricData,
     );
@@ -204,7 +207,7 @@ export class Beacon {
     try {
       if (postJson(beaconUrl, JSON.stringify(payload))) {
         this.isSent = true;
-        this.logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
+        this._logger.logEvent(LogEvent.PostBeaconSent, [beaconUrl, payload]);
         Events.emit("beacon", payload);
       }
     } catch {
@@ -212,7 +215,7 @@ export class Beacon {
     }
 
     if (!this.isSent) {
-      this.logger.logEvent(LogEvent.PostBeaconSendFailed, [beaconUrl, payload]);
+      this._logger.logEvent(LogEvent.PostBeaconSendFailed, [beaconUrl, payload]);
     }
   }
 }
