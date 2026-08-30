@@ -162,11 +162,8 @@ LUX = (function () {
 
     if (
       PO.observe("largest-contentful-paint", (entry) => {
-        // Process the LCP entry for the legacy beacon
-        processAndLogEntry(entry);
-
-        // Process the LCP entry for the new beacon
         LCP.processEntry(entry);
+        logEntry(entry);
       })
     ) {
       beaconCollectors[PROPS.push]([BeaconMetricKey.LCP, LCP.getData]);
@@ -1046,7 +1043,6 @@ LUX = (function () {
       const navEntry = getNavigationEntry();
       const startRender = getStartRender();
       const fcp = getFcp();
-      const lcp = getLcp();
 
       const prefixNTValue = (
         key: keyof PerformanceNavigationTiming,
@@ -1107,7 +1103,6 @@ LUX = (function () {
         loadEventEndStr,
         typeof startRender !== "undefined" ? "sr" + startRender : "",
         typeof fcp !== "undefined" ? "fc" + fcp : "",
-        typeof lcp !== "undefined" ? "lc" + lcp : "",
       ].join("");
     } else if (endMark) {
       // This is a "main" page view that does NOT support Navigation Timing - strange.
@@ -1139,23 +1134,6 @@ LUX = (function () {
         if (shouldReportValue(value)) {
           return value;
         }
-      }
-    }
-
-    return undefined;
-  }
-
-  // Return Largest Contentful Paint or undefined if not supported.
-  function getLcp(): number | undefined {
-    const lcpEntries = PO.getEntries("largest-contentful-paint");
-
-    if (lcpEntries[PROPS.length]) {
-      const lastEntry = lcpEntries[lcpEntries[PROPS.length] - 1];
-      const value = processTimeMetric(lastEntry[PROPS.startTime]);
-
-      if (shouldReportValue(value)) {
-        logger.logEvent(LogEvent.PerformanceEntryProcessed, [lastEntry]);
-        return value;
       }
     }
 
@@ -1481,7 +1459,6 @@ LUX = (function () {
 
     const sET = elementTimingValues(); // Element Timing data
     const sCPU = cpuTimes();
-    const clsData = CLS.getData(globalConfig);
     const sLuxjs = selfLoading();
 
     if (!isVisible()) {
@@ -1572,8 +1549,7 @@ LUX = (function () {
       (sIx ? "&IX=" + sIx : "") +
       (typeof gFirstInputDelay !== "undefined" ? "&FID=" + gFirstInputDelay : "") +
       (sCPU ? "&CPU=" + sCPU : "") +
-      (sET ? "&ET=" + sET : "") + // element timing
-      (clsData ? "&CLS=" + clsData.value.toFixed(6) : "");
+      (sET ? "&ET=" + sET : ""); // element timing
 
     // We add the user timing entries last so that we can split them to reduce the URL size if necessary.
     const utValues = userTimingValues();

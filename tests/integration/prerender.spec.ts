@@ -143,7 +143,6 @@ test.describe("LUX prerender support", () => {
     // Paint metrics
     expect(NT.startRender).toBeLessThan(NT.activationStart);
     expect(NT.firstContentfulPaint).toBeLessThan(NT.activationStart);
-    expect(NT.largestContentfulPaint).toBeGreaterThanOrEqual(ET["charlie-image"].startTime);
 
     // CPU metrics
     // There are two long tasks created on the prerendered page: the first 50ms task occurs before

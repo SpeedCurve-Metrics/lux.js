@@ -5,7 +5,7 @@ import * as Shared from "../helpers/shared-tests";
 import RequestInterceptor from "../request-interceptor";
 
 test.describe("Default metrics in auto mode", () => {
-  test("basic functionality", async ({ page, browserName }) => {
+  test("basic functionality", async ({ page }) => {
     const luxRequests = new RequestInterceptor(page).createRequestMatcher("/beacon/");
     await page.goto("/default.html");
     await luxRequests.waitForMatchingRequest();
@@ -29,12 +29,8 @@ test.describe("Default metrics in auto mode", () => {
     // interaction data is not sent when there are no interactions
     expect(beacon.searchParams.get("IX")).toBeNull();
 
-    if (browserName === "chromium") {
-      // CLS is set to zero when there are no layout shifts
-      expect(parseFloat(getSearchParam(beacon, "CLS"))).toEqual(0);
-    } else {
-      expect(beacon.searchParams.get("CLS")).toBeNull();
-    }
+    // CLS is only sent in the POST beacon
+    expect(beacon.searchParams.get("CLS")).toBeNull();
 
     // hostname and pathname are set
     expect(getSearchParam(beacon, "HN")).toEqual("localhost");
