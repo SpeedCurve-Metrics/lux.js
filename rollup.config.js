@@ -26,7 +26,7 @@ const scriptOutput = (file, minified) => ({
       ? terser({
           mangle: {
             properties: {
-              regex: /^(_.+|#)/,
+              regex: /^_.+/,
             },
           },
         })
