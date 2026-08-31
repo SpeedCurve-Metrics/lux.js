@@ -1,6 +1,12 @@
 # lux.js changelog
 
-## 2026-08-26: v4.5.1
+## 2026-08-31: v4.5.2
+
+### Improvements
+
+- Minor reduction in bundle size by removing redundant metrics from GET beacon.
+
+## 2026-08-31: v4.5.1
 
 ### Bug fixes
 
