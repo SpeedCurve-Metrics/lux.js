@@ -1,5 +1,11 @@
 # lux.js changelog
 
+## 2026-09-28: v4.5.3
+
+### Bug fixes
+
+- Fix INP being over-estimated in certain scenarios. This mostly affected soft navigations.
+
 ## 2026-08-31: v4.5.2
 
 ### Improvements
