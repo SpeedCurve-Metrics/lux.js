@@ -41,4 +41,52 @@ test.describe("POST beacon INP", () => {
       expect(b.inp).toBeUndefined();
     }
   });
+
+  test("INP is reset between SPA page transitions", async ({ page }) => {
+    // Note we block for just 60ms to validate a fix for https://github.com/SpeedCurve-Metrics/lux.js/issues/85
+    const blockingTime = 60;
+    const luxRequests = new RequestInterceptor(page).createRequestMatcher("/store/");
+    const inpSupported = await entryTypeSupported(page, "event");
+    await page.goto(`/interaction.html?blockFor=${blockingTime}&injectScript=LUX.auto=false;`, {
+      waitUntil: "networkidle",
+    });
+
+    // Generate INP for the first page
+    await page.locator("#button-with-js").click({ force: true });
+    await page.waitForTimeout(100);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    let b = luxRequests.get(0)!.postDataJSON() as BeaconPayload;
+
+    if (inpSupported) {
+      expect(b.inp!.value).toBeGreaterThanOrEqual(blockingTime);
+      expect(b.inp!.attribution!.elementSelector).toEqual("#button-with-js");
+    } else {
+      expect(b.inp).toBeUndefined();
+    }
+
+    // Second page has no INP
+    await page.evaluate(() => LUX.init());
+    await page.waitForTimeout(200);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    b = luxRequests.get(1)!.postDataJSON() as BeaconPayload;
+    expect(b.inp).toBeUndefined();
+
+    // Third page has INP from a new interaction
+    const beforeInit = await getElapsedMs(page);
+    await page.evaluate(() => LUX.init());
+    const beforeClick = await getElapsedMs(page);
+    await page.locator("#button-with-js").click({ force: true });
+    await page.waitForTimeout(100);
+    await luxRequests.waitForMatchingRequest(() => page.evaluate(() => LUX.send()));
+    b = luxRequests.get(2)!.postDataJSON() as BeaconPayload;
+
+    if (inpSupported) {
+      expect(b.inp!.startTime).toBeGreaterThanOrEqual(beforeClick - beforeInit);
+      expect(b.inp!.value).toBeGreaterThanOrEqual(blockingTime);
+      expect(b.inp!.value).toBeLessThan(104);
+      expect(b.inp!.attribution!.elementSelector).toEqual("#button-with-js");
+    } else {
+      expect(b.inp).toBeUndefined();
+    }
+  });
 });
